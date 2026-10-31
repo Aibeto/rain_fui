@@ -1,5 +1,5 @@
 name: rain_fui
-description: "A new Flutter project."
+description: "Rain FUI — a Fluent-styled FFmpeg desktop/web front end."
 publish_to: 'none'
 version: 0.1.0+1
 
@@ -10,10 +10,65 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # UI kit. Every button/input/dialog/list tile comes from here.
+  fluent_ui: ^4.17.0
+  # Microsoft Fluent System Icons (MIT). The only icon source in this app.
+  fluentui_system_icons: ^1.1.273
+
+  # File and folder pickers.
+  file_picker: ^13.3.0
+  # Drag and drop for desktop + web. Pinned: 0.9.x pulls cross_file ^0.4.0,
+  # which conflicts with file_picker >= 12 (cross_file ^0.3.5+4).
+  desktop_drop: ^0.8.4
+
+  # Locale persistence.
+  shared_preferences: ^2.5.6
+  # Path helpers that also work on web (no dart:io).
+  path: ^1.9.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
 
 flutter:
+  # The Fluent icon fonts are the primary set; keeping the Material glyph
+  # table available only guards against a stray Material icon inside a
+  # transitive widget rendering as tofu. No Material icon is used by our code.
   uses-material-design: true
+
+  assets:
+    - assets/licenses/
+
+  fonts:
+    # Primary face: Latin, Greek, Cyrillic (incl. Vietnamese). OFL 1.1.
+    - family: Source Sans 3
+      fonts:
+        - asset: assets/fonts/SourceSans3-Variable.ttf
+        - asset: assets/fonts/SourceSans3-Variable-Italic.ttf
+          style: italic
+    # Script fallbacks, ordered per script in `AppTheme.fallbackFor`.
+    - family: Noto Sans SC
+      fonts:
+        - asset: assets/fonts/NotoSansSC-Variable.ttf
+    - family: Noto Sans TC
+      fonts:
+        - asset: assets/fonts/NotoSansTC-Variable.ttf
+    - family: Noto Sans JP
+      fonts:
+        - asset: assets/fonts/NotoSansJP-Variable.ttf
+    - family: Noto Sans KR
+      fonts:
+        - asset: assets/fonts/NotoSansKR-Variable.ttf
+    - family: Noto Sans Arabic
+      fonts:
+        - asset: assets/fonts/NotoSansArabic-Variable.ttf
+    - family: Noto Sans Thai
+      fonts:
+        - asset: assets/fonts/NotoSansThai-Variable.ttf
+    # Monospace face for LanguageActivity's table-like list. Same designer as
+    # Source Sans 3, OFL 1.1. Bundled because the generic `monospace` family
+    # resolves inconsistently across platforms.
+    - family: Source Code Pro
+      fonts:
+        - asset: assets/fonts/SourceCodePro-Variable.ttf
