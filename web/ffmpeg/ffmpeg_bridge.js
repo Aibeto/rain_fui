@@ -104,6 +104,17 @@
   window.rainFfmpeg = {
     init: function () {
       return new Promise(function (resolve) {
+        var hint = isolationHint();
+        if (hint) {
+          // Refuse before starting the wasm core: without SharedArrayBuffer
+          // its pthread bootstrap hangs instead of reporting an error.
+          resolve({
+            ok: false,
+            version: '',
+            error: 'FFmpeg wasm cannot start' + hint,
+          });
+          return;
+        }
         var target;
         try {
           target = ensureWorker();

@@ -112,19 +112,28 @@ configure：`--enable-pthreads`（即不加 `--disable-pthreads`），其余与 
 链接 ABI：
 
 ```
+-pthread -sPROXY_TO_PTHREAD=1 -sPTHREAD_POOL_SIZE=8 -sPTHREAD_POOL_SIZE_STRICT=0
+-sPTHREAD_POOL_DELAY_LOAD=1 -sEXIT_RUNTIME=1
 -sMODULARIZE=1 -sEXPORT_NAME=createFFmpegCore -sINVOKE_RUN=0
 -sENVIRONMENT=web,worker -sALLOW_MEMORY_GROWTH=1 -sFORCE_FILESYSTEM=1
 -sEXPORTED_FUNCTIONS=_main,_malloc,_free
 -sEXPORTED_RUNTIME_METHODS=FS,callMain,ccall,cwrap
--sSTACK_SIZE=5242880 -sEXIT_RUNTIME=0 -sASSERTIONS=0
--pthread -sPTHREAD_POOL_SIZE=8 -sPTHREAD_POOL_SIZE_STRICT=0
+-sSTACK_SIZE=5242880 -sASSERTIONS=0
 -sINITIAL_MEMORY=67108864 -sMAXIMUM_MEMORY=2147483648
 ```
 
-即全局工厂函数 `createFFmpegCore(moduleOverrides) -> Promise<Module>`；`Module.callMain(args)`
-执行一次 FFmpeg（`exit()` 会抛出 `ExitStatus`，由 JS 侧捕获）。产物是三个文件：
-`ffmpeg.js`、`ffmpeg.wasm`、`ffmpeg.worker.js`（Emscripten 的 pthread worker 脚本，必须与
-`ffmpeg.js` 同目录，`locateFile` 已在 `web/ffmpeg/ffmpeg_worker.js` 里指向同目录）。
+三条硬要求，任何一条不满足都会卡死或拿到假退出码：
+1. `-sPROXY_TO_PTHREAD=1`：`main()` 必须跑在 pthread 上，否则主 worker 被 FFmpeg 阻塞，
+   emscripten 的 proxied calls（`print`/`printErr`、线程引导）没人服务，`init`/`run` 直接死锁。
+2. `-sEXIT_RUNTIME=1`：只有 `EXIT_RUNTIME` 才能通过 `Module.onExit(status)` 拿到退出码；
+   PROXY 模式下 `callMain()` 立刻返回 `0`，**不能**当退出码用。
+3. 调用方不得覆盖 `self.onmessage`（`ffmpeg.js` 用赋值式安装 own handler），必须用
+   `addEventListener`，且把 URL 是 `web/ffmpeg/ffmpeg_worker.js` 的 pthread worker 识别为
+   `self.name === 'em-pthread'` 只加载核心。
+
+产物是 `ffmpeg.js` 和 `ffmpeg.wasm` 两个文件：Emscripten 6 不再生成独立的 pthread worker
+脚本，它用加载自己的那个 URL（也就是 `web/ffmpeg/ffmpeg_worker.js`）去 `new Worker(...)`
+起线程。
 
 **运行前提：页面必须 cross-origin isolated**（`Cross-Origin-Opener-Policy: same-origin` +
 `Cross-Origin-Embedder-Policy: require-corp`），否则没有 `SharedArrayBuffer`，wasm 无法初始化。
@@ -139,7 +148,7 @@ Dart 侧把它显示为 `unavailableReason`，而不是抛一个看不懂的 was
 | `linux-x64` | `linux/ffmpeg/ffmpeg` | CMake `install(PROGRAMS …)` → `<bundle>/lib/ffmpeg`（这是**文件**，不是目录） |
 | `windows-x64` | `windows/ffmpeg/ffmpeg.exe` | CMake `install(FILES …)` → 与 `rain_fui.exe` 同级 |
 | `android-*` | `android/app/src/main/jniLibs/<abi>/libffmpeg_exe.so` | `nativeLibraryDir` === `android/app/src/main/jniLibs` 打包解压目录 |
-| `web` | `web/ffmpeg/ffmpeg.js`、`web/ffmpeg/ffmpeg.wasm`、`web/ffmpeg/ffmpeg.worker.js` | `web/ffmpeg/ffmpeg_worker.js` 内 `importScripts('ffmpeg.js')` |
+| `web` | `web/ffmpeg/ffmpeg.js`、`web/ffmpeg/ffmpeg.wasm` | `web/ffmpeg/ffmpeg_worker.js` 内 `importScripts('ffmpeg.js')` |
 
 Android 必须保持 `android:extractNativeLibs="true"` + `useLegacyPackaging = true`，否则
 `libffmpeg_exe.so` 不会被解压成可执行文件。
@@ -151,6 +160,6 @@ Android 必须保持 `android:extractNativeLibs="true"` + `useLegacyPackaging = 
 3. 宿主可执行的目标：`./build/ffmpeg/dist/<target>/ffmpeg -version` 必须打印 `9.0.2`。
 4. Android：`flutter build apk --release --target-platform android-arm64` 后，APK 内
    `lib/arm64-v8a/libffmpeg_exe.so` 存在（CI 用 `unzip -l` 断言）。
-5. web：`flutter build web --release` 后 `build/web/ffmpeg/{ffmpeg.js,ffmpeg.wasm,ffmpeg.worker.js}` 都存在，
+5. web：`flutter build web --release` 后 `build/web/ffmpeg/{ffmpeg.js,ffmpeg.wasm}` 都存在，
    且在带 COOP/COEP 头的服务器上能真实转码一次（见 `docs/ffmpeg-build.md`）。
 6. 桌面端集成测试：`REAL_FFMPEG=<built binary> flutter test test/real_binary_test.dart` 通过（未设置 `REAL_FFMPEG` 时自动 skip）。

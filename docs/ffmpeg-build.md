@@ -131,9 +131,11 @@ build tree first. `bash -n` is enough to syntax-check them.
   `-sINVOKE_RUN=0`, `FS` + `callMain` exported. The build is **threaded**
   (`--enable-pthreads`, `-pthread`, `-sPTHREAD_POOL_SIZE=8`,
   `-sPTHREAD_POOL_SIZE_STRICT=0`) because FFmpeg 9's CLI scheduler needs real
-  pthreads to transcode; Emscripten therefore emits `ffmpeg.worker.js` next to
-  `ffmpeg.js`, and the page must be cross-origin isolated (COOP/COEP, see
-  below). **`--disable-avdevice` must stay off**: the `lavfi` input device lives
+  pthreads to transcode. Emscripten 6 does **not** emit a separate pthread
+  worker script: it re-uses the URL it was loaded from, i.e.
+  `web/ffmpeg/ffmpeg_worker.js`, so that file detects `self.name ===
+  'em-pthread'` and only loads the core there. The page must be cross-origin
+  isolated (COOP/COEP, see below). **`--disable-avdevice` must stay off**: the `lavfi` input device lives
   in libavdevice, so removing libavdevice makes every `-f lavfi ...` command
   fail with `Unknown input format: 'lavfi'`. The link step therefore includes
   `-lavdevice`, and the fftools objects are deleted and rebuilt on every run
@@ -340,7 +342,10 @@ persistent storage (MEMFS only); `-y` overwrites inside that in-memory FS.
   `llvm-readelf -l libffmpeg_exe.so | grep LOAD` (alignment `0x4000`).
 * **Web module cannot find the wasm** — the shipped `ffmpeg.js` is built for
   `-sENVIRONMENT=web,worker`; serve `ffmpeg.js` and `ffmpeg.wasm` from the same
-  directory and let the loader fetch the wasm (no COOP/COEP required).
+  directory. The module is threaded, so the page **must** be cross-origin
+  isolated (`Cross-Origin-Opener-Policy: same-origin` +
+  `Cross-Origin-Embedder-Policy: require-corp`) or `SharedArrayBuffer` is
+  missing and `init()` refuses early with a cross-origin-isolation hint.
 
 ## CI notes
 

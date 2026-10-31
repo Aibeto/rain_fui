@@ -15,6 +15,18 @@ manual check of the web target:
 
 `--no-isolation` deliberately omits the headers: the app must still load and
 report "cross-origin isolation required" instead of hanging on a broken wasm.
+
+`--smoke` additionally serves an end-to-end check at /__smoke.html that runs the
+bridge (`init()` + one real `-f lavfi` mpeg4/aac transcode) and prints
+`SMOKE_OK` when the wasm core really works. It is a normal page, so a headless
+browser can drive it:
+
+    python3 tool/serve_web.py --smoke &
+    chromium --headless=new --no-sandbox --dump-dom \
+        http://127.0.0.1:8080/__smoke.html | grep SMOKE_OK
+
+The page holds its own `load` event until the run finishes, so `--dump-dom`
+waits for the result instead of racing the wasm compile.
 """
 
 from __future__ import annotations
@@ -24,6 +36,7 @@ import functools
 import http.server
 import os
 import sys
+import threading
 
 ISOLATION_HEADERS = {
     "Cross-Origin-Opener-Policy": "same-origin",
@@ -31,6 +44,63 @@ ISOLATION_HEADERS = {
     # Let the wasm core spawn its pthread workers from the same origin.
     "Cross-Origin-Resource-Policy": "same-origin",
 }
+
+
+SMOKE_HTML = """<!doctype html>
+<meta charset="utf-8">
+<title>rain_fui ffmpeg web smoke</title>
+<pre id="out">running</pre>
+<script src="ffmpeg/ffmpeg_bridge.js"></script>
+<script>
+(function () {
+  var out = document.getElementById('out');
+  var lines = [];
+  function log(text) {
+    lines.push(text);
+    out.textContent = lines.join(String.fromCharCode(10));
+  }
+  function finish() {
+    try { fetch('/__smoke/done'); } catch (error) {}
+  }
+  (async function () {
+    try {
+      if (!window.rainFfmpeg) throw new Error('ffmpeg/ffmpeg_bridge.js did not load');
+      var init = await window.rainFfmpeg.init();
+      log('INIT ' + JSON.stringify(init));
+      if (!init.ok) throw new Error('init failed: ' + init.error);
+      var result = await window.rainFfmpeg.run([
+        '-hide_banner', '-nostdin', '-nostats', '-progress', 'pipe:1',
+        '-f', 'lavfi', '-i', 'testsrc2=duration=1:size=320x240:rate=25',
+        '-c:v', 'mpeg4', '-c:a', 'aac', '-y', '/tmp/rain_fui_smoke.mp4'
+      ], function (line) { log('LINE ' + line); });
+      log('RUN ' + JSON.stringify(result));
+      var ok = result.exitCode === 0 &&
+        /Output #0/.test(result.stderr || '') &&
+        /progress=end/.test(result.stdout || '');
+      log(ok ? 'SMOKE_OK' : 'SMOKE_FAIL');
+    } catch (error) {
+      log('SMOKE_ERROR ' + (error && (error.stack || error.message || error)));
+      log('SMOKE_FAIL');
+    } finally {
+      finish();
+    }
+  })();
+})();
+</script>
+<script src="__smoke/hold.js"></script>
+"""
+
+SMOKE_HOLD_JS = """// Holds the document's load event until the smoke test reports back.
+(function () {
+  var started = Date.now();
+  var script = document.createElement('script');
+  script.src = '__smoke/wait.js?' + Date.now();
+  document.head.appendChild(script);
+})();
+"""
+
+
+SMOKE_DONE = threading.Event()
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -45,6 +115,43 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     }
 
     isolation = True
+    smoke = False
+
+    def _send(self, status: int, body: bytes, content_type: str = "text/plain") -> None:
+        self.send_response(status)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_GET(self) -> None:  # noqa: D102 - inherited contract
+        if self.smoke:
+            path = self.path.split("?", 1)[0]
+            if path == "/__smoke.html":
+                SMOKE_DONE.clear()
+                self._send(200, SMOKE_HTML.encode(), "text/html; charset=utf-8")
+                return
+            if path == "/__smoke/hold.js":
+                # Blocks until the smoke page posts /__smoke/done, so the
+                # browser's load event (and --dump-dom) waits for the result.
+                SMOKE_DONE.wait(300)
+                self._send(200, b"/*smoke finished*/", "text/javascript")
+                return
+            if path == "/__smoke/wait.js":
+                self._send(200, b"/*noop*/", "text/javascript")
+                return
+            if path == "/__smoke/done":
+                SMOKE_DONE.set()
+                self._send(204, b"")
+                return
+        super().do_GET()
+
+    def do_POST(self) -> None:  # noqa: D102 - inherited contract
+        if self.smoke and self.path.split("?", 1)[0] == "/__smoke/done":
+            SMOKE_DONE.set()
+            self._send(204, b"")
+            return
+        self._send(404, b"not found")
 
     def end_headers(self) -> None:  # noqa: D102 - inherited contract
         if self.isolation:
@@ -73,6 +180,11 @@ def main() -> int:
         action="store_true",
         help="omit COOP/COEP to exercise the graceful 'needs isolation' path",
     )
+    parser.add_argument(
+        "--smoke",
+        action="store_true",
+        help="also serve /__smoke.html (real wasm transcode check)",
+    )
     args = parser.parse_args()
 
     root = os.path.abspath(args.dir)
@@ -87,11 +199,15 @@ def main() -> int:
         return 1
 
     Handler.isolation = not args.no_isolation
+    Handler.smoke = args.smoke
     httpd = http.server.ThreadingHTTPServer(
         (args.host, args.port), functools.partial(Handler, directory=root)
     )
     mode = "isolated" if Handler.isolation else "NOT isolated (FFmpeg will refuse to start)"
-    sys.stderr.write("serving %s on http://%s:%d (%s)\n" % (root, args.host, args.port, mode))
+    smoke = " + /__smoke.html" if args.smoke else ""
+    sys.stderr.write(
+        "serving %s on http://%s:%d (%s%s)\n" % (root, args.host, args.port, mode, smoke)
+    )
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

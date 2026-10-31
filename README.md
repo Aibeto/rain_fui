@@ -25,7 +25,7 @@ Per platform that means:
 | Linux | `lib/ffmpeg` in the bundle | `Process.start` on the bundled path |
 | Windows | `ffmpeg.exe` next to the runner | `Process.start` on the bundled path |
 | Android | `lib/<abi>/libffmpeg_exe.so` in the APK | exec'd from `nativeLibraryDir` |
-| Web | `web/ffmpeg/ffmpeg.{js,wasm,worker.js}` | Emscripten (threaded) module in a Web Worker |
+| Web | `web/ffmpeg/ffmpeg.{js,wasm}` | Emscripten (threaded) module in a Web Worker |
 
 Android refuses to exec files from the app's data directory on API 29+, but the
 native library directory is executable, hence the `libffmpeg_exe.so` name. The
@@ -94,7 +94,14 @@ Cross-Origin-Embedder-Policy: require-corp
 flutter build web --release
 python3 tool/serve_web.py          # http://127.0.0.1:8080, adds COOP/COEP
 python3 tool/serve_web.py --no-isolation   # checks the graceful error path
+python3 tool/serve_web.py --smoke          # serves /__smoke.html
+chromium --headless=new --no-sandbox --dump-dom \
+  http://127.0.0.1:8080/__smoke.html | grep SMOKE_OK
 ```
+
+`--smoke` runs the bridge for real: `init()` plus one `-f lavfi … -c:v mpeg4 -c:a
+aac` transcode, and prints `SMOKE_OK` when the wasm core works. CI runs exactly
+this on the web leg.
 
 Without the headers the app still loads: `createFfmpegBackend()` reports
 `unavailableReason` containing "cross-origin isolation" instead of hanging on a

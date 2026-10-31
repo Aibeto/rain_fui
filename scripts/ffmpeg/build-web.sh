@@ -6,8 +6,9 @@
 #
 # FFmpeg 9's CLI scheduler (fftools/ffmpeg_sched.c) creates one pthread per
 # demux/decode/filter/encode/mux task, so the web build is THREADED: FFmpeg is
-# configured with --enable-pthreads, Emscripten emits a pthread worker script
-# (ffmpeg.worker.js), and the page must be cross-origin isolated (COOP
+# configured with --enable-pthreads, the pthread bootstrap is inlined in
+# ffmpeg.js (Emscripten 6 no longer emits a separate worker script), and the
+# page must be cross-origin isolated (COOP
 # same-origin + COEP require-corp) so SharedArrayBuffer is available. The
 # ffmpeg program is still configured with --disable-programs and its CLI
 # frontend (fftools/ffmpeg.c + friends) is linked manually, because the
@@ -15,8 +16,10 @@
 # The ABI is contract §7 (createFFmpegCore / MODULARIZE / INVOKE_RUN=0 /
 # FS + callMain exported).
 #
-# Artifacts (§5): build/ffmpeg/dist/web/ffmpeg.js + ffmpeg.wasm +
-# ffmpeg.worker.js + version.txt
+# Artifacts (§5): build/ffmpeg/dist/web/ffmpeg.js + ffmpeg.wasm + version.txt
+# (no separate pthread worker script: Emscripten 6 re-uses this same script
+#  URL, i.e. web/ffmpeg/ffmpeg_worker.js, for its pthread workers -- see
+#  web/ffmpeg/ffmpeg_worker.js, which special-cases self.name === 'em-pthread'.)
 # =============================================================================
 set -euo pipefail
 
@@ -196,11 +199,19 @@ link_flags+=(
     -sPTHREAD_POOL_SIZE=8
     -sPTHREAD_POOL_SIZE_STRICT=0
     -sPTHREAD_POOL_DELAY_LOAD=1
+    # FFmpeg's CLI blocks its main thread while the scheduler waits on worker
+    # threads. A blocking main thread cannot service Emscripten's proxied calls
+    # (thread startup, heap growth), which deadlocks the run, so main() has to
+    # live on a pthread while the hosting worker stays free.
+    -sPROXY_TO_PTHREAD=1
     -sFORCE_FILESYSTEM=1
     -sEXPORTED_FUNCTIONS=_main,_malloc,_free
     -sEXPORTED_RUNTIME_METHODS=FS,callMain,ccall,cwrap
     -sSTACK_SIZE=5242880
-    -sEXIT_RUNTIME=0
+    # The caller needs to know when main() finished: with PROXY_TO_PTHREAD the
+    # exit status arrives through Module.onExit, which Emscripten only invokes
+    # when the runtime is actually torn down.
+    -sEXIT_RUNTIME=1
     -sASSERTIONS=0
     -o "$distdir/ffmpeg.js"
 )
@@ -211,7 +222,10 @@ mkdir -p "$builddir/obj"
     cd "$builddir"
     emcc "${link_flags[@]}" "${fftools_objs[@]}"
 )
-for artifact in ffmpeg.js ffmpeg.wasm ffmpeg.worker.js; do
+# Emscripten >= 4 inlines the pthread bootstrap into ffmpeg.js (it creates
+# the thread workers from `self.location.href`), so no separate .worker.js is
+# emitted any more; the two files below are the whole contract.
+for artifact in ffmpeg.js ffmpeg.wasm; do
     [ -s "$distdir/$artifact" ] || die "emcc did not produce $distdir/$artifact"
 done
 
@@ -295,7 +309,7 @@ fi
 printf '\n[ffmpeg] %s: artifacts\n' "$TARGET"
 ls -l "$distdir"
 if command -v file >/dev/null 2>&1; then
-    file "$distdir/ffmpeg.js" "$distdir/ffmpeg.wasm" "$distdir/ffmpeg.worker.js" || true
+    file "$distdir/ffmpeg.js" "$distdir/ffmpeg.wasm" || true
 fi
 [ -n "$first" ] && printf '  -version first line: %s\n' "$first"
 log "$TARGET build complete in $(ffmpeg_elapsed "$start")"

@@ -158,11 +158,12 @@ checkout(fetch-depth:1, 无子模块) → flutter(stable) → cache pub → flut
 | android | `actions/setup-java@v4`(temurin 17) + `android-actions/setup-android@v3` + `sdkmanager` 装 `ndk;28.2.13676358`、`cmake;3.22.1`；`ANDROID_NDK_HOME`/`ANDROID_NDK_ROOT`/`ANDROID_NDK` 写入 `$GITHUB_ENV`；`~/.gradle/caches`、`~/.gradle/wrapper` 缓存 |
 | windows | `msys2/setup-msys2@v2`（`msystem: MINGW64`，`mingw-w64-x86_64-gcc`、`nasm`、`pkgconf`、`make`、`git`）；FFmpeg 的两步用 `shell: msys2 {0}` 跑，Flutter 构建用默认 `pwsh` |
 | linux | apt: `build-essential nasm yasm pkg-config patch clang cmake ninja-build libgtk-3-dev liblzma-dev libstdc++-12-dev zip unzip file`；`flutter config --enable-linux-desktop` |
-| web | `mymindstorm/setup-emsdk@v14`（`version: 3.1.64`，`actions-cache-folder`），并打印 `emcc --version` |
+| web | `mymindstorm/setup-emsdk@v14`（`version: 6.0.13`，`actions-cache-folder`），并打印 `emcc --version` |
 
 `NDK 28.2.13676358` 不是随手写的数字：它就是 Flutter 3.47.x 的默认 `ndkVersion`
 （`flutter/packages/flutter_tools/gradle/src/main/kotlin/FlutterExtension.kt:42`），
 而 `android/app/build.gradle.kts` 用的是 `ndkVersion = flutter.ndkVersion`。
+
 
 ### `release`（仅 tag `v*`，ubuntu-latest，15 min）
 

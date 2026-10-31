@@ -13,7 +13,7 @@
 #   linux-x64             -> linux/ffmpeg/ffmpeg
 #   windows-x64           -> windows/ffmpeg/ffmpeg.exe
 #   android-<abi>         -> android/app/src/main/jniLibs/<abi>/libffmpeg_exe.so
-#   web                   -> web/ffmpeg/ffmpeg.js + ffmpeg.wasm + ffmpeg.worker.js
+#   web                   -> web/ffmpeg/ffmpeg.js + ffmpeg.wasm
 # =============================================================================
 set -euo pipefail
 
@@ -106,8 +106,7 @@ for target in "${TARGETS[@]}"; do
         web)
             install_one "$dist/ffmpeg.js"         "$REPO_ROOT/web/ffmpeg/ffmpeg.js"         0644 "$target"
             install_one "$dist/ffmpeg.wasm"       "$REPO_ROOT/web/ffmpeg/ffmpeg.wasm"       0644 "$target"
-            install_one "$dist/ffmpeg.worker.js"  "$REPO_ROOT/web/ffmpeg/ffmpeg.worker.js"  0644 "$target"
-            installed=$((installed + 3))
+            installed=$((installed + 2))
             ;;
     esac
     printf '[ffmpeg]   version.txt: %s\n' "$(head -n1 "$dist/version.txt")"

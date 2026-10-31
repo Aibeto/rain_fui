@@ -81,20 +81,32 @@ function instantiate(onStdout, onStderr) {
       printErr: function (line) {
         onStderr(clean(line));
       },
-      noExitRuntime: true,
     });
   });
 }
 
+// Resolves with the exit status. With -sPROXY_TO_PTHREAD the CLI runs on a
+// pthread: callMain() returns 0 immediately and the real status arrives later
+// through Module.onExit, so its return value must never be treated as status.
 function callMain(module, args) {
-  try {
-    var status = module.callMain(args);
-    return typeof status === 'number' ? status : 0;
-  } catch (error) {
-    // Emscripten signals exit() by throwing ExitStatus.
-    if (error && typeof error.status === 'number') return error.status;
-    throw error;
-  }
+  return new Promise(function (resolve, reject) {
+    var settled = false;
+    function finish(status) {
+      if (settled) return;
+      settled = true;
+      resolve(typeof status === 'number' ? status : 0);
+    }
+    module.onExit = finish;
+    try {
+      module.callMain(args);
+    } catch (error) {
+      if (error && typeof error.status === 'number') {
+        finish(error.status);
+        return;
+      }
+      reject(error);
+    }
+  });
 }
 
 function runInit(id) {
@@ -109,16 +121,17 @@ function runInit(id) {
     }
   )
     .then(function (module) {
-      var exitCode = callMain(module, ['-version']);
-      var version = stdout.find(function (line) {
-        return line.indexOf('ffmpeg version') === 0;
-      });
-      postMessage({
-        id: id,
-        type: 'init',
-        ok: exitCode === 0 && !!version,
-        version: version || '',
-        error: exitCode === 0 ? (version ? '' : 'unexpected -version output') : stderr.join('\n'),
+      return callMain(module, ['-version']).then(function (exitCode) {
+        var version = stdout.find(function (line) {
+          return line.indexOf('ffmpeg version') === 0;
+        });
+        postMessage({
+          id: id,
+          type: 'init',
+          ok: exitCode === 0 && !!version,
+          version: version || '',
+          error: exitCode === 0 ? (version ? '' : 'unexpected -version output') : stderr.join('\n'),
+        });
       });
     })
     .catch(function (error) {
@@ -141,13 +154,14 @@ function runJob(id, args) {
   )
     .then(function (module) {
       lastModule = module;
-      var exitCode = callMain(module, args);
-      postMessage({
-        id: id,
-        type: 'done',
-        exitCode: exitCode,
-        stdout: stdout.join('\n'),
-        stderr: stderr.join('\n'),
+      return callMain(module, args).then(function (exitCode) {
+        postMessage({
+          id: id,
+          type: 'done',
+          exitCode: exitCode,
+          stdout: stdout.join('\n'),
+          stderr: stderr.join('\n'),
+        });
       });
     })
     .catch(function (error) {
@@ -174,8 +188,13 @@ function readFile(id, path) {
   }
 }
 
-self.onmessage = function (event) {
+// Emscripten owns `self.onmessage` (it routes proxied calls from the pthreads,
+// including their stdout/stderr, through that handler). Assigning it here would
+// silently cut FFmpeg's output off, so listen in parallel instead and leave
+// `onmessage` to the core.
+self.addEventListener('message', function (event) {
   var message = event.data || {};
+  if (message.type !== 'init' && message.type !== 'run' && message.type !== 'read') return;
   // Serialise work: two FFmpeg instances at once would only fight over memory.
   queue = queue.then(function () {
     if (message.type === 'init') return runInit(message.id);
@@ -183,5 +202,5 @@ self.onmessage = function (event) {
     if (message.type === 'read') return readFile(message.id, message.path);
     return Promise.resolve();
   });
-};
+});
 }

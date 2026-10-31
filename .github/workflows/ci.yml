@@ -247,7 +247,7 @@ jobs:
         if: matrix.platform == 'web'
         uses: mymindstorm/setup-emsdk@v14
         with:
-          version: 3.1.64
+          version: 6.0.13
           actions-cache-folder: emsdk-cache
 
       - name: web · emcc version
@@ -435,7 +435,39 @@ jobs:
           ls -l build/web/ffmpeg
           test -s build/web/index.html || { echo "::error::build/web/index.html 缺失"; exit 1; }
 
-      # ---------------- 打包 + 上传（release job 直接复用这些文件） ----------------
+      - name: Run FFmpeg wasm smoke test (real transcode)
+        if: matrix.platform == 'web'
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [ -z "$CHROME" ]; then
+            echo "::warning::没有可用的 Chromium/Chrome，跳过 wasm 真实转码 smoke（本地请跑 tool/serve_web.py --smoke）"
+            exit 0
+          fi
+          python3 tool/serve_web.py --smoke --port 8080 --host 127.0.0.1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 50); do
+            if curl -fsS -o /dev/null http://127.0.0.1:8080/__smoke.html; then break; fi
+            sleep 0.2
+          done
+          timeout 300 "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage \
+            --dump-dom http://127.0.0.1:8080/__smoke.html > /tmp/web_smoke.html
+          # Only the rendered <pre id="out"> counts: the page's own script
+          # text also contains the marker, so grepping the whole document
+          # would pass even when the transcode failed.
+          RESULT="$(tr '\n' ' ' < /tmp/web_smoke.html | sed -n 's/.*<pre id="out">\([^<]*\)<\/pre>.*/\1/p')"
+          printf '%s\n' "$RESULT"
+          case "$RESULT" in
+            *SMOKE_OK*) echo "wasm transcode OK" ;;
+            *)
+              echo "::error::wasm 真实转码失败（期望 <pre> 里出现 SMOKE_OK）"
+              sed -n '1,80p' /tmp/web_smoke.html
+              exit 1
+              ;;
+          esac
+
       - name: Package android
         if: matrix.platform == 'android'
         shell: bash
@@ -448,6 +480,7 @@ jobs:
              build/release-artifacts/rain_fui-android-arm64-v8a-ffmpeg-version.txt
           ls -l build/release-artifacts
 
+      # ---------------- 打包 + 上传（release job 直接复用这些文件） ----------------
       - name: Package linux
         if: matrix.platform == 'linux'
         shell: bash
