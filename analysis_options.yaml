@@ -1,6 +1,10 @@
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
+  errors:
+    # Locale catalogs are named after their tag (zh_CN.dart), which the
+    # lower_case_with_underscores lint would otherwise flag 19 times.
+    file_names: ignore
   exclude:
     - build/**
     - android/**
