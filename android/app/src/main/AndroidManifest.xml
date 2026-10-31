@@ -1,5 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- FFmpeg can read remote inputs (http/https/rtmp) as well as local files. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+
+    <!-- extractNativeLibs="true" is required: the bundled FFmpeg binary is
+         exec'd from ApplicationInfo.nativeLibraryDir, and mapped-from-APK
+         libraries cannot be spawned. Mirrored by useLegacyPackaging in
+         android/app/build.gradle.kts. -->
     <application
+        android:extractNativeLibs="true"
         android:label="rain_fui"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
