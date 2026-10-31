@@ -87,6 +87,21 @@ if(PLUGIN_BUNDLED_LIBRARIES)
     COMPONENT Runtime)
 endif()
 
+# === Bundled FFmpeg CLI ===
+# Staged by scripts/ffmpeg/install-to-app.sh next to the runner executable, which
+# is where FfmpegLocator looks first on Windows.
+set(FFMPEG_STAGED_BINARY "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/ffmpeg.exe")
+if(EXISTS "${FFMPEG_STAGED_BINARY}")
+  install(PROGRAMS "${FFMPEG_STAGED_BINARY}"
+    DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+    COMPONENT Runtime)
+  message(STATUS "Bundling FFmpeg CLI from ${FFMPEG_STAGED_BINARY}")
+else()
+  message(WARNING
+    "windows/ffmpeg/ffmpeg.exe is missing: the bundle will not ship FFmpeg. "
+    "Run scripts/ffmpeg/build-windows.sh, then scripts/ffmpeg/install-to-app.sh windows.")
+endif()
+
 # Copy the native assets provided by the build.dart from all packages.
 set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/windows/")
 install(DIRECTORY "${NATIVE_ASSETS_DIR}"

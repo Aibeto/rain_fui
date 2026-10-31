@@ -29,6 +29,16 @@ android {
         versionName = flutter.versionName
     }
 
+    packaging {
+        // FFmpeg ships as `lib/<abi>/libffmpeg_exe.so` and is exec'd from the
+        // native library dir. Modern packaging keeps libs compressed inside the
+        // APK and maps them from the archive, which cannot be spawned, so fall
+        // back to extracting them on install.
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.

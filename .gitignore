@@ -46,3 +46,26 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# === Bundled FFmpeg ===
+# Build outputs of scripts/ffmpeg/* (see docs/ffmpeg-build.md). Everything in
+# build/ffmpeg/ is reproducible from the pinned submodule, so it never ships.
+/build/ffmpeg/
+
+# Staged desktop binaries, copied into the app bundle at build time by
+# install-to-app.sh. CI rebuilds and re-stages them, so they stay untracked.
+/linux/ffmpeg/
+/windows/ffmpeg/
+
+# Android executables disguised as lib<name>.so; Gradle packages them, the
+# repository does not carry multi-megabyte binaries.
+/android/app/src/main/jniLibs/**/libffmpeg_exe.so
+
+# Emscripten core (generated) lives next to the hand-written bridge/worker.
+/web/ffmpeg/ffmpeg.js
+/web/ffmpeg/ffmpeg.wasm
+/web/ffmpeg/ffmpeg.js.map
+/web/ffmpeg/ffmpeg.wasm.map
+
+# Local helper state from this workspace's tooling.
+/.dsh-progress/

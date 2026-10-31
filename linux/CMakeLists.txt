@@ -106,6 +106,22 @@ foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
     COMPONENT Runtime)
 endforeach(bundled_library)
 
+# === Bundled FFmpeg CLI ===
+# Staged by scripts/ffmpeg/install-to-app.sh. The app spawns it as a subprocess
+# instead of linking libav*, so it ships as a plain executable. Keeping it in
+# lib/ satisfies the desktop loader rules for bundled binaries.
+set(FFMPEG_STAGED_BINARY "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/ffmpeg")
+if(EXISTS "${FFMPEG_STAGED_BINARY}")
+  install(PROGRAMS "${FFMPEG_STAGED_BINARY}"
+    DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+    COMPONENT Runtime)
+  message(STATUS "Bundling FFmpeg CLI from ${FFMPEG_STAGED_BINARY}")
+else()
+  message(WARNING
+    "linux/ffmpeg/ffmpeg is missing: the bundle will not ship FFmpeg. "
+    "Run scripts/ffmpeg/build-linux.sh, then scripts/ffmpeg/install-to-app.sh linux.")
+endif()
+
 # Copy the native assets provided by the build.dart from all packages.
 set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/linux/")
 install(DIRECTORY "${NATIVE_ASSETS_DIR}"

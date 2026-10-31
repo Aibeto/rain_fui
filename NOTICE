@@ -1,0 +1,67 @@
+# NOTICE — bundled third-party components
+
+`rain_fui` bundles a **self-compiled** FFmpeg command-line binary (or WebAssembly core) that is
+launched as a subprocess / worker by the Flutter application. This file records what is bundled,
+under which license, and how a recipient can obtain the corresponding source.
+
+## 1. This application
+
+* Name: `rain_fui`
+* License: **GNU General Public License v3.0 or later** — see [`LICENSE`](LICENSE).
+* Copyright: `<YEAR> <COPYRIGHT HOLDER>` (fill in the template placeholder in `LICENSE` before
+  you distribute a build).
+
+## 2. FFmpeg
+
+| Field | Value |
+| --- | --- |
+| Component | FFmpeg (`ffmpeg` CLI binary, and a WebAssembly build of the same sources for the web target) |
+| Upstream | <https://ffmpeg.org/> / <https://github.com/FFmpeg/FFmpeg> |
+| Version | **9.0.2** (git tag `n9.0.2`, vendored as the `third_party/ffmpeg` submodule) |
+| License of the *bundled build* | **GPL v3 or later** — because our build passes `--enable-gpl --enable-version3` |
+| Relevant texts | [`LICENSES/ffmpeg/COPYING.GPLv3`](LICENSES/ffmpeg/COPYING.GPLv3), [`LICENSES/ffmpeg/LICENSE.md`](LICENSES/ffmpeg/LICENSE.md), [`LICENSES/ffmpeg/COPYING.LGPLv2.1`](LICENSES/ffmpeg/COPYING.LGPLv2.1) |
+
+Upstream FFmpeg is LGPL v2.1+ by default; the optional GPL-only parts are activated by
+`--enable-gpl`, which makes the resulting binary GPL. We additionally pass `--enable-version3` so
+the result is GPL **v3**-or-later — the strictest license FFmpeg can be distributed under while
+staying free. `--enable-nonfree` is forbidden in this repository and is checked by the build
+scripts (`scripts/ffmpeg/common.sh`).
+
+### Corresponding source
+
+The complete source of the bundled FFmpeg is the contents of the `third_party/ffmpeg` submodule at
+commit `n9.0.2`. A recipient of a binary can reproduce it byte-for-byte from:
+
+```bash
+git clone https://github.com/FFmpeg/FFmpeg.git
+git -C FFmpeg checkout n9.0.2
+./scripts/ffmpeg/build-<target>.sh    # exact configure flags are printed by the script
+```
+
+The build scripts print the full `configure` command line and write it to
+`build/ffmpeg/dist/<target>/configure.txt`, so the "preferred form for modification" is fully
+specified. No local patches are applied to FFmpeg.
+
+### No external (non-FFmpeg) libraries
+
+The bundled builds currently link **only** FFmpeg's own in-tree implementations (plus, where the
+platform provides it, `zlib`). Consequently the only third-party license to honour for the
+multimedia stack is FFmpeg's. If an external codec library (x264, x265, libvpx, opus, …) is added
+later, it must be added as a submodule **and** registered in this file with its license text placed
+in `LICENSES/` — the build contract forbids unlicensed linkage.
+
+## 3. Flutter / Dart / Android / platform SDKs
+
+* Flutter and the Dart SDK — BSD-3-Clause (see the Flutter SDK's `LICENSE`).
+* Android SDK / NDK, MSYS2 runtime, MinGW-w64, Emscripten — their own licenses; they are build-time
+  toolchains and, apart from MinGW's runtime support already statically linked into the Windows
+  `ffmpeg.exe`, they are not redistributed by this project.
+
+## 4. Compliance checklist for distributors
+
+1. Ship `LICENSE`, `NOTICE` and the whole `LICENSES/` directory alongside the application.
+2. Provide the corresponding source of this app ("preferred form for modification").
+3. Provide the FFmpeg source at tag `n9.0.2` (submodule contents) — a written offer is not enough
+   for GPL v3 if you distribute binaries over the network; host the source or point at a mirror you
+   control in addition to upstream.
+4. Do not modify the bundled binary's build flags to add `--enable-nonfree`.

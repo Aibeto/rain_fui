@@ -1,0 +1,595 @@
+# Rain FUI — 持续集成 / 发布
+#
+# 流水线依据 docs/build-contract.md（唯一接口约定）：
+#   1) 构建 FFmpeg        scripts/ffmpeg/build-<target>.sh
+#   2) 落地进平台工程      scripts/ffmpeg/install-to-app.sh <target>
+#   3) 构建 Flutter 应用   flutter build <...>
+#   4) 断言产物里真的有 FFmpeg（unzip -l / ls），失败即红
+#
+# 只构建 4 个受支持目标：android / windows / linux / web。
+# iOS / macOS 放在独立的 build-unsupported job 里，job 级 if 恒为假（默认）
+# → GitHub UI 显示为 “skipped”，而不是让用户以为“这些平台没配置”。
+# 为什么不能写成矩阵里 skip: true + jobs.<id>.if: !matrix.skip：docs/ci.md。
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+  workflow_dispatch:
+
+# 最小权限；只有 release job 提升到 contents: write
+permissions:
+  contents: read
+
+# PR 上新的提交会取消旧的运行；main / tag 的运行互不取消（tag 发布不能被掐断）
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # 把 pub 缓存钉在 workspace 内，三套 OS 的路径与缓存键才一致（见 docs/ci.md）
+  PUB_CACHE: ${{ github.workspace }}/.pub-cache
+  # FFmpeg 版本（build-contract §1）；version.txt 断言用
+  FFMPEG_VERSION: '9.0.2'
+  # 必须等于 Flutter 3.47.x 的默认 ndkVersion（FlutterExtension.kt），否则 Gradle 会另找 NDK
+  ANDROID_NDK_VERSION: '28.2.13676358'
+  # FFmpeg 构建缓存纪元：升级 emsdk / NDK / gcc 等工具链后 +1，强制所有 FFmpeg 缓存失效
+  FFMPEG_CACHE_EPOCH: 'v1'
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 静态检查 + 单元测试（Lead 的 Dart 测试在 test/；集成测试无二进制时自动 skip）
+  # 不拉 FFmpeg 子模块：这一步只关心 Dart 代码，尽快给反馈
+  # ---------------------------------------------------------------------------
+  analyze-and-test:
+    name: analyze & test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: false
+
+      - name: Set up Flutter (stable)
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PUB_CACHE }}
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            pub-${{ runner.os }}-
+
+      - name: flutter pub get
+        run: flutter pub get
+
+      - name: flutter analyze
+        run: flutter analyze
+
+      - name: flutter test
+        run: flutter test --reporter expanded
+
+  # ---------------------------------------------------------------------------
+  # 平台构建（矩阵）
+  #
+  # 为什么只有这 4 个目标：仓库只 vendor 了 FFmpeg 的 4 套产物（build-contract §5），
+  # 且没有 macOS/iOS 的 sign/notarize 凭据（无 secrets）；Windows/Linux/Android/Web
+  # 都能用未签名 / debug 签名的产物跑通完整链路。其余平台显式 skip。
+  # ---------------------------------------------------------------------------
+  build:
+    name: build (${{ matrix.platform }})
+    needs: analyze-and-test
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: android
+            os: ubuntu-latest
+            skip: false
+            timeout: 150
+            artifact: rain_fui-android-arm64-v8a
+            ffmpeg_target: android-arm64-v8a
+          - platform: windows
+            os: windows-latest
+            skip: false
+            timeout: 180
+            artifact: rain_fui-windows-x64
+            ffmpeg_target: windows-x64
+          - platform: linux
+            os: ubuntu-latest
+            skip: false
+            timeout: 120
+            artifact: rain_fui-linux-x64
+            ffmpeg_target: linux-x64
+          - platform: web
+            os: ubuntu-latest
+            skip: false
+            timeout: 90
+            artifact: rain_fui-web
+            ffmpeg_target: web
+
+    steps:
+      # ---------------- 公共 ----------------
+      - name: Checkout (+ FFmpeg 子模块)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: recursive
+
+      - name: Set up Flutter (stable)
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PUB_CACHE }}
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            pub-${{ runner.os }}-
+
+      - name: flutter pub get
+        run: flutter pub get
+
+      - name: Resolve FFmpeg submodule revision
+        id: ffmpeg-rev
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha=$(git -C third_party/ffmpeg rev-parse HEAD)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "FFmpeg submodule @ $sha"
+
+      # FFmpeg 构建缓存：键 = (OS, 目标, 子模块 commit, scripts/ffmpeg 内容哈希, 纪元)。
+      # 精确命中才复用，绝不跨 OS 共享；actions/cache 默认 post-if: success()，
+      # 所以只有构建成功的那次才会写缓存，不会缓存半成品。
+      - name: Cache FFmpeg build output
+        id: ffmpeg-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/ffmpeg/dist
+            build/ffmpeg/ffbuild
+          key: ffmpeg-${{ env.FFMPEG_CACHE_EPOCH }}-${{ runner.os }}-${{ matrix.ffmpeg_target }}-${{ steps.ffmpeg-rev.outputs.sha }}-${{ hashFiles('scripts/ffmpeg/**') }}
+
+      # ---------------- Android 工具链 ----------------
+      - name: Android · JDK 17 (temurin)
+        if: matrix.platform == 'android'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Android · Android SDK
+        if: matrix.platform == 'android'
+        uses: android-actions/setup-android@v3
+
+      - name: Android · NDK + CMake, export ANDROID_NDK_HOME
+        if: matrix.platform == 'android'
+        shell: bash
+        run: |
+          set -euo pipefail
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
+          sdkmanager --install "ndk;${{ env.ANDROID_NDK_VERSION }}" "cmake;3.22.1" >/dev/null
+          NDK_HOME="${ANDROID_SDK_ROOT:?ANDROID_SDK_ROOT is not set}/ndk/${{ env.ANDROID_NDK_VERSION }}"
+          if [ ! -d "$NDK_HOME" ]; then
+            echo "::error::NDK ${{ env.ANDROID_NDK_VERSION }} 未安装到 $NDK_HOME"
+            exit 1
+          fi
+          cat "$NDK_HOME/source.properties" || true
+          {
+            echo "ANDROID_NDK_HOME=$NDK_HOME"
+            echo "ANDROID_NDK_ROOT=$NDK_HOME"
+            echo "ANDROID_NDK=$NDK_HOME"
+          } >> "$GITHUB_ENV"
+
+      - name: Android · Cache Gradle
+        if: matrix.platform == 'android'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      # ---------------- Linux 工具链 ----------------
+      - name: Linux · apt 依赖（FFmpeg 构建 + Flutter desktop）
+        if: matrix.platform == 'linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential nasm yasm pkg-config patch \
+            clang cmake ninja-build libgtk-3-dev liblzma-dev libstdc++-12-dev \
+            zip unzip file
+          nasm -v
+          clang --version | head -1
+
+      - name: Linux · enable desktop
+        if: matrix.platform == 'linux'
+        run: flutter config --enable-linux-desktop
+
+      # ---------------- Windows 工具链（FFmpeg 走 MSYS2 MinGW64） ----------------
+      - name: Windows · MSYS2 MinGW64 toolchain
+        if: matrix.platform == 'windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            make
+            diffutils
+            git
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-nasm
+            mingw-w64-x86_64-pkgconf
+
+      # ---------------- web 工具链（Emscripten） ----------------
+      - name: web · Emscripten SDK
+        if: matrix.platform == 'web'
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 3.1.64
+          actions-cache-folder: emsdk-cache
+
+      - name: web · emcc version
+        if: matrix.platform == 'web'
+        shell: bash
+        run: emcc --version | head -1
+
+      # ---------------- 构建 FFmpeg（缓存命中则跳过编译） ----------------
+      - name: Prepare scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          ls -l scripts/ffmpeg
+          chmod +x scripts/ffmpeg/*.sh
+
+      - name: FFmpeg · build android-arm64-v8a
+        if: matrix.platform == 'android' && steps.ffmpeg-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: ./scripts/ffmpeg/build-android.sh --jobs "$(nproc)" --abis arm64-v8a --api 24
+
+      - name: FFmpeg · build windows-x64 (MSYS2 MinGW64)
+        if: matrix.platform == 'windows' && steps.ffmpeg-cache.outputs.cache-hit != 'true'
+        shell: msys2 {0}
+        run: bash ./scripts/ffmpeg/build-windows.sh --jobs "$(nproc)"
+
+      - name: FFmpeg · build linux-x64
+        if: matrix.platform == 'linux' && steps.ffmpeg-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: ./scripts/ffmpeg/build-linux.sh --jobs "$(nproc)" --arch x86_64
+
+      - name: FFmpeg · build web
+        if: matrix.platform == 'web' && steps.ffmpeg-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: ./scripts/ffmpeg/build-web.sh --jobs "$(nproc)"
+
+      # ---------------- 校验 FFmpeg 产物（build-contract §9.1 / §9.3） ----------------
+      - name: Verify FFmpeg dist
+        shell: bash
+        run: |
+          set -euo pipefail
+          DIST="build/ffmpeg/dist/${{ matrix.ffmpeg_target }}"
+          echo "== $DIST =="
+          ls -l "$DIST" || { echo "::error::缺少目录 $DIST"; exit 1; }
+          if [ ! -s "$DIST/version.txt" ]; then
+            echo "::error::$DIST/version.txt 缺失或为空（build-contract §5）"
+            exit 1
+          fi
+          cat "$DIST/version.txt"
+          grep -q "${{ env.FFMPEG_VERSION }}" "$DIST/version.txt" \
+            || { echo "::error::version.txt 里没有 ${{ env.FFMPEG_VERSION }}"; exit 1; }
+
+      - name: Verify FFmpeg binary runs (linux)
+        if: matrix.platform == 'linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          F=build/ffmpeg/dist/linux-x64/ffmpeg
+          "$F" -version | head -1
+          "$F" -version | grep -q "version ${{ env.FFMPEG_VERSION }}"
+          # 冒烟测试：静态二进制真的能跑（不能只信 ls 出来的文件）
+          "$F" -hide_banner -loglevel error -f lavfi -i testsrc=duration=1:size=64x64:rate=5 \
+            -frames:v 3 -f null - && echo "ffmpeg encode smoke test: ok"
+
+      - name: Verify FFmpeg binary runs (windows)
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          $exe = "build/ffmpeg/dist/windows-x64/ffmpeg.exe"
+          if (-not (Test-Path $exe)) { throw "missing $exe" }
+          $out = & $exe -version
+          if ($LASTEXITCODE -ne 0) { throw "ffmpeg.exe -version exited $LASTEXITCODE" }
+          $out | Select-Object -First 1
+          if (-not ($out -match "version ${{ env.FFMPEG_VERSION }}")) {
+            throw "ffmpeg.exe -version does not report ${{ env.FFMPEG_VERSION }}"
+          }
+
+      # ---------------- 落地进平台工程（build-contract §8） ----------------
+      - name: Install FFmpeg into app (android-arm64-v8a)
+        if: matrix.platform == 'android'
+        shell: bash
+        run: ./scripts/ffmpeg/install-to-app.sh android-arm64-v8a
+
+      - name: Install FFmpeg into app (windows-x64)
+        if: matrix.platform == 'windows'
+        shell: msys2 {0}
+        run: bash ./scripts/ffmpeg/install-to-app.sh windows-x64
+
+      - name: Install FFmpeg into app (linux-x64)
+        if: matrix.platform == 'linux'
+        shell: bash
+        run: ./scripts/ffmpeg/install-to-app.sh linux-x64
+
+      - name: Install FFmpeg into app (web)
+        if: matrix.platform == 'web'
+        shell: bash
+        run: ./scripts/ffmpeg/install-to-app.sh web
+
+      # ---------------- flutter build ----------------
+      - name: flutter build apk (arm64, split-per-abi)
+        if: matrix.platform == 'android'
+        shell: bash
+        run: flutter build apk --release --target-platform android-arm64 --split-per-abi
+
+      - name: flutter build windows
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: flutter build windows --release
+
+      - name: flutter build linux
+        if: matrix.platform == 'linux'
+        shell: bash
+        run: flutter build linux --release
+
+      - name: flutter build web
+        if: matrix.platform == 'web'
+        shell: bash
+        run: flutter build web --release
+
+      # ---------------- 断言 FFmpeg 真的进了应用产物 ----------------
+      - name: Assert FFmpeg inside APK
+        if: matrix.platform == 'android'
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK=build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          if [ ! -f "$APK" ]; then
+            echo "::error::APK 不存在: $APK"
+            ls -l build/app/outputs/flutter-apk || true
+            exit 1
+          fi
+          ls -l "$APK"
+          if ! unzip -l "$APK" | grep -E 'lib/arm64-v8a/libffmpeg_exe\.so'; then
+            echo "::error::APK 里没有 lib/arm64-v8a/libffmpeg_exe.so（install-to-app 没落地？）"
+            unzip -l "$APK" | grep -E '\.so$' || echo "（APK 内没有任何 .so）"
+            exit 1
+          fi
+          # 运行时需要解压成可执行文件，见 build-contract §8；只告警，布局由 Lead 维护
+          if ! grep -q 'extractNativeLibs="true"' android/app/src/main/AndroidManifest.xml; then
+            echo "::warning::AndroidManifest.xml 缺 android:extractNativeLibs=\"true\"，libffmpeg_exe.so 运行时不会被解压（build-contract §8）"
+          fi
+          if ! grep -rq 'useLegacyPackaging' android/app/build.gradle.kts; then
+            echo "::warning::android/app/build.gradle.kts 里没有 useLegacyPackaging = true（build-contract §8）"
+          fi
+
+      - name: Assert FFmpeg inside windows bundle
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          $exe = "build/windows/x64/runner/Release/ffmpeg.exe"
+          if (-not (Test-Path $exe)) {
+            Get-ChildItem -Path build/windows -Recurse -Filter "ffmpeg*.exe" -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }
+            throw "windows bundle 里没有 ffmpeg.exe: $exe"
+          }
+          Get-Item $exe | Format-List Name, Length, FullName
+          if (-not (Test-Path "build/windows/x64/runner/Release/rain_fui.exe")) { throw "bundle 里没有 rain_fui.exe" }
+
+      - name: Assert FFmpeg inside linux bundle
+        if: matrix.platform == 'linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          FF=build/linux/x64/release/bundle/lib/ffmpeg
+          if [ ! -f "$FF" ]; then
+            echo "::error::linux bundle 里没有 $FF"
+            find build/linux \( -name 'ffmpeg*' -o -name 'rain_fui' \) | head -20 || true
+            exit 1
+          fi
+          ls -l "$FF" build/linux/x64/release/bundle/rain_fui
+          file "$FF"
+          # 必须是可执行 ELF，不是被当数据拷进去的占位文件
+          test -x "$FF" || { echo "::error::$FF 没有可执行位（CMake install(PROGRAMS ...) 少了？）"; exit 1; }
+          "$FF" -version | head -1
+
+      - name: Assert FFmpeg inside web build
+        if: matrix.platform == 'web'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f build/web/ffmpeg/ffmpeg.wasm || {
+            echo "::error::build/web/ffmpeg/ffmpeg.wasm 缺失（build-contract §9.5）"
+            find build/web -maxdepth 2 -type d | head -20 || true
+            exit 1
+          }
+          test -f build/web/ffmpeg/ffmpeg.js || { echo "::error::build/web/ffmpeg/ffmpeg.js 缺失"; exit 1; }
+          ls -l build/web/ffmpeg
+          test -s build/web/index.html || { echo "::error::build/web/index.html 缺失"; exit 1; }
+
+      # ---------------- 打包 + 上传（release job 直接复用这些文件） ----------------
+      - name: Package android
+        if: matrix.platform == 'android'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/release-artifacts
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
+             build/release-artifacts/rain_fui-android-arm64-v8a.apk
+          cp build/ffmpeg/dist/android-arm64-v8a/version.txt \
+             build/release-artifacts/rain_fui-android-arm64-v8a-ffmpeg-version.txt
+          ls -l build/release-artifacts
+
+      - name: Package linux
+        if: matrix.platform == 'linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          STAGE=$(mktemp -d)
+          mkdir -p "$STAGE/rain_fui" build/release-artifacts
+          cp -a build/linux/x64/release/bundle/. "$STAGE/rain_fui/"
+          if [ -d LICENSES/ffmpeg ]; then cp -a LICENSES/ffmpeg "$STAGE/rain_fui/LICENSES"; fi
+          if [ -f LICENSE ]; then cp LICENSE "$STAGE/rain_fui/LICENSE"; fi
+          if [ -f NOTICE ]; then cp NOTICE "$STAGE/rain_fui/NOTICE"; fi
+          cp build/ffmpeg/dist/linux-x64/version.txt "$STAGE/rain_fui/FFMPEG-VERSION.txt"
+          tar -czf build/release-artifacts/rain_fui-linux-x64.tar.gz -C "$STAGE" rain_fui
+          tar -tzf build/release-artifacts/rain_fui-linux-x64.tar.gz | head -10
+          ls -l build/release-artifacts
+
+      - name: Package windows
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          $stage = "build/release-artifacts"
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          $pkg = "build/pkg/rain_fui"
+          Remove-Item -Recurse -Force "build/pkg" -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path $pkg | Out-Null
+          Copy-Item -Recurse -Force "build/windows/x64/runner/Release/*" $pkg
+          if (Test-Path "LICENSES/ffmpeg") { Copy-Item -Recurse -Force "LICENSES/ffmpeg" "$pkg/LICENSES" }
+          if (Test-Path "LICENSE") { Copy-Item -Force "LICENSE" "$pkg/LICENSE" }
+          if (Test-Path "NOTICE") { Copy-Item -Force "NOTICE" "$pkg/NOTICE" }
+          Copy-Item -Force "build/ffmpeg/dist/windows-x64/version.txt" "$pkg/FFMPEG-VERSION.txt"
+          Compress-Archive -Path $pkg -DestinationPath "$stage/rain_fui-windows-x64.zip" -Force
+          Get-ChildItem $stage | Format-Table Name, Length
+
+      - name: Package web
+        if: matrix.platform == 'web'
+        shell: bash
+        run: |
+          set -euo pipefail
+          STAGE=$(mktemp -d)
+          mkdir -p "$STAGE/rain_fui-web" build/release-artifacts
+          cp -a build/web/. "$STAGE/rain_fui-web/"
+          if [ -d LICENSES/ffmpeg ]; then cp -a LICENSES/ffmpeg "$STAGE/rain_fui-web/LICENSES"; fi
+          if [ -f LICENSE ]; then cp LICENSE "$STAGE/rain_fui-web/LICENSE"; fi
+          if [ -f NOTICE ]; then cp NOTICE "$STAGE/rain_fui-web/NOTICE"; fi
+          cp build/ffmpeg/dist/web/version.txt "$STAGE/rain_fui-web/FFMPEG-VERSION.txt"
+          ( cd "$STAGE" && zip -qr "$OLDPWD/build/release-artifacts/rain_fui-web.zip" rain_fui-web )
+          unzip -l build/release-artifacts/rain_fui-web.zip | head -10
+          ls -l build/release-artifacts
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: build/release-artifacts
+          if-no-files-found: error
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------
+  # iOS / macOS：**故意**整条跳过，但仍然出现在 CI 图里（用户要求“其他平台直接跳过
+  # 构建”，跳过必须看得见，不能像没配置一样消失）。
+  #
+  # 为什么不用 `if: ${{ !matrix.skip }}` 挂在 build 矩阵上？
+  #   GitHub 在矩阵展开**之前**就求值 jobs.<id>.if，可用的 context 只有
+  #   github / needs / vars / inputs（官方 Contexts 表），matrix 在那里会直接报
+  #   "Unrecognized named-value: 'matrix'" 并让整个 workflow 无效。
+  #   所以拆成独立 job：job 级 if 为假 → 每个矩阵 leg 在 UI 里显示为 skipped。
+  #
+  # 想真正支持某个平台时：把仓库变量 BUILD_UNSUPPORTED_PLATFORMS 设为 true（仍会
+  # 显式失败并给出原因），或直接把这个 job 改造成真正的构建 job 并删掉占位步骤。
+  # ---------------------------------------------------------------------------
+  build-unsupported:
+    name: build (${{ matrix.platform }}) — 未支持，跳过
+    if: ${{ vars.BUILD_UNSUPPORTED_PLATFORMS == 'true' }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ios
+            os: macos-14
+            skip: true
+            reason: 未 vendor iOS 版 FFmpeg 静态库，且仓库没有签名/描述文件凭据
+          - platform: macos
+            os: macos-14
+            skip: true
+            reason: 未 vendor macOS 版 FFmpeg 静态库，且没有 Developer ID 公证凭据
+    steps:
+      - name: Explain why this platform is not built
+        run: |
+          echo "::error::${{ matrix.platform }} 不在支持范围内：${{ matrix.reason }}。详见 docs/ci.md。"
+          exit 1
+
+  # ---------------------------------------------------------------------------
+  # 发布：仅 tag v* 触发；把 build 已打好的包直接挂到 GitHub Release
+  # ---------------------------------------------------------------------------
+  release:
+    name: release
+    needs:
+      - analyze-and-test
+      - build
+    # 矩阵里被 skip 的 leg 不影响 needs.build 的总体结论（success），但这里显式写成
+    # result == 'success'，避免“构建被跳过却发布了空包”
+    if: ${{ !cancelled() && needs.build.result == 'success' && startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write # softprops/action-gh-release 需要写 release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # 只有这里需要完整历史/tag：生成 release notes 时用
+          fetch-depth: 0
+          submodules: false
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: List artifacts
+        shell: bash
+        run: ls -lR artifacts
+
+      - name: Pack FFmpeg license bundle (build-contract §2)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -d LICENSES/ffmpeg ]; then
+            tar -czf "artifacts/rain_fui-ffmpeg-licenses-${GITHUB_REF_NAME}.tar.gz" LICENSES/ffmpeg
+          else
+            echo "::warning::LICENSES/ffmpeg 不存在：发布包缺少 FFmpeg 许可证原文（build-contract §2 要求随二进制分发）"
+          fi
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          files: artifacts/*
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}

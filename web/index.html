@@ -41,6 +41,10 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
+  <!-- Defines window.rainFfmpeg, the wasm FFmpeg bridge used by
+       lib/src/ffmpeg/ffmpeg_web.dart. It is a no-op until ffmpeg.js/ffmpeg.wasm
+       are staged by scripts/ffmpeg/install-to-app.sh. -->
+  <script src="ffmpeg/ffmpeg_bridge.js"></script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
