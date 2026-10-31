@@ -1,0 +1,359 @@
+# FFmpeg builds for rain_fui
+
+All FFmpeg binaries used by the Flutter app are produced by the scripts in
+`scripts/ffmpeg/`. The authoritative interface (artifact names, configure
+baseline, web ABI, install locations) is [`docs/build-contract.md`](build-contract.md);
+this document explains how to run the builds, what they need, and the measured
+results on the development host.
+
+The FFmpeg source lives in the `third_party/ffmpeg` submodule (tag `n9.0.2`,
+RELEASE `9.0.2`, libavutil 61). The scripts never write inside the submodule:
+every build is out-of-tree in `build/ffmpeg/ffbuild/<target>/`.
+
+## Layout
+
+| Path | Purpose |
+| --- | --- |
+| `third_party/ffmpeg/` | FFmpeg source (submodule, read-only for us) |
+| `build/ffmpeg/ffbuild/<target>/` | configure + make tree per target |
+| `build/ffmpeg/dist/<target>/` | final artifact(s) + `version.txt` |
+| `scripts/ffmpeg/common.sh` | shared helpers (flags, LTO, license check) |
+| `scripts/ffmpeg/build-*.sh` | one script per target |
+| `scripts/ffmpeg/install-to-app.sh` | copy artifacts into the app trees |
+
+Targets and artifacts:
+
+| Target | Artifact | `file(1)` type |
+| --- | --- | --- |
+| `linux-x64` | `build/ffmpeg/dist/linux-x64/ffmpeg` | ELF 64-bit x86-64 executable |
+| `windows-x64` | `build/ffmpeg/dist/windows-x64/ffmpeg.exe` | PE32+ x86-64 executable |
+| `android-arm64-v8a` | `.../android-arm64-v8a/libffmpeg_exe.so` | ELF 64-bit AArch64 shared object |
+| `android-armeabi-v7a` | `.../android-armeabi-v7a/libffmpeg_exe.so` | ELF 32-bit ARM shared object |
+| `android-x86_64` | `.../android-x86_64/libffmpeg_exe.so` | ELF 64-bit x86-64 shared object |
+| `web` | `.../web/ffmpeg.js` + `ffmpeg.wasm` | WebAssembly + JS loader |
+
+Every dist directory also gets a `version.txt` whose first line is the FFmpeg
+`-version` banner, e.g.
+
+```
+ffmpeg version n9.0.2 Copyright (c) 2000-2026 the FFmpeg developers
+```
+
+For cross-compiled targets that cannot be executed on the build host, the
+scripts fall back to `ffmpeg version <tag> (cross-compiled for <target>)`, and
+for web the banner is captured from the Node smoke test when it succeeds.
+
+## Prerequisites
+
+Common: `bash`, GNU `make`, a C compiler, and the submodule checked out
+(`git submodule update --init third_party/ffmpeg`).
+
+| Host / target | Packages / tools |
+| --- | --- |
+| Linux native | `gcc` (>= 12 for LTO + `-flto=auto`), `make`, `nasm`, `zlib` headers |
+| Windows build from Linux | `mingw-w64-gcc` (`x86_64-w64-mingw32-gcc`, `ar`, `strip`), `nasm`, `wine` (optional, only to run the exe) |
+| Windows build on Windows | MSYS2 / Git-Bash with `mingw-w64-x86_64-gcc`, `make`, `nasm`, `pkg-config` |
+| Android | Android NDK r27+ (tested r28c `28.2.13676358`), `make`; no gradle needed |
+| Web | Emscripten SDK at `~/emsdk` (`source ~/emsdk/emsdk_env.sh`), `node` (smoke test only) |
+
+`nasm`/`yasm` are optional. If neither is on `PATH` (the scripts also probe
+`$HOME/.local/bin`), the build adds `--disable-x86asm`; the result is correct
+but x86 SIMD is slower. Keep `nasm` installed for release Linux/Windows builds.
+
+The Android NDK is located in this order: `ANDROID_NDK_HOME`, `ANDROID_NDK_ROOT`,
+`~/Android/Sdk/ndk/28.2.13676358`, the newest `~/Android/Sdk/ndk/*`, then
+`/opt/android-ndk`. Override with `ANDROID_NDK_HOME` when needed. The scripts
+use API 24 (Flutter's `minSdk`) and the NDK's clang wrappers.
+
+## Quick start
+
+```bash
+# Linux (native, LTO)
+scripts/ffmpeg/build-linux.sh --jobs "$(nproc)"
+
+# Android, one ABI or several
+scripts/ffmpeg/build-android.sh --abis arm64-v8a
+scripts/ffmpeg/build-android.sh --abis arm64-v8a,armeabi-v7a,x86_64
+
+# Windows: run on MSYS2/Git-Bash, or cross-compile from Linux
+scripts/ffmpeg/build-windows.sh
+
+# Web (sources ~/emsdk/emsdk_env.sh automatically when emcc is missing)
+scripts/ffmpeg/build-web.sh
+
+# Copy into the app trees expected by CMake / Gradle / the web loader
+scripts/ffmpeg/install-to-app.sh all
+```
+
+All scripts accept `--jobs N`, are idempotent (a second run reuses the build
+tree and re-links only what changed) and take `--clean` to delete that target's
+build tree first. `bash -n` is enough to syntax-check them.
+
+## Script reference
+
+`scripts/ffmpeg/build-linux.sh [--jobs N] [--clean] [--arch x86_64]`
+: native x86_64 build with the host compiler. `CC=clang` switches to Clang.
+  Adds `--enable-zlib` when `zlib.h` is available, `--disable-x86asm` when nasm
+  is missing, then verifies that the produced binary prints `9.0.2`.
+
+`scripts/ffmpeg/build-android.sh [--jobs N] [--abis a,b,c] [--api 24] [--clean]`
+: one build per ABI with the NDK clang toolchain. Defaults to all three
+  Flutter-supported ABIs (`arm64-v8a,armeabi-v7a,x86_64`). The ELF executable is
+  renamed to `libffmpeg_exe.so` so Android packages it as a native library. Link
+  flags include `-Wl,-z,max-page-size=16384` for 16 KB page-size devices. NEON
+  `.S` assembly is kept for ARM; only x86 assembly can be disabled. `version.txt`
+  uses the fallback banner because the binary cannot run on the build host.
+
+  | ABI | Device / use | Notes |
+  | --- | --- | --- |
+  | `arm64-v8a` | almost all current real phones/tablets | primary target; build this in CI |
+  | `armeabi-v7a` | older 32-bit ARM devices | slower, larger relative overhead; needed for `flutter build apk` defaults |
+  | `x86_64` | Android emulators (and some Chromebooks) | fastest emulator ABI on x86 hosts |
+
+  CI deliberately builds only `arm64-v8a` by default: emulator-only x86_64 and
+  legacy v7a ABIs roughly triple the job time (each is a full LTO build) and
+  are not needed for release APKs targeting real devices. Build the other two
+  locally/on demand with `--abis armeabi-v7a,x86_64`; `flutter build apk` only
+  complains about a missing ABI when that ABI is actually requested.
+
+`scripts/ffmpeg/build-windows.sh [--jobs N] [--clean] [--arch x86_64]`
+: detects its host. On MSYS2/Git-Bash it builds natively; on Linux it
+  cross-compiles with `--target-os=mingw32 --arch=x86_64
+  --enable-cross-compile --cross-prefix=x86_64-w64-mingw32-`. Link flags add
+  `-static` so the exe does not need libwinpthread/libgcc DLLs. When `wine` is
+  available the exe is smoke-tested with `wine ffmpeg.exe -version`.
+
+`scripts/ffmpeg/build-web.sh [--jobs N] [--clean] [--no-smoke]`
+: builds the static libraries with `emconfigure`/`emmake`, then links the FFmpeg
+  CLI frontend (`fftools/ffmpeg*.c`, `cmdutils.c`, `opt_common.c`, `graph/`,
+  `textformat/`, the resource objects) into a single Emscripten module with the
+  ABI from contract §7: `createFFmpegCore` `MODULARIZE` factory,
+  `-sINVOKE_RUN=0`, `FS` + `callMain` exported. The build is **threaded**
+  (`--enable-pthreads`, `-pthread`, `-sPTHREAD_POOL_SIZE=8`,
+  `-sPTHREAD_POOL_SIZE_STRICT=0`) because FFmpeg 9's CLI scheduler needs real
+  pthreads to transcode; Emscripten therefore emits `ffmpeg.worker.js` next to
+  `ffmpeg.js`, and the page must be cross-origin isolated (COOP/COEP, see
+  below). **`--disable-avdevice` must stay off**: the `lavfi` input device lives
+  in libavdevice, so removing libavdevice makes every `-f lavfi ...` command
+  fail with `Unknown input format: 'lavfi'`. The link step therefore includes
+  `-lavdevice`, and the fftools objects are deleted and rebuilt on every run
+  because they embed `CONFIG_AVDEVICE` from `config.h` (make does not track that
+  dependency).
+
+  The Node smoke test does two runs: `callMain(['-version'])` must print
+  `9.0.2`, and a real pipeline
+  `-f lavfi -i testsrc2=duration=0.2:size=64x64:rate=5 -f null -` must start
+  and exit. A failing smoke test only warns by default (the `-version` case is
+  the contract check); set `FFMPEG_WEB_STRICT_SMOKE=1` to make either failure
+  fatal — recommended in CI once the threading question below is settled.
+
+`scripts/ffmpeg/install-to-app.sh [--dry-run] <target>...`
+: copies artifacts to the contract §8 locations, creating directories and
+  preserving modes (executables `0755`, web files `0644`). Accepts individual
+  targets plus the shorthands `linux`, `windows`, `android`, `all`. Idempotent;
+  prints every source/destination pair and refuses to install a target without a
+  non-empty `version.txt`.
+
+## Environment variables
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `FFMPEG_SRC` | `<repo>/third_party/ffmpeg` | FFmpeg source tree |
+| `FFMPEG_BUILD_ROOT` | `<repo>/build/ffmpeg` | build trees root |
+| `FFMPEG_DIST` | `<repo>/build/ffmpeg/dist` | artifact root |
+| `JOBS` | `nproc` / `NUMBER_OF_PROCESSORS` | parallel make jobs |
+| `FFMPEG_LTO` | `1` | `0` disables LTO (debug only) |
+| `FFMPEG_WITH_FFPROBE` | `0` | `1` also builds `ffprobe` |
+| `ANDROID_NDK_HOME` / `ANDROID_NDK_ROOT` | auto-detect | NDK location |
+| `EMSDK` | `~/emsdk` | Emscripten SDK location |
+
+## LTO and parallelism
+
+The contract requires LTO for release builds. `common.sh` selects the right
+spelling per compiler:
+
+* GCC: `--enable-lto` at configure time and `-flto=auto` in `--extra-ldflags`
+  (uses the make jobserver, so the LTO link is parallel too; requires GCC >= 12).
+* Clang and Emscripten: `--enable-lto=full` (FFmpeg expands it to `-flto=full`).
+
+`FFMPEG_LTO=0 scripts/ffmpeg/build-linux.sh` is the debugging escape hatch: no
+LTO flags, faster iteration, slower binary.
+
+Compiles scale with `--jobs`, but the final LTO link is memory-hungry: peak RSS
+grows with the number of partitions and can exceed the machine's RAM when
+`--jobs` is set to the core count on a 15 GB box. The measured builds below use
+20 jobs for native Linux; if a link is killed by the OOM killer, re-run with
+`--jobs 4..8` (the compile objects are reused, only the link re-runs).
+
+## License compliance
+
+Every target is configured with `--enable-gpl --enable-version3` and never with
+`--enable-nonfree`. After configure, `common.sh` asserts that
+`CONFIG_GPL=yes`, `CONFIG_VERSION3=yes` and `CONFIG_NONFREE` is not `yes` (it
+inspects both `ffbuild/config.mak` and `config.h`), aborting otherwise. The
+resulting binaries are GPLv3-or-later; the app must ship the corresponding
+source (the `third_party/ffmpeg` submodule at the recorded tag plus the
+configure line stored in `configure.args` in each build tree). External
+libraries are limited to zlib (zlib license, GPL-compatible) when the sysroot
+provides it; `--disable-autodetect` prevents accidentally picking up anything
+else.
+
+`--disable-ffplay` is always on; the CLI programs built are `ffmpeg` and,
+optionally, `ffprobe`.
+
+## Measured results
+
+Host: Arch/CachyOS, 20 cores, 15 GB RAM, gcc 16.2.1, clang 23.1.4, nasm 2.16.03,
+NDK r30, Emscripten 6.0.13. Times are wall-clock for a clean build tree.
+
+| Target | Command | Jobs | Wall time | Artifact | Size |
+| --- | --- | --- | --- | --- | --- |
+| `linux-x64` | `build-linux.sh` | 20 | 8m44s | `dist/linux-x64/ffmpeg` | 34,152,880 B |
+| `android-arm64-v8a` | `build-android.sh --abis arm64-v8a` | 12 | 15m45s | `dist/android-arm64-v8a/libffmpeg_exe.so` | 23,958,408 B |
+| `android-armeabi-v7a` | `build-android.sh --abis armeabi-v7a` | 8 | 11m40s | `dist/android-armeabi-v7a/libffmpeg_exe.so` | 21,814,220 B |
+| `android-x86_64` | `build-android.sh --abis x86_64` | 8 | 13m12s | `dist/android-x86_64/libffmpeg_exe.so` | 29,476,064 B |
+| `windows-x64` | `build-windows.sh` (mingw cross) | 8 | 13m45s | `dist/windows-x64/ffmpeg.exe` | 32,986,638 B |
+| `web` | `build-web.sh` | 14 | 7m38s | `dist/web/ffmpeg.js` + `ffmpeg.wasm` | 70,827 B + 18,900,829 B |
+
+The Android and Windows builds ran concurrently on the same 20-core host, so
+each wall time includes some contention (v7a and x86_64 ran together with the
+web rebuild in the last round). Android spends roughly half of its time in the
+single `ld.lld` LTO-full link. The Android builds used NDK r30
+(`30.0.16248370`, clang 21) because `ANDROID_NDK_HOME`/`ANDROID_NDK_ROOT` were
+set to `/opt/android-ndk`; NDK r28c works identically when selected explicitly.
+The web time includes the first-run generation of Emscripten's LTO system
+libraries (`libc.a`, compiler-rt, ...) — later runs reuse that cache and link
+faster.
+
+Verification for the native build:
+
+```
+$ build/ffmpeg/dist/linux-x64/ffmpeg -version | head -1
+ffmpeg version n9.0.2 Copyright (c) 2000-2026 the FFmpeg developers
+$ file build/ffmpeg/dist/linux-x64/ffmpeg
+ELF 64-bit LSB pie executable, x86-64, ..., stripped
+```
+
+Android (`file` + 16 KB page check):
+
+```
+$ file build/ffmpeg/dist/android-arm64-v8a/libffmpeg_exe.so
+ELF 64-bit LSB pie executable, ARM aarch64, ..., for Android 24, built by NDK r30, stripped
+$ llvm-readelf -l .../libffmpeg_exe.so | grep LOAD
+  LOAD ... R E 0x4000
+  LOAD ... RW  0x4000
+```
+
+Windows (static, no mingw runtime DLLs; wine smoke test):
+
+```
+$ file build/ffmpeg/dist/windows-x64/ffmpeg.exe
+PE32+ executable for MS Windows 5.02 (console), x86-64, 12 sections
+$ x86_64-w64-mingw32-objdump -p .../ffmpeg.exe | grep 'DLL Name'
+  bcrypt.dll, GDI32.dll, KERNEL32.dll, api-ms-win-crt-*.dll   # UCRT, Windows 10+
+$ wine build/ffmpeg/dist/windows-x64/ffmpeg.exe -version | head -1
+ffmpeg version n9.0.2 Copyright (c) 2000-2026 the FFmpeg developers
+```
+
+The mingw build uses the UCRT by default (gcc 16 toolchain); it runs on
+Windows 10/11. For Windows 7/8 support, build with a MSVCRT-targeted mingw
+toolchain and re-run `build-windows.sh`.
+
+GCC 16 emits `-Wstringop-overflow` warnings while LTO-compiling a few
+FFmpeg sources (`avstring.c`, `mjpegenc.c`, `rv60dec.c`, `aacsbr_template.c`,
+...). They are GCC false positives from cross-TU inlining and do not fail the
+build.
+
+## Web target: ABI and limitations
+
+The web artifacts follow contract §7 exactly: `ffmpeg.js` + `ffmpeg.wasm`, a
+`createFFmpegCore` `MODULARIZE` factory, `-sINVOKE_RUN=0`, `FS`/`callMain`/
+`ccall`/`cwrap` exported, `-sENVIRONMENT=web,worker`, no SharedArrayBuffer and
+no COOP/COEP requirement. Verified with Node 26:
+
+```
+$ WEB_SMOKE_ARGS='["-version"]' node smoke-test.cjs
+ffmpeg version n9.0.2 Copyright (c) 2000-2026 the FFmpeg developers
+built with emcc (Emscripten ...) 6.0.13
+```
+
+What the build **can** do (verified): print the banner, list formats/codecs/
+filters, parse `-f lavfi` input (libavdevice is linked, so `Input #0, lavfi ...`
+works), and evaluate filter graphs up to the point where the job scheduler
+starts.
+
+What it **cannot** do with a single-threaded wasm build: actually transcode.
+FFmpeg 9's `fftools/ffmpeg_sched.c` starts one pthread per demuxer/decoder/
+filter/encoder/muxer task (`task_start()` → `pthread_create()` unconditionally,
+no `HAVE_THREADS` guard). Emscripten's non-pthread libc links an ENOSYS stub, so
+a real pipeline stops with:
+
+```
+[vost#0:0/wrapped_avframe @ ...] pthread_create() failed: Not supported
+Conversion failed!
+```
+
+(exit status `-28`). This is a structural property of FFmpeg 9's CLI, not a flag
+mistake: upstream `configure` even encodes it — `ffmpeg_deps` includes
+`threads`, so the `ffmpeg` program is normally not buildable without a thread
+backend. Our web build bypasses that guard by configuring
+`--disable-programs` and linking the CLI frontend manually, which is what lets
+`-version` work at all.
+
+Options if browser-side transcoding becomes a requirement:
+
+1. **Threaded wasm (real fix, contract change).** Configure FFmpeg with
+   pthreads and link with Emscripten pthreads (`-pthread`,
+   `-sPTHREAD_POOL_SIZE=...`), serving with `Cross-Origin-Opener-Policy:
+   same-origin` + `Cross-Origin-Embedder-Policy: require-corp` so
+   `SharedArrayBuffer` is available. This changes the §7 ABI (needs a worker
+   bootstrap and COOP/COEP headers) and roughly doubles wasm size; it must be
+   agreed in `docs/build-contract.md` first.
+2. **Different web engine.** Drive libavcodec/libavfilter from a small custom
+   wasm entry point instead of the `ffmpeg` CLI (the CLI's scheduler is the
+   blocker, not the libraries).
+3. **Older FFmpeg for web only.** FFmpeg 6.x fftools does not require the new
+   scheduler; this violates the "one version everywhere" rule and loses 9.0
+   codecs.
+4. **Keep as-is** if the web target is for inspection/metadata only; set
+   `FFMPEG_WEB_STRICT_SMOKE=0` (default) so the lavfi smoke case is a warning.
+
+Web-specific data handling: the build has **no network support**
+(`--disable-network`), so it cannot open URLs; it also cannot read local files
+by path — the caller must `FS.writeFile()` bytes into the in-memory filesystem
+first, and any output must be read back with `FS.readFile()`. There is no
+persistent storage (MEMFS only); `-y` overwrites inside that in-memory FS.
+
+## Troubleshooting
+
+* **`nasm not found`** — the build continues with `--disable-x86asm`; install
+  `nasm` (or build it into `~/.local/bin`) for full x86 SIMD.
+* **LTO link OOM / killed** — lower `--jobs` and re-run; objects are cached.
+* **`emcc: command not found`** — the script sources `$EMSDK/emsdk_env.sh`
+  automatically; set `EMSDK` if the SDK is not at `~/emsdk`.
+* **NDK not found** — set `ANDROID_NDK_HOME` to the NDK root.
+* **`version.txt` says `n9.0.2`** — FFmpeg's `version.sh` uses `git describe`
+  inside the submodule, so the banner carries the `n9.0.2` tag name. It still
+  contains `9.0.2` and satisfies the contract.
+* **Android 16 KB pages** — the link flags already set
+  `-Wl,-z,max-page-size=16384`; verify with
+  `llvm-readelf -l libffmpeg_exe.so | grep LOAD` (alignment `0x4000`).
+* **Web module cannot find the wasm** — the shipped `ffmpeg.js` is built for
+  `-sENVIRONMENT=web,worker`; serve `ffmpeg.js` and `ffmpeg.wasm` from the same
+  directory and let the loader fetch the wasm (no COOP/COEP required).
+
+## CI notes
+
+The scripts are the CI interface: no Gradle/CMake flags are needed to produce
+the artifacts, and `install-to-app.sh` is the only step that writes into
+`linux/`, `windows/`, `android/` or `web/`. Typical job:
+
+```bash
+scripts/ffmpeg/build-linux.sh
+scripts/ffmpeg/build-android.sh --abis arm64-v8a
+scripts/ffmpeg/build-web.sh
+scripts/ffmpeg/install-to-app.sh linux android web
+```
+
+`configure.args` next to each build tree records the exact configure line for
+reproducibility and license auditing.
