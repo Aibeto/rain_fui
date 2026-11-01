@@ -59,6 +59,11 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
   final Map<String, String> _values = <String, String>{};
   bool _advancedOpen = false;
 
+  /// How the chosen video encoder is told what to aim for. `-q:v` and `-b:v`
+  /// answer the same question, so the form asks for the mode first and only
+  /// shows the parameters that mode actually uses.
+  _RateMode _videoRateMode = _RateMode.auto;
+
   @override
   void initState() {
     super.initState();
@@ -135,17 +140,64 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
     return audioOnly.isEmpty ? null : audioOnly.first;
   }
 
-  List<OptionSpec> get _basicOptions => <OptionSpec>[
+  /// Flags that choose between quality and bitrate; which of them are shown
+  /// depends on [_videoRateMode].
+  static const Set<String> _videoRateFlags = <String>{
+    '-q:v',
+    '-b:v',
+    '-maxrate',
+    '-bufsize',
+  };
+
+  bool get _videoHasQuality =>
+      _video?.options.any((OptionSpec spec) => spec.flag == '-q:v') ?? false;
+
+  bool get _videoHasBitrate =>
+      _video?.options.any((OptionSpec spec) => spec.flag == '-b:v') ?? false;
+
+  bool get _showsRateMode => _videoHasQuality || _videoHasBitrate;
+
+  Set<String> get _visibleRateFlags => switch (_videoRateMode) {
+    _RateMode.auto => const <String>{},
+    _RateMode.quality => const <String>{'-q:v'},
+    _RateMode.bitrate => const <String>{'-b:v'},
+    _RateMode.cbr => const <String>{'-b:v', '-maxrate', '-bufsize'},
+  };
+
+  /// Target bitrate has no sensible default, so the form refuses to start
+  /// until one is typed when the mode needs it.
+  bool get _rateReady {
+    if (_videoRateMode != _RateMode.bitrate &&
+        _videoRateMode != _RateMode.cbr) {
+      return true;
+    }
+    return (_values['-b:v'] ?? '').trim().isNotEmpty;
+  }
+
+  List<OptionSpec> _withRateMode(List<OptionSpec> specs) {
+    if (!_showsRateMode) {
+      return specs;
+    }
+    return specs
+        .where(
+          (OptionSpec spec) =>
+              !_videoRateFlags.contains(spec.flag) ||
+              _visibleRateFlags.contains(spec.flag),
+        )
+        .toList();
+  }
+
+  List<OptionSpec> get _basicOptions => _withRateMode(<OptionSpec>[
     if (_video != null) ..._video!.basicOptions,
     if (_audio != null) ..._audio!.basicOptions,
     if (_container != null) ..._container!.basicOptions,
-  ];
+  ]);
 
-  List<OptionSpec> get _advancedOptions => <OptionSpec>[
+  List<OptionSpec> get _advancedOptions => _withRateMode(<OptionSpec>[
     if (_video != null) ..._video!.advancedOptions,
     if (_audio != null) ..._audio!.advancedOptions,
     if (_container != null) ..._container!.advancedOptions,
-  ];
+  ]);
 
   TextEditingController _controllerFor(OptionSpec spec) {
     return _fields.putIfAbsent(
@@ -159,6 +211,7 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
   void _setVideo(CodecSpec? codec) {
     setState(() {
       _video = codec;
+      _videoRateMode = _RateMode.auto;
       _values.removeWhere((String flag, _) => _isVideoFlag(flag));
       // The new encoder may not fit the current container; move to the first
       // container that can hold it instead of leaving an impossible pair.
@@ -369,6 +422,24 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
                     const SizedBox(height: 18),
                     _sectionTitle(context, I18nKey.jobSectionBasic),
                     const SizedBox(height: 8),
+                    if (_showsRateMode) ...<Widget>[
+                      _RateModeRow(
+                        mode: _videoRateMode,
+                        hasQuality: _videoHasQuality,
+                        hasBitrate: _videoHasBitrate,
+                        onChanged: _setVideoRateMode,
+                      ),
+                      if (!_rateReady) ...<Widget>[
+                        Text(
+                          l10n(I18nKey.jobRateRequired),
+                          style: theme.typography.caption?.copyWith(
+                            color: theme.accentColor,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                      ],
+                      const SizedBox(height: 6),
+                    ],
                     _OptionGrid(
                       specs: _basicOptions,
                       valueOf: _values,
@@ -406,6 +477,7 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
               onStart: _start,
               canStart:
                   _container != null &&
+                  _rateReady &&
                   (_kind != MediaKind.video || _video != null) &&
                   (_kind != MediaKind.audio || _audio != null),
             ),
@@ -413,6 +485,25 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
         ),
       ),
     );
+  }
+
+  void _setVideoRateMode(_RateMode mode) {
+    setState(() {
+      _videoRateMode = mode;
+      for (final String flag in _videoRateFlags) {
+        if (_visibleRateFlags.contains(flag)) {
+          continue;
+        }
+        _values.remove(flag);
+        _fields.remove(flag)?.dispose();
+      }
+      // Constant quality needs a number to send; 2 is what FFmpeg's own
+      // MPEG-family encoders pick when nothing is specified.
+      if (mode == _RateMode.quality && (_values['-q:v'] ?? '').isEmpty) {
+        _values['-q:v'] = '2';
+        _fields['-q:v']?.text = '2';
+      }
+    });
   }
 
   void _onOptionChanged(OptionSpec spec, String? value) {
@@ -646,6 +737,99 @@ double _comboWidth(
   }
   // Chevron, horizontal padding and a little slack for the caret.
   return (widest + 45).clamp(min, max);
+}
+
+/// How the encoder is asked to pick a quality.
+///
+/// FFmpeg treats constant quality (`-q:v`) and target bitrate (`-b:v`) as
+/// alternatives, and capped VBR (`-maxrate` + `-bufsize`) only makes sense on
+/// top of a bitrate. Making the choice explicit keeps the two from reaching the
+/// command line together.
+enum _RateMode {
+  auto(I18nKey.jobRateAuto),
+  quality(I18nKey.jobRateQuality),
+  bitrate(I18nKey.jobRateBitrate),
+  cbr(I18nKey.jobRateCbr);
+
+  const _RateMode(this.labelKey);
+
+  final String labelKey;
+}
+
+/// Dropdown that picks the rate-control mode.
+class _RateModeRow extends StatelessWidget {
+  const _RateModeRow({
+    required this.mode,
+    required this.hasQuality,
+    required this.hasBitrate,
+    required this.onChanged,
+  });
+
+  final _RateMode mode;
+  final bool hasQuality;
+  final bool hasBitrate;
+  final ValueChanged<_RateMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final FluentThemeData theme = FluentTheme.of(context);
+    final AppL10n l10n = context.l10n;
+    final List<_RateMode> modes = <_RateMode>[
+      _RateMode.auto,
+      if (hasQuality) _RateMode.quality,
+      if (hasBitrate) _RateMode.bitrate,
+      if (hasBitrate) _RateMode.cbr,
+    ];
+    final double width = _comboWidth(
+      context,
+      modes.map((_RateMode m) => l10n(m.labelKey)),
+    );
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(bottom: 10),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: Text(
+              l10n(I18nKey.jobRateMode),
+              style: theme.typography.body,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: width,
+            child: ComboBox<_RateMode>(
+              isExpanded: true,
+              popupColor: theme.menuColor,
+              popupConstraints: BoxConstraints(
+                minWidth: width,
+                maxWidth: width,
+                maxHeight: 280,
+              ),
+              value: mode,
+              items: <ComboBoxItem<_RateMode>>[
+                for (final _RateMode option in modes)
+                  ComboBoxItem<_RateMode>(
+                    value: option,
+                    child: Text(
+                      l10n(option.labelKey),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
+              onChanged: (_RateMode? value) {
+                if (value != null) {
+                  onChanged(value);
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _PickerRow<T> extends StatelessWidget {
