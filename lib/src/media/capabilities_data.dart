@@ -50,7 +50,6 @@ const List<OptionSpec> _videoRateOptions = <OptionSpec>[
   ),
   IntOption(
     flag: '-maxrate',
-    exclusiveGroup: 'rate',
     labelKey: I18nKey.optMaxRate,
     min: 1,
     unit: 'kbps',
@@ -58,7 +57,6 @@ const List<OptionSpec> _videoRateOptions = <OptionSpec>[
   ),
   IntOption(
     flag: '-bufsize',
-    exclusiveGroup: 'rate',
     labelKey: I18nKey.optBufSize,
     min: 1,
     unit: 'kbps',
@@ -75,21 +73,6 @@ const List<OptionSpec> _videoStructureOptions = <OptionSpec>[
     min: 0,
     max: 16,
     advanced: true,
-  ),
-  ChoiceOption(
-    flag: '-pix_fmt',
-    labelKey: I18nKey.optPixelFormat,
-    advanced: true,
-    choices: <OptionChoice>[
-      OptionChoice('yuv420p'),
-      OptionChoice('yuv422p'),
-      OptionChoice('yuv444p'),
-      OptionChoice('yuv420p10le'),
-      OptionChoice('yuv422p10le'),
-      OptionChoice('rgb24'),
-      OptionChoice('rgba'),
-      OptionChoice('gray'),
-    ],
   ),
 ];
 
@@ -118,14 +101,6 @@ final List<CodecSpec> _coreVideoCodecs = <CodecSpec>[
     options: <OptionSpec>[
       ..._videoRateOptions,
       ChoiceOption(
-        flag: '-profile:v',
-        labelKey: I18nKey.optProfile,
-        choices: const <OptionChoice>[
-          OptionChoice('simple'),
-          OptionChoice('advanced'),
-        ],
-      ),
-      ChoiceOption(
         flag: '-mbd',
         labelKey: I18nKey.optMbDecision,
         advanced: true,
@@ -139,14 +114,7 @@ final List<CodecSpec> _coreVideoCodecs = <CodecSpec>[
         flag: '-trellis',
         labelKey: I18nKey.optTrellis,
         min: 0,
-        max: 2,
-        advanced: true,
-      ),
-      IntOption(
-        flag: '-mv4',
-        labelKey: I18nKey.optMvFourMotion,
-        min: 0,
-        max: 1,
+        max: 4,
         advanced: true,
       ),
       ..._videoStructureOptions,
@@ -186,7 +154,7 @@ final List<CodecSpec> _coreVideoCodecs = <CodecSpec>[
         flag: '-trellis',
         labelKey: I18nKey.optTrellis,
         min: 0,
-        max: 2,
+        max: 4,
         advanced: true,
       ),
       ..._videoStructureOptions,
@@ -270,20 +238,7 @@ final List<CodecSpec> _coreVideoCodecs = <CodecSpec>[
       'yuv444p',
       'yuv422p',
     ],
-    options: <OptionSpec>[
-      ChoiceOption(
-        flag: '-pix_fmt',
-        labelKey: I18nKey.optPixelFormat,
-        advanced: true,
-        choices: const <OptionChoice>[
-          OptionChoice('yuvj420p'),
-          OptionChoice('yuvj422p'),
-          OptionChoice('yuvj444p'),
-          OptionChoice('bgr24'),
-        ],
-      ),
-      _threadsOption,
-    ],
+    options: <OptionSpec>[_threadsOption],
   ),
   CodecSpec(
     id: 'png',
@@ -339,15 +294,6 @@ final List<CodecSpec> _coreVideoCodecs = <CodecSpec>[
         labelKey: I18nKey.optGopSize,
         min: 0,
         advanced: true,
-      ),
-      ChoiceOption(
-        flag: '-pix_fmt',
-        labelKey: I18nKey.optPixelFormat,
-        advanced: true,
-        choices: const <OptionChoice>[
-          OptionChoice('rgb8'),
-          OptionChoice('bgr8'),
-        ],
       ),
       _threadsOption,
     ],
@@ -432,7 +378,7 @@ final List<CodecSpec> _coreVideoCodecs = <CodecSpec>[
         labelKey: I18nKey.optCoder,
         advanced: true,
         choices: const <OptionChoice>[
-          OptionChoice('golomb'),
+          OptionChoice('rice'),
           OptionChoice('range_def'),
           OptionChoice('range_tab'),
         ],
@@ -488,7 +434,6 @@ final List<CodecSpec> _coreVideoCodecs = <CodecSpec>[
         choices: const <OptionChoice>[
           OptionChoice('none'),
           OptionChoice('left'),
-          OptionChoice('gradient'),
           OptionChoice('median'),
         ],
       ),
@@ -502,25 +447,7 @@ final List<CodecSpec> _coreVideoCodecs = <CodecSpec>[
     kind: MediaKind.video,
     pixelFormats: <String>['yuv422p10le', 'yuv444p10le', 'yuva444p10le'],
     options: <OptionSpec>[
-      ChoiceOption(
-        flag: '-profile:v',
-        labelKey: I18nKey.optProfile,
-        choices: const <OptionChoice>[
-          OptionChoice('proxy'),
-          OptionChoice('lt'),
-          OptionChoice('standard'),
-          OptionChoice('hq'),
-          OptionChoice('4444'),
-          OptionChoice('4444xq'),
-        ],
-      ),
       TextOption(flag: '-vendor', labelKey: I18nKey.optVendor, advanced: true),
-      IntOption(
-        flag: '-bits_per_mb',
-        labelKey: I18nKey.optBitsPerMb,
-        min: 1,
-        advanced: true,
-      ),
       _threadsOption,
     ],
   ),
@@ -558,19 +485,7 @@ final List<CodecSpec> _coreVideoCodecs = <CodecSpec>[
     name: 'DV',
     kind: MediaKind.video,
     pixelFormats: <String>['yuv411p', 'yuv422p', 'yuv420p'],
-    options: <OptionSpec>[
-      ChoiceOption(
-        flag: '-pix_fmt',
-        labelKey: I18nKey.optPixelFormat,
-        advanced: true,
-        choices: const <OptionChoice>[
-          OptionChoice('yuv411p'),
-          OptionChoice('yuv420p'),
-          OptionChoice('yuv422p'),
-        ],
-      ),
-      _threadsOption,
-    ],
+    options: <OptionSpec>[_threadsOption],
   ),
   CodecSpec(
     id: 'rawvideo',
@@ -628,19 +543,7 @@ final List<CodecSpec> _coreVideoCodecs = <CodecSpec>[
     name: 'QuickTime Animation',
     kind: MediaKind.video,
     pixelFormats: <String>['rgb24', 'rgb555be', 'argb', 'gray'],
-    options: <OptionSpec>[
-      ChoiceOption(
-        flag: '-pix_fmt',
-        labelKey: I18nKey.optPixelFormat,
-        advanced: true,
-        choices: const <OptionChoice>[
-          OptionChoice('rgb24'),
-          OptionChoice('argb'),
-          OptionChoice('gray'),
-        ],
-      ),
-      _threadsOption,
-    ],
+    options: <OptionSpec>[_threadsOption],
   ),
   CodecSpec(
     id: 'zmbv',
@@ -648,19 +551,7 @@ final List<CodecSpec> _coreVideoCodecs = <CodecSpec>[
     name: 'Zip Motion Blocks',
     kind: MediaKind.video,
     pixelFormats: <String>['pal8', 'rgb555le', 'rgb565le', 'bgr0'],
-    options: <OptionSpec>[
-      ChoiceOption(
-        flag: '-pix_fmt',
-        labelKey: I18nKey.optPixelFormat,
-        advanced: true,
-        choices: const <OptionChoice>[
-          OptionChoice('pal8'),
-          OptionChoice('rgb555le'),
-          OptionChoice('rgb24'),
-        ],
-      ),
-      _threadsOption,
-    ],
+    options: <OptionSpec>[_threadsOption],
   ),
 ];
 
@@ -691,7 +582,6 @@ final List<CodecSpec> _coreAudioCodecs = <CodecSpec>[
         choices: const <OptionChoice>[
           OptionChoice('twoloop'),
           OptionChoice('fast'),
-          OptionChoice('anmr'),
         ],
       ),
       IntOption(
@@ -724,12 +614,20 @@ final List<CodecSpec> _coreAudioCodecs = <CodecSpec>[
     kind: MediaKind.audio,
     pixelFormats: <String>['fltp'],
     options: <OptionSpec>[
-      IntOption(
+      ChoiceOption(
         flag: '-b:a',
         labelKey: I18nKey.optBitrateAudio,
-        min: 32,
-        max: 640,
-        unit: 'kbps',
+        choices: <OptionChoice>[
+          OptionChoice('96k'),
+          OptionChoice('128k'),
+          OptionChoice('192k'),
+          OptionChoice('256k'),
+          OptionChoice('320k'),
+          OptionChoice('384k'),
+          OptionChoice('448k'),
+          OptionChoice('512k'),
+          OptionChoice('640k'),
+        ],
       ),
       IntOption(
         flag: '-ac',
@@ -791,12 +689,20 @@ final List<CodecSpec> _coreAudioCodecs = <CodecSpec>[
     kind: MediaKind.audio,
     pixelFormats: <String>['s16'],
     options: <OptionSpec>[
-      IntOption(
+      ChoiceOption(
         flag: '-b:a',
         labelKey: I18nKey.optBitrateAudio,
-        min: 32,
-        max: 384,
-        unit: 'kbps',
+        choices: <OptionChoice>[
+          OptionChoice('64k'),
+          OptionChoice('96k'),
+          OptionChoice('128k'),
+          OptionChoice('160k'),
+          OptionChoice('192k'),
+          OptionChoice('224k'),
+          OptionChoice('256k'),
+          OptionChoice('320k'),
+          OptionChoice('384k'),
+        ],
       ),
       IntOption(
         flag: '-ar',
@@ -880,22 +786,19 @@ final List<CodecSpec> _coreAudioCodecs = <CodecSpec>[
         max: 512,
         unit: 'kbps',
       ),
-      ChoiceOption(
-        flag: '-application',
-        labelKey: I18nKey.optApplication,
-        advanced: true,
-        choices: const <OptionChoice>[
-          OptionChoice('voip'),
-          OptionChoice('audio'),
-          OptionChoice('lowdelay'),
-        ],
-      ),
-      IntOption(
-        flag: '-frame_duration',
+      DecimalOption(
+        flag: '-opus_delay',
         labelKey: I18nKey.optFrameDuration,
-        min: 2,
-        max: 120,
+        min: 2.5,
+        max: 360,
         advanced: true,
+      ),
+      const ChoiceOption(
+        flag: '-strict',
+        labelKey: null,
+        defaultValue: '-2',
+        advanced: true,
+        choices: <OptionChoice>[OptionChoice('-2')],
       ),
       IntOption(
         flag: '-ac',
@@ -913,12 +816,12 @@ final List<CodecSpec> _coreAudioCodecs = <CodecSpec>[
     kind: MediaKind.audio,
     pixelFormats: <String>['fltp'],
     options: <OptionSpec>[
-      IntOption(
-        flag: '-q:a',
-        exclusiveGroup: 'audioRate',
-        labelKey: I18nKey.optQualityScaleAudio,
-        min: -1,
-        max: 10,
+      const ChoiceOption(
+        flag: '-strict',
+        labelKey: null,
+        defaultValue: '-2',
+        advanced: true,
+        choices: <OptionChoice>[OptionChoice('-2')],
       ),
       IntOption(
         flag: '-ac',
@@ -1008,14 +911,7 @@ final List<CodecSpec> _coreAudioCodecs = <CodecSpec>[
     name: 'TTA',
     kind: MediaKind.audio,
     pixelFormats: <String>['u8', 's16', 's32'],
-    options: <OptionSpec>[
-      IntOption(
-        flag: '-compression_level',
-        labelKey: I18nKey.optCompressionLevel,
-        min: 0,
-        max: 8,
-      ),
-    ],
+    options: <OptionSpec>[],
   ),
   CodecSpec(
     id: 'wmav2',
@@ -1490,10 +1386,19 @@ final List<ContainerSpec> kContainers = <ContainerSpec>[
     videoCodecs: <String>{'h263', 'mpeg1video', 'mpeg2video', 'mpeg4', 'vc2'},
     audioCodecs: <String>{'aac', 'ac3', 'dca', 'eac3', 'mp2', 'opus', 'truehd'},
     options: <OptionSpec>[
-      TextOption(
+      ChoiceOption(
         flag: '-mpegts_flags',
         labelKey: I18nKey.optMpegtsFlags,
         advanced: true,
+        choices: <OptionChoice>[
+          OptionChoice('+resend_headers'),
+          OptionChoice('+pat_pmt_at_frames'),
+          OptionChoice('+latm'),
+          OptionChoice('+system_b'),
+          OptionChoice('+initial_discontinuity'),
+          OptionChoice('+nit'),
+          OptionChoice('+omit_rai'),
+        ],
       ),
     ],
   ),
@@ -1505,10 +1410,17 @@ final List<ContainerSpec> kContainers = <ContainerSpec>[
     videoCodecs: <String>{'flv', 'h263'},
     audioCodecs: <String>{'aac', 'mp2'},
     options: <OptionSpec>[
-      TextOption(
+      ChoiceOption(
         flag: '-flvflags',
         labelKey: I18nKey.optFlvFlags,
         advanced: true,
+        choices: <OptionChoice>[
+          OptionChoice('+add_keyframe_index'),
+          OptionChoice('+no_metadata'),
+          OptionChoice('+no_duration_filesize'),
+          OptionChoice('+aac_seq_header_detect'),
+          OptionChoice('+no_sequence_end'),
+        ],
       ),
     ],
   ),
@@ -1523,7 +1435,7 @@ final List<ContainerSpec> kContainers = <ContainerSpec>[
       IntOption(
         flag: '-loop',
         labelKey: I18nKey.optGifLoop,
-        min: 0,
+        min: -1,
         max: 65535,
       ),
     ],
@@ -2393,7 +2305,28 @@ const List<CodecSpec> _extraVideoCodecs = <CodecSpec>[
     name: 'prores_ks',
     kind: MediaKind.video,
     pixelFormats: <String>['yuv422p10le', 'yuv444p10le', 'yuva444p10le'],
-    options: _extraVideoOptions,
+    options: <OptionSpec>[
+      ..._extraVideoOptions,
+      ChoiceOption(
+        flag: '-profile:v',
+        labelKey: I18nKey.optProfile,
+        choices: <OptionChoice>[
+          OptionChoice('proxy'),
+          OptionChoice('lt'),
+          OptionChoice('standard'),
+          OptionChoice('hq'),
+          OptionChoice('4444'),
+          OptionChoice('4444xq'),
+        ],
+      ),
+      IntOption(
+        flag: '-bits_per_mb',
+        labelKey: I18nKey.optBitsPerMb,
+        min: 1,
+        advanced: true,
+      ),
+      TextOption(flag: '-vendor', labelKey: I18nKey.optVendor, advanced: true),
+    ],
   ),
   CodecSpec(
     id: 'qoi',

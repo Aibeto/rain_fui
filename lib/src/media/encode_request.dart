@@ -58,6 +58,7 @@ class EncodeRequest {
   /// All options that belong to the chosen encoder and container.
   List<OptionSpec> get activeOptions => <OptionSpec>[
     if (videoCodec != null) ...videoCodec!.options,
+    if (videoCodec?.pixelFormatOption case final OptionSpec spec) spec,
     if (audioCodec != null) ...audioCodec!.options,
     ...container.options,
   ];

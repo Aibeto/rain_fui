@@ -85,7 +85,9 @@ class IntOption extends OptionSpec {
     if ((min != null && parsed < min!) || (max != null && parsed > max!)) {
       return const <String>[];
     }
-    return <String>[flag, parsed.toString()];
+    // FFmpeg reads bitrates in bit/s; the form edits them in kbit/s.
+    final String rendered = unit == 'kbps' ? '${parsed}k' : parsed.toString();
+    return <String>[flag, rendered];
   }
 }
 
