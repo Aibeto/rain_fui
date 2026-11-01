@@ -313,43 +313,23 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
   }
 
   /// Extensions that name a real media file, used to decide whether a typed
-  /// name already carries one.
-  static const Set<String> _mediaExtensions = <String>{
-    'mp4',
-    'm4v',
-    'mov',
+  /// name already carries one. Built from the container table so a new
+  /// container never leaves its extension out of date.
+  static final Set<String> _mediaExtensions = <String>{
+    for (final ContainerSpec container in kContainers) container.extension,
+    // Extensions people type that name the same formats under another suffix.
     'mkv',
     'mka',
-    'webm',
-    'avi',
+    'm4a',
     'ts',
     'm2ts',
-    'flv',
-    'gif',
-    'png',
-    'apng',
     'jpg',
     'jpeg',
-    'bmp',
     'tiff',
-    'wav',
-    'flac',
-    'ogg',
-    'opus',
-    'm4a',
-    'ac3',
-    'adts',
-    'aac',
-    'wv',
-    'nut',
-    'asf',
-    'wmv',
-    'dv',
-    'mxf',
-    'yuv',
-    'y4m',
-    'smjpeg',
-    'swf',
+    'mp3',
+    'thd',
+    'mpg',
+    '3gp',
   };
 
   String? _outputPath() {
