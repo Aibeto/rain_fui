@@ -43,12 +43,12 @@ const Map<String, String> nlNl = <String, String>{
   'add_source_confirm_body':
       'De map wordt als bron op het startscherm vermeld.',
   'action_add': 'Toevoegen',
-  'option_unset': 'Niet ingesteld',
+  'option_unset': 'Standaard',
   'option_edit': 'Voer handmatig een waarde in',
   'job_section_input': 'Invoer',
   'job_label_video_decoder': 'Videodecoder',
   'job_label_audio_decoder': 'Audiodecoder',
-  'job_decoder_auto': 'Automatisch (detecteren)',
+  'job_decoder_auto': 'Automatisch',
   'action_cancel': 'Annuleren',
   'action_close': 'Sluiten',
 

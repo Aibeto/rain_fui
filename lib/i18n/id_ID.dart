@@ -41,12 +41,12 @@ const Map<String, String> idId = <String, String>{
   'add_source_confirm_body':
       'Folder akan dicantumkan sebagai sumber di layar utama.',
   'action_add': 'Tambahkan',
-  'option_unset': 'Tidak diatur',
+  'option_unset': 'Bawaan',
   'option_edit': 'Masukkan nilai secara manual',
   'job_section_input': 'Masukan',
   'job_label_video_decoder': 'Dekoder video',
   'job_label_audio_decoder': 'Dekoder audio',
-  'job_decoder_auto': 'Otomatis (deteksi)',
+  'job_decoder_auto': 'Otomatis',
   'action_cancel': 'Batal',
   'action_close': 'Tutup',
 

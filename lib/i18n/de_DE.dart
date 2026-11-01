@@ -42,12 +42,12 @@ const Map<String, String> deDe = <String, String>{
   'add_source_confirm_body':
       'Der Ordner wird auf der Startseite als Quelle aufgeführt.',
   'action_add': 'Hinzufügen',
-  'option_unset': 'Nicht gesetzt',
+  'option_unset': 'Standard',
   'option_edit': 'Wert manuell eingeben',
   'job_section_input': 'Eingabe',
   'job_label_video_decoder': 'Videodecoder',
   'job_label_audio_decoder': 'Audiodecoder',
-  'job_decoder_auto': 'Automatisch (erkennen)',
+  'job_decoder_auto': 'Automatisch',
   'action_cancel': 'Abbrechen',
   'action_close': 'Schließen',
 

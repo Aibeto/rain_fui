@@ -40,12 +40,12 @@ const Map<String, String> plPl = <String, String>{
   'add_source_confirm_body':
       'Folder zostanie dodany jako źródło na ekranie głównym.',
   'action_add': 'Dodaj',
-  'option_unset': 'Nie ustawiono',
+  'option_unset': 'Domyślne',
   'option_edit': 'Wpisz wartość ręcznie',
   'job_section_input': 'Wejście',
   'job_label_video_decoder': 'Dekoder wideo',
   'job_label_audio_decoder': 'Dekoder dźwięku',
-  'job_decoder_auto': 'Automatycznie (wykryj)',
+  'job_decoder_auto': 'Automatycznie',
   'action_cancel': 'Anuluj',
   'action_close': 'Zamknij',
 

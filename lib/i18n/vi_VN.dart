@@ -40,12 +40,12 @@ const Map<String, String> viVn = <String, String>{
   'add_source_confirm_body':
       'Thư mục sẽ được liệt kê làm nguồn trên màn hình chính.',
   'action_add': 'Thêm',
-  'option_unset': 'Không đặt',
+  'option_unset': 'Mặc định',
   'option_edit': 'Nhập giá trị thủ công',
   'job_section_input': 'Đầu vào',
   'job_label_video_decoder': 'Bộ giải mã video',
   'job_label_audio_decoder': 'Bộ giải mã âm thanh',
-  'job_decoder_auto': 'Tự động (nhận diện)',
+  'job_decoder_auto': 'Tự động',
   'action_cancel': 'Hủy',
   'action_close': 'Đóng',
 

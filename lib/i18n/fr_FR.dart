@@ -42,12 +42,12 @@ const Map<String, String> frFr = <String, String>{
   'add_source_confirm_body':
       'Le dossier sera ajouté comme source sur l’écran d’accueil.',
   'action_add': 'Ajouter',
-  'option_unset': 'Non défini',
+  'option_unset': 'Par défaut',
   'option_edit': 'Saisir une valeur manuellement',
   'job_section_input': 'Entrée',
   'job_label_video_decoder': 'Décodeur vidéo',
   'job_label_audio_decoder': 'Décodeur audio',
-  'job_decoder_auto': 'Automatique (détection)',
+  'job_decoder_auto': 'Automatique',
   'action_cancel': 'Annuler',
   'action_close': 'Fermer',
 
