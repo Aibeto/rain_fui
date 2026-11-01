@@ -173,9 +173,10 @@ class IoFfmpegBackend extends FfmpegBackend {
   Future<String> version() async {
     await initialize();
     final line = _versionLine;
-    if (line == null)
+    if (line == null) {
       throw _failure ??
           FfmpegNotFoundException(_unavailableReason ?? 'FFmpeg unavailable');
+    }
     return line;
   }
 
