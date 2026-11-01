@@ -746,16 +746,16 @@ class _DecoderRow extends StatelessWidget {
           child: Text(l10n(labelKey), style: theme.typography.body),
         ),
         SizedBox(
-          width: 220,
+          // Decoder names are short (h264, aac), so the field does not need
+          // the width of a codec name; the popup is pinned to the same width
+          // instead of stretching to the longest entry.
+          width: 160,
           child: ComboBox<String?>(
             isExpanded: true,
             popupColor: theme.menuColor,
-            // Decoder names are long and fluent's popup otherwise grows to
-            // fit the widest one. Cap it at the field width so the list stays
-            // aligned with the box instead of covering half the page.
             popupConstraints: const BoxConstraints(
-              minWidth: 220,
-              maxWidth: 220,
+              minWidth: 160,
+              maxWidth: 160,
               maxHeight: 320,
             ),
             value: value,
@@ -770,7 +770,7 @@ class _DecoderRow extends StatelessWidget {
                   value: name,
                   child: Text(
                     name,
-                    style: AppTheme.mono(theme.typography.body, l10n.locale),
+                    style: AppTheme.mono(theme.typography.caption, l10n.locale),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
