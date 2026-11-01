@@ -86,7 +86,10 @@ class WebFfmpegBackend extends FfmpegBackend {
   @override
   Future<String> version() async {
     await initialize();
-    if (!_available) throw FfmpegNotFoundException(_unavailableReason ?? 'FFmpeg is unavailable');
+    if (!_available)
+      throw FfmpegNotFoundException(
+        _unavailableReason ?? 'FFmpeg is unavailable',
+      );
     return _versionLine;
   }
 
@@ -95,7 +98,9 @@ class WebFfmpegBackend extends FfmpegBackend {
     await initialize();
     final bridge = _bridge;
     if (!_available || bridge == null) {
-      throw FfmpegNotFoundException(_unavailableReason ?? 'FFmpeg is unavailable');
+      throw FfmpegNotFoundException(
+        _unavailableReason ?? 'FFmpeg is unavailable',
+      );
     }
 
     final task = WebFfmpegTask._(command: command, onCancel: bridge.cancel);
@@ -113,7 +118,10 @@ class WebFfmpegBackend extends FfmpegBackend {
   }
 
   @override
-  Future<bool> saveOutputFile(String virtualPath, {String? downloadName}) async {
+  Future<bool> saveOutputFile(
+    String virtualPath, {
+    String? downloadName,
+  }) async {
     final bridge = _bridge;
     if (!_available || bridge == null) return false;
     try {
@@ -129,8 +137,8 @@ class WebFfmpegBackend extends FfmpegBackend {
 /// One running wasm FFmpeg invocation.
 class WebFfmpegTask implements FfmpegTask {
   WebFfmpegTask._({required FfmpegCommand command, required this.onCancel})
-      : _command = command,
-        _argv = command.toArgv();
+    : _command = command,
+      _argv = command.toArgv();
 
   final FfmpegCommand _command;
   final List<String> _argv;
@@ -139,7 +147,9 @@ class WebFfmpegTask implements FfmpegTask {
   final void Function() onCancel;
 
   final ReplayStream<String> _logs = ReplayStream<String>(capacity: 4000);
-  final ReplayStream<FfmpegProgress> _progress = ReplayStream<FfmpegProgress>(capacity: 128);
+  final ReplayStream<FfmpegProgress> _progress = ReplayStream<FfmpegProgress>(
+    capacity: 128,
+  );
   final Completer<FfmpegResult> _done = Completer<FfmpegResult>();
   final FfmpegProgressParser _parser = FfmpegProgressParser();
   final Stopwatch _wallClock = Stopwatch()..start();
@@ -166,12 +176,19 @@ class WebFfmpegTask implements FfmpegTask {
 
   void start(JSPromise<JSObject> promise) {
     _wallClock.start();
-    promise.toDart.then((value) {
-      final result = _RunResult._(value);
-      _complete(result.exitCode, stdout: result.stdout, stderr: result.stderr);
-    }, onError: (Object error) {
-      _complete(-1, stdout: '', stderr: 'worker error: $error');
-    });
+    promise.toDart.then(
+      (value) {
+        final result = _RunResult._(value);
+        _complete(
+          result.exitCode,
+          stdout: result.stdout,
+          stderr: result.stderr,
+        );
+      },
+      onError: (Object error) {
+        _complete(-1, stdout: '', stderr: 'worker error: $error');
+      },
+    );
   }
 
   /// Called from the JS bridge for every line FFmpeg writes.
@@ -187,7 +204,11 @@ class WebFfmpegTask implements FfmpegTask {
     }
   }
 
-  void _complete(int exitCode, {required String stdout, required String stderr}) {
+  void _complete(
+    int exitCode, {
+    required String stdout,
+    required String stderr,
+  }) {
     _running = false;
     _wallClock.stop();
     final result = FfmpegResult(
@@ -205,6 +226,12 @@ class WebFfmpegTask implements FfmpegTask {
   /// A wasm FFmpeg cannot be signalled: the only way to stop it is to tear the
   /// worker down, which the bridge does. The run then reports a synthetic
   /// non-zero exit code because no real status can be observed.
+  @override
+  Future<bool> suspend() async => false;
+
+  @override
+  Future<bool> resume() async => false;
+
   @override
   Future<void> cancel() async {
     if (!_running) return;

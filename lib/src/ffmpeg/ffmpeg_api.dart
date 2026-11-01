@@ -59,12 +59,15 @@ class FfmpegResult {
     throw FfmpegException(
       'ffmpeg exited with code $exitCode',
       exitCode: exitCode,
-      stderr: tail.length > 8 ? tail.sublist(tail.length - 8).join('\n') : stderr,
+      stderr: tail.length > 8
+          ? tail.sublist(tail.length - 8).join('\n')
+          : stderr,
     );
   }
 
   @override
-  String toString() => 'FfmpegResult(exitCode: $exitCode, wallClock: $wallClock)';
+  String toString() =>
+      'FfmpegResult(exitCode: $exitCode, wallClock: $wallClock)';
 }
 
 /// One `-progress` block emitted by FFmpeg, e.g.
@@ -84,6 +87,7 @@ class FfmpegProgress {
   int? get frame => _asInt(raw['frame']);
   double? get fps => _asDouble(raw['fps']);
   int? get totalSize => _asInt(raw['total_size']);
+
   /// Bitrate in kbit/s. FFmpeg writes `512.0kbits/s`, so the unit is stripped.
   int? get bitrateKbps => _leadingDouble(raw['bitrate'])?.round();
 
@@ -98,15 +102,19 @@ class FfmpegProgress {
   double? get speed {
     final value = raw['speed'];
     if (value == null) return null;
-    return _asDouble(value.endsWith('x') ? value.substring(0, value.length - 1) : value);
+    return _asDouble(
+      value.endsWith('x') ? value.substring(0, value.length - 1) : value,
+    );
   }
 
   bool get isFinal => raw['progress'] == 'end';
 
   @override
-  String toString() => 'FfmpegProgress(outTime: $outTime, frame: $frame, fps: $fps, speed: $speed)';
+  String toString() =>
+      'FfmpegProgress(outTime: $outTime, frame: $frame, fps: $fps, speed: $speed)';
 
-  static int? _asInt(String? value) => value == null ? null : int.tryParse(value.trim());
+  static int? _asInt(String? value) =>
+      value == null ? null : int.tryParse(value.trim());
 
   /// Parses the leading number of a value, ignoring any trailing unit.
   static double? _leadingDouble(String? value) {
@@ -126,9 +134,12 @@ class FfmpegProgress {
 /// Parses `HH:MM:SS.micros` (FFmpeg's `out_time`) into a [Duration].
 Duration? parseFfmpegTimestamp(String? value) {
   if (value == null) return null;
-  final match = RegExp(r'^(\d+):(\d{2}):(\d{2}(?:\.\d+)?)$').firstMatch(value.trim());
+  final match = RegExp(r'^(\d+):(\d{2}):(\d{2}(?:\.\d+)?)$')
+      .firstMatch(value.trim());
   if (match == null) return null;
-  final micros = ((double.parse(match.group(3)!)) * Duration.microsecondsPerSecond).round();
+  final micros =
+      ((double.parse(match.group(3)!)) * Duration.microsecondsPerSecond)
+          .round();
   return Duration(
     hours: int.parse(match.group(1)!),
     minutes: int.parse(match.group(2)!),
@@ -164,7 +175,11 @@ class FfmpegCommand {
     this.allowStdin = false,
   }) : args = List<String>.unmodifiable(args) {
     if (args.isEmpty) {
-      throw ArgumentError.value(args, 'args', 'ffmpeg needs at least one argument');
+      throw ArgumentError.value(
+        args,
+        'args',
+        'ffmpeg needs at least one argument',
+      );
     }
   }
 
@@ -198,7 +213,7 @@ class FfmpegCommand {
 }
 
 /// A running (or finished) FFmpeg invocation.
-abstract interface class FfmpegTask {
+abstract class FfmpegTask {
   /// Human-readable log lines from both stdout and stderr.
   Stream<String> get logs;
 
@@ -216,6 +231,15 @@ abstract interface class FfmpegTask {
 
   /// Terminates the run. Safe to call more than once.
   Future<void> cancel();
+
+  /// Suspends the process where the platform supports it (POSIX signals).
+  ///
+  /// Returns false when the current platform cannot pause a process, so the
+  /// caller can leave the job running instead of pretending it stopped.
+  Future<bool> suspend() async => false;
+
+  /// Undoes [suspend]. Returns false when nothing was suspended.
+  Future<bool> resume() async => false;
 }
 
 /// The platform-specific FFmpeg driver.
@@ -249,7 +273,10 @@ abstract class FfmpegBackend {
   /// Web only: copies a file out of FFmpeg's in-memory filesystem into a
   /// browser download. Returns false on native platforms, where outputs are
   /// written to the real filesystem and no export step is needed.
-  Future<bool> saveOutputFile(String virtualPath, {String? downloadName}) async => false;
+  Future<bool> saveOutputFile(
+    String virtualPath, {
+    String? downloadName,
+  }) async => false;
 }
 
 /// Splits a command line into arguments, honouring quotes and escapes.
@@ -323,23 +350,35 @@ abstract final class FfmpegPresets {
   /// Runs a real filter graph and encode, discarding the output. Works on every
   /// platform (including web) because no file needs to exist.
   static const List<String> testSourceToNull = <String>[
-    '-f', 'lavfi',
-    '-i', 'testsrc2=duration=1:size=320x240:rate=25',
-    '-f', 'null', '-',
+    '-f',
+    'lavfi',
+    '-i',
+    'testsrc2=duration=1:size=320x240:rate=25',
+    '-f',
+    'null',
+    '-',
   ];
 
   /// Encodes a generated test pattern + tone into a real MP4 file in the
   /// current directory. Uses only FFmpeg-native encoders (mpeg4/aac), so it
   /// works without external libraries.
   static const List<String> testSourceToMp4 = <String>[
-    '-f', 'lavfi',
-    '-i', 'testsrc2=duration=2:size=640x360:rate=25',
-    '-f', 'lavfi',
-    '-i', 'sine=duration=2',
-    '-c:v', 'mpeg4',
-    '-q:v', '5',
-    '-c:a', 'aac',
-    '-b:a', '96k',
+    '-f',
+    'lavfi',
+    '-i',
+    'testsrc2=duration=2:size=640x360:rate=25',
+    '-f',
+    'lavfi',
+    '-i',
+    'sine=duration=2',
+    '-c:v',
+    'mpeg4',
+    '-q:v',
+    '5',
+    '-c:a',
+    'aac',
+    '-b:a',
+    '96k',
     '-shortest',
     '-y',
     'rain_fui_sample.mp4',

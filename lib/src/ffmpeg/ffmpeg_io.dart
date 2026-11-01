@@ -8,7 +8,10 @@ import 'ffmpeg_locator.dart';
 import 'replay_stream.dart';
 
 /// Signature of the process launcher, injectable so tests can fake FFmpeg.
-typedef ProcessStarter = Future<Process> Function(String executable, List<String> arguments);
+typedef ProcessStarter = Future<Process> Function(
+  String executable,
+  List<String> arguments,
+);
 
 /// Drives a native `ffmpeg` binary through [Process].
 ///
@@ -85,7 +88,8 @@ class IoFfmpegBackend extends FfmpegBackend {
       final locator = await _buildLocator();
       final candidates = locator.candidates();
       if (candidates.isEmpty) {
-        _unavailableReason = 'No FFmpeg candidate paths for ${Platform.operatingSystem}.';
+        _unavailableReason =
+            'No FFmpeg candidate paths for ${Platform.operatingSystem}.';
         return;
       }
 
@@ -114,7 +118,9 @@ class IoFfmpegBackend extends FfmpegBackend {
 
   Future<FfmpegLocator> _buildLocator() async {
     if (locator != null) return locator!;
-    final nativeLibDir = Platform.isAndroid ? await AndroidPaths.nativeLibraryDir() : null;
+    final nativeLibDir = Platform.isAndroid
+        ? await AndroidPaths.nativeLibraryDir()
+        : null;
     return FfmpegLocator(
       androidNativeLibraryDir: nativeLibDir,
       executableSuffix: Platform.isWindows ? '.exe' : '',
@@ -124,25 +130,41 @@ class IoFfmpegBackend extends FfmpegBackend {
   /// Runs `ffmpeg -version` and returns its first line, proving the binary is
   /// executable and is really FFmpeg.
   Future<String> _probe(String executable) async {
-    final process = await _starter(executable, const <String>['-version']).timeout(probeTimeout);
+    final process = await _starter(executable, const <String>[
+      '-version',
+    ]).timeout(probeTimeout);
     // `-version` never reads stdin; leaving the pipe open keeps a handle per
     // probe and can make a stubborn binary wait for input.
     unawaited(process.stdin.close().catchError((Object _) {}));
-    final stdoutFuture = process.stdout.transform(const Utf8Decoder(allowMalformed: true)).join();
-    final stderrFuture = process.stderr.transform(const Utf8Decoder(allowMalformed: true)).join();
-    final exitCode = await process.exitCode.timeout(probeTimeout, onTimeout: () {
-      process.kill(ProcessSignal.sigkill);
-      throw TimeoutException('ffmpeg -version timed out', probeTimeout);
-    });
+    final stdoutFuture = process.stdout
+        .transform(const Utf8Decoder(allowMalformed: true))
+        .join();
+    final stderrFuture = process.stderr
+        .transform(const Utf8Decoder(allowMalformed: true))
+        .join();
+    final exitCode = await process.exitCode.timeout(
+      probeTimeout,
+      onTimeout: () {
+        process.kill(ProcessSignal.sigkill);
+        throw TimeoutException('ffmpeg -version timed out', probeTimeout);
+      },
+    );
     final stdout = await stdoutFuture;
     await stderrFuture;
 
     if (exitCode != 0) {
-      throw FfmpegException('`-version` exited with code $exitCode', exitCode: exitCode);
+      throw FfmpegException(
+        '`-version` exited with code $exitCode',
+        exitCode: exitCode,
+      );
     }
-    final firstLine = stdout.split('\n').firstWhere((line) => line.trim().isNotEmpty, orElse: () => '');
+    final firstLine = stdout
+        .split('\n')
+        .firstWhere((line) => line.trim().isNotEmpty, orElse: () => '');
     if (!firstLine.contains('ffmpeg version')) {
-      throw FfmpegException('Not an FFmpeg binary (stdout: ${firstLine.trim()})');
+      throw FfmpegException(
+        'Not an FFmpeg binary (stdout: ${firstLine.trim()})',
+      );
     }
     return firstLine.trim();
   }
@@ -151,7 +173,9 @@ class IoFfmpegBackend extends FfmpegBackend {
   Future<String> version() async {
     await initialize();
     final line = _versionLine;
-    if (line == null) throw _failure ?? FfmpegNotFoundException(_unavailableReason ?? 'FFmpeg unavailable');
+    if (line == null)
+      throw _failure ??
+          FfmpegNotFoundException(_unavailableReason ?? 'FFmpeg unavailable');
     return line;
   }
 
@@ -161,7 +185,9 @@ class IoFfmpegBackend extends FfmpegBackend {
     final location = _location;
     if (location == null) {
       throw _failure ??
-          FfmpegNotFoundException(_unavailableReason ?? 'FFmpeg is not available on this platform');
+          FfmpegNotFoundException(
+            _unavailableReason ?? 'FFmpeg is not available on this platform',
+          );
     }
     final argv = command.toArgv();
     try {
@@ -187,7 +213,11 @@ class IoFfmpegBackend extends FfmpegBackend {
 
 /// One running native FFmpeg process.
 class IoFfmpegTask implements FfmpegTask {
-  IoFfmpegTask({required this.process, required this.command, required this.argv}) {
+  IoFfmpegTask({
+    required this.process,
+    required this.command,
+    required this.argv,
+  }) {
     _bind();
   }
 
@@ -201,7 +231,9 @@ class IoFfmpegTask implements FfmpegTask {
   final List<String> argv;
 
   final ReplayStream<String> _logs = ReplayStream<String>(capacity: 4000);
-  final ReplayStream<FfmpegProgress> _progress = ReplayStream<FfmpegProgress>(capacity: 128);
+  final ReplayStream<FfmpegProgress> _progress = ReplayStream<FfmpegProgress>(
+    capacity: 128,
+  );
   final Completer<FfmpegResult> _done = Completer<FfmpegResult>();
   final FfmpegProgressParser _parser = FfmpegProgressParser();
   final _TailBuffer _stdout = _TailBuffer();
@@ -239,29 +271,31 @@ class IoFfmpegTask implements FfmpegTask {
         .transform(const Utf8Decoder(allowMalformed: true))
         .transform(const LineSplitter())
         .listen(
-      (line) {
-        _stdout.add(line);
-        _emit(line);
-        if (command.reportProgress) {
-          final block = _parser.addLine(line);
-          if (block != null) _progress.add(block);
-        }
-      },
-      onError: (Object error) => _stderr.add('stdout error: $error'),
-      cancelOnError: false,
-    ).asFuture<void>();
+          (line) {
+            _stdout.add(line);
+            _emit(line);
+            if (command.reportProgress) {
+              final block = _parser.addLine(line);
+              if (block != null) _progress.add(block);
+            }
+          },
+          onError: (Object error) => _stderr.add('stdout error: $error'),
+          cancelOnError: false,
+        )
+        .asFuture<void>();
 
     final stderrDone = process.stderr
         .transform(const Utf8Decoder(allowMalformed: true))
         .transform(const LineSplitter())
         .listen(
-      (line) {
-        _stderr.add(line);
-        _emit(line);
-      },
-      onError: (Object error) => _stderr.add('stderr error: $error'),
-      cancelOnError: false,
-    ).asFuture<void>();
+          (line) {
+            _stderr.add(line);
+            _emit(line);
+          },
+          onError: (Object error) => _stderr.add('stderr error: $error'),
+          cancelOnError: false,
+        )
+        .asFuture<void>();
 
     Future.wait<void>(<Future<void>>[stdoutDone, stderrDone])
         .then((_) => process.exitCode)
@@ -304,6 +338,32 @@ class IoFfmpegTask implements FfmpegTask {
   void _closeStreams() {
     unawaited(_logs.close());
     unawaited(_progress.close());
+  }
+
+  /// True while the process is parked by [suspend].
+  bool _suspended = false;
+
+  @override
+  Future<bool> suspend() async {
+    if (!_running || _suspended || Platform.isWindows) return false;
+    try {
+      _suspended = process.kill(ProcessSignal.sigstop);
+      return _suspended;
+    } on Object {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> resume() async {
+    if (!_running || !_suspended) return false;
+    try {
+      final bool sent = process.kill(ProcessSignal.sigcont);
+      if (sent) _suspended = false;
+      return sent;
+    } on Object {
+      return false;
+    }
   }
 
   @override
