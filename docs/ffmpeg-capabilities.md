@@ -121,7 +121,6 @@ Matroska 默认拒绝没有原生 CodecID 的编码，必须显式 `-allow_raw_v
 | `rpza` | QuickTime RPZA | `rgb555` | 有损 | mov, avi |
 | `rv10` | RealVideo 1.0 | `yuv420p` | 有损 | rm, mkv |
 | `rv20` | RealVideo 2.0 | `yuv420p` | 有损 | rm, mkv |
-| ~~`s302m`~~ | 见第 3 节，它是音频编码器（`s302m.c:232` 的 `.p.type` 是 `AVMEDIA_TYPE_AUDIO`） | — | — | — |
 | `sgi` | SGI 图像 | `rgb24`,`rgba`,`rgb48le/be`,`rgba64le/be`,`gray16le/be`,`gray8` | 无损 | image2, mov |
 | `smc` | QuickTime SMC | `pal8` | 无损（调色板 RLE） | mov |
 | `snow` | Snow | `yuv420p`,`yuv410p`,`yuv444p`,`gray8` | 有损 | mkv, avi, nut |
@@ -144,7 +143,8 @@ Matroska 默认拒绝没有原生 CodecID 的编码，必须显式 `-allow_raw_v
 | `zlib`† | LCL ZLIB | `bgr24` | 无损 | 无常规封装 |
 | `zmbv`† | Zip Motion Blocks | `pal8`,`rgb555le`,`rgb565le`,`bgr24`,`bgr0` | 无损 | avi |
 
-合计 88 个视频编码器（其中 8 个标 `†`，依赖 zlib）。
+合计 86 个视频编码器（其中 8 个标 `†`，依赖 zlib）。`s302m` 不在本表：它是音频编码器
+（`libavcodec/s302m.c:232` 的 `.p.type` 是 `AVMEDIA_TYPE_AUDIO`），见第 3 节。
 
 说明：
 
@@ -175,7 +175,7 @@ Matroska 默认拒绝没有原生 CodecID 的编码，必须显式 `-allow_raw_v
 | `dca` | DTS Coherent Acoustics | `s16p`,`s32p` | 有损 | dts, mp4, mov, mkv, mpegts |
 | `truehd` | TrueHD | `s16p`,`s32p` | 无损 | mkv, mp4, mpegts |
 | `mlp` | MLP | `s16p`,`s32p` | 无损 | mkv |
-| `s302m` | SMPTE 302M（AES3 打包的 PCM） | `s16`,`s24`,`s32` | 无损 | mxf |
+| `s302m` | SMPTE 302M（AES3 打包 PCM，**实验性**） | `s16`,`s32` | 无损 | mxf |
 | `tta` | TTA | `u8`,`s16`,`s32` | 无损 | mkv |
 | `wavpack` | WavPack | `u8p`…`s32p` | 无损 | mkv |
 | `aptx` | aptX（蓝牙） | `s16p`,`s32p` | 有损 | 无常规封装 |
@@ -201,9 +201,13 @@ ADPCM / DPCM 编码器：
 `adpcm_ima_apm` `adpcm_ima_qt` `adpcm_ima_ssi` `adpcm_ima_wav` `adpcm_ima_ws` `adpcm_ms` `adpcm_swf`
 `adpcm_yamaha` `roq_dpcm`
 
-合计 25 + 31 + 16 = 72 个音频编码器。
+合计 25 + 31 + 16 = 72 个音频编码器。另有 `anull`（静音）与 `comfortnoise`（舒适噪声）两个
+内部测试编码器，不面向 GUI。
 
 关键约束（源码可查）：
+
+- `s302m` 只支持 48000 Hz（`s302menc.c:186`），且带 `AV_CODEC_CAP_EXPERIMENTAL`（`s302menc.c:178`），
+  需 `-strict -2`。
 
 - `opus` 只接受 48000 Hz、单声道或立体声（`libavcodec/opus/enc.c:759-761`），且带
   `AV_CODEC_CAP_EXPERIMENTAL`（`opus/enc.c:751`），必须加 `-strict -2`。
@@ -242,7 +246,6 @@ ADPCM / DPCM 编码器：
 | `ivf` / `h264` / `hevc` | .ivf/.h264/.hevc | **无**原生编码器（ivf 只认 vp8/vp9/av1） | 无 | 只能封装已有码流，本仓库用不上 |
 | `smjpeg` | — | mjpeg | pcm_s16le | 逐帧 JPEG + PCM |
 | `swf` | .swf | flv | mp3（无编码器） | 只能出无声视频 |
-| `h264` / `hevc` | .h264/.hevc | **无**原生编码器 | 无 | 只能封装已有码流（本仓库不适用） |
 
 `prores*` 指 `prores`、`prores_aw`、`prores_ks` 三个名字，码流相同。
 
@@ -281,6 +284,8 @@ ADPCM / DPCM 编码器：
 `-b:v`、`-q:v`、`-g`、`-bf` 等属于 `AVCodecContext` 公共字段，见第 6 节。
 `-crf` **在本构建完全不存在**：它只由 `libx264/libx265/libvpx/libaom/libsvtav1/libxeve` 定义
 （`libavcodec/libx264.c:1505`、`libvpxenc.c:2009`、`libaomenc.c:1546` 等），这些文件都没有被编译。
+`-preset` 与 `-tune` 同理，只存在于这些外部封装层与硬件编码器上；本构建的任何一个 native
+编码器都没有这两个选项，GUI 不应给它们留控件。
 
 ### 5.1 MPEG-1/2/4、H.263、FLV、WMV 共用选项
 `mpeg1video` / `mpeg2video` / `mpeg4` / `h263` / `h263p` 共用 `FF_MPV_COMMON_OPTS`
