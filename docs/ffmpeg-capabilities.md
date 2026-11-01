@@ -670,3 +670,7 @@ ADPCM / DPCM 编码器：
 * `containers-system.json`：48 个 muxer 对哪些 codec id 真的能写，靠一只 64×64 的单帧和 0.2 秒静音逐个试出来，dv 和 mxf 另用 720×576 与带视频流的组合手工量过。
 
 `tool/check_catalog.dart` 用原生构建和完整构建两种假设各查一遍，验证 mp4 收 H.264、WebM 不收、flac 不收 opus、原生构建不列 libx264 这些结论。
+
+表里还包含本机跑不起来的编码器：MediaCodec、MediaFoundation、VideoToolbox、D3D12、Rockchip、OpenHarmony 这些平台后端，以及 libfdk_aac、libopenh264 这类没装的第三方库。它们的名字、类型和 codec id 写在 `tool/gen_capabilities.py` 的 `EXTRA_ENCODERS` 里，只有对应平台的探针报出来才会出现在下拉框。生成器会重新解析 `libavcodec/allcodecs.c`，只要有一个编码器符号既没被探针覆盖、也不在别名表或排除表里，就报错退出，避免又退回“只有 Linux 能看到的那部分”。目前是 256 个编码器（162 视频 / 94 音频）。
+
+Android 上二进制在 `nativeLibraryDir`，探针拿不到这个目录就必然失败、退回打包清单，所以目录由 `main()` 通过 `AndroidPaths.nativeLibraryDir()` 传进去，探针本身不 import Flutter，普通 Dart VM 下也能跑。

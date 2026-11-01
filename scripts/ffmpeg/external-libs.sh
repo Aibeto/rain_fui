@@ -89,8 +89,19 @@ ffmpeg_external_flags() {
     # Hardware back ends. nvenc only needs headers at build time; the runtime
     # needs a driver, and without one the encoder fails at Start with FFmpeg's
     # own message.
-    if [ -f "$prefix/include/ffnvcodec/nvEncodeAPI.h" ] \
-       || ffmpeg_have_pkg ffnvcodec "$target_os" "$prefix"; then
+    # On Linux the headers are enough (configure only compiles a probe). Cross
+    # targets need a real ffnvcodec.pc: with only headers installed, configure
+    # fails the LoadLibrary dependency check and aborts the whole build.
+    local have_nvcodec=0
+    if [ "$target_os" = "linux" ] \
+       && [ -f "$prefix/include/ffnvcodec/nvEncodeAPI.h" ]; then
+        have_nvcodec=1
+    fi
+    if [ "$target_os" != "windows" ] \
+       && ffmpeg_have_pkg ffnvcodec "$target_os" "$prefix"; then
+        have_nvcodec=1
+    fi
+    if [ "$have_nvcodec" = "1" ]; then
         # --disable-autodetect turns ffnvcodec off, so it has to be named.
         printf '%s\n' --enable-ffnvcodec --enable-nvenc
     fi

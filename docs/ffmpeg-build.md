@@ -230,9 +230,37 @@ The dependency prefix is `build/ffmpeg/deps/<target>`, so a cross build needs it
 own prefix (`android-arm64-v8a`, `windows-x64`, …) built with that target's `CC`,
 `CFLAGS`, `LDFLAGS` and `HOST`.
 
+Cross builds must not read the host's pkg-config: a host `libaom.pc` would add
+`--enable-libaom` and then link x86-64 libraries into an Android binary. For any
+target other than `linux`, the probe runs `pkg-config` with
+`PKG_CONFIG_LIBDIR=<prefix>/lib/pkgconfig` and an empty `PKG_CONFIG_PATH`, so only
+the target prefix counts. Two consequences worth knowing:
+
+* Android with no dependencies installed ends up with exactly
+  `--enable-jni --enable-mediacodec`, which is enough for MediaCodec.
+* NVENC is enabled from headers alone on Linux, but a cross build needs a real
+  `ffnvcodec.pc`; with headers only, configure fails its `LoadLibrary`
+  dependency check. Windows therefore has no NVENC in the cross build: run
+  `build-deps.sh` on Windows itself (MSYS2) so the `.pc` exists, or point
+  `FFMPEG_DEPS_PREFIX` at a prefix that has one.
+
 Hardware encoders only prove themselves at run time: the build can carry them,
 but a machine without the matching GPU reports FFmpeg's own `Cannot load libcuda`
 or `No VA display` error in the job log.
+
+Builds verified on this machine (FFmpeg 9.0.2 source, `FFMPEG_EXTERNAL_LIBS=1`,
+`FFMPEG_LTO=0`):
+
+| target | artifact | size | encoders |
+|---|---|---|---|
+| linux-x64 | `dist/linux-x64/ffmpeg` | 32 676 024 B | 115 video / 78 audio, incl. libx264/x265/vpx/aom/svtav1/opus/vorbis/mp3lame/webp and nvenc/qsv/vaapi |
+| android-arm64-v8a | `dist/android-arm64-v8a/libffmpeg_exe.so` | 22 115 776 B | native set + 11 MediaCodec encoders |
+| android-armeabi-v7a | `dist/android-armeabi-v7a/libffmpeg_exe.so` | 19 911 816 B | native set + 11 MediaCodec encoders |
+| android-x86_64 | `dist/android-x86_64/libffmpeg_exe.so` | 27 311 008 B | native set + 11 MediaCodec encoders |
+| windows-x64 | `dist/windows-x64/ffmpeg.exe` | 30 676 494 B | native set (no NVENC, see above) |
+
+The wasm targets stay native-only: a wasm module cannot dlopen the system's
+libx264, so `build-web.sh` never passes `FFMPEG_EXTERNAL_LIBS`.
 
 ## LTO and parallelism
 
