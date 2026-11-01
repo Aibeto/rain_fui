@@ -36,7 +36,7 @@ class HomeContent extends StatelessWidget {
               children: <Widget>[
                 Text(
                   l10n(I18nKey.jobsTitle),
-                  style: theme.typography.bodyStrong?.copyWith(fontSize: 14),
+                  style: theme.typography.bodyStrong,
                 ),
                 const SizedBox(height: 10),
                 Expanded(
@@ -85,7 +85,7 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               l10n(I18nKey.homeEmptyTitle),
-              style: theme.typography.bodyStrong?.copyWith(fontSize: 16),
+              style: theme.typography.subtitle,
               textAlign: TextAlign.center,
               softWrap: true,
             ),

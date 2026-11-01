@@ -208,7 +208,7 @@ class _LanguageRow extends StatelessWidget {
     // The row text stays English-shaped, but the endonyms need the per-script
     // fallbacks of the Latin catalogue, which is the fallback locale here.
     final TextStyle mono = AppTheme.mono(
-      theme.typography.body?.copyWith(fontSize: 15),
+      theme.typography.body,
       kFallbackLocale,
     );
 

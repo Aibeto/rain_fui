@@ -363,7 +363,7 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
     final FluentThemeData theme = FluentTheme.of(context);
     return Text(
       context.l10n(key),
-      style: theme.typography.bodyStrong?.copyWith(fontSize: 14),
+      style: theme.typography.bodyStrong,
     );
   }
 }
@@ -570,7 +570,7 @@ class _PickerRow<T> extends StatelessWidget {
             width: 132,
             child: Text(
               label,
-              style: theme.typography.body?.copyWith(fontSize: 13),
+              style: theme.typography.body,
             ),
           ),
           Expanded(
@@ -619,7 +619,7 @@ class _OutputField extends StatelessWidget {
           width: 132,
           child: Text(
             l10n(I18nKey.jobLabelOutputName),
-            style: theme.typography.body?.copyWith(fontSize: 13),
+            style: theme.typography.body,
           ),
         ),
         Expanded(
@@ -711,7 +711,6 @@ class _OptionField extends StatelessWidget {
                 spec.labelKey == null ? '' : spec.flag,
                 style: AppTheme.mono(
                   theme.typography.caption?.copyWith(
-                    fontSize: 11,
                     color: theme.resources.textFillColorTertiary,
                   ),
                   l10n.locale,

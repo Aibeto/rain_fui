@@ -72,7 +72,6 @@ class HomeSidebar extends StatelessWidget {
               child: Text(
                 l10n(I18nKey.homeSourcesTitle),
                 style: theme.typography.bodyStrong?.copyWith(
-                  fontSize: 12,
                   color: resources.textFillColorSecondary,
                 ),
                 maxLines: 1,
