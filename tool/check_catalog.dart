@@ -123,6 +123,24 @@ void main() {
     'mp4 accepts h264_mf',
   );
 
+  // 3. Each platform's shipped build is a different binary: the baseline has to
+  // name what that build actually contains, or a failed probe on Android hides
+  // the MediaCodec encoders.
+  MediaCapabilities.useAvailability(
+    EncoderAvailability.baselineForPlatform('android'),
+  );
+  check(offersVideo('h264_mediacodec'), 'android baseline has MediaCodec');
+  check(offersVideo('libx264'), 'android baseline has libx264');
+  check(!offersVideo('h264_mf'), 'android baseline hides MediaFoundation');
+  MediaCapabilities.useAvailability(
+    EncoderAvailability.baselineForPlatform('windows'),
+  );
+  check(!offersVideo('h264_mediacodec'), 'windows baseline hides MediaCodec');
+  MediaCapabilities.useAvailability(
+    EncoderAvailability.baselineForPlatform('web'),
+  );
+  check(offersVideo('mpeg4'), 'web baseline offers mpeg4');
+
   // Every encoder FFmpeg knows must be reachable once the probe reports it,
   // otherwise the picker would silently drop it.
   MediaCapabilities.useAvailability(

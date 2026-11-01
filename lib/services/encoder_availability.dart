@@ -43,6 +43,15 @@ class EncoderAvailability {
   );
 
   /// Encoders compiled into the shipped binary for the running platform.
+  /// Baseline for an explicit platform key (`linux`, `windows`, `android`,
+  /// `web`). Used by `tool/check_catalog.dart`, which runs on one machine but
+  /// has to check every shipped build.
+  static EncoderAvailability baselineForPlatform(String key) =>
+      EncoderAvailability(
+        names: kPlatformBaselineEncoders[key] ?? kBaselineEncoderNames,
+        probed: false,
+      );
+
   static Set<String> get baselineNamesForCurrentPlatform =>
       kPlatformBaselineEncoders[baselinePlatformKey()] ?? kBaselineEncoderNames;
 
