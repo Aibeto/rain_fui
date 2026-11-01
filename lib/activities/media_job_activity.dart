@@ -14,6 +14,7 @@ import '../i18n/i18n.dart';
 import '../i18n/i18n_keys.dart';
 import '../models/source_selection.dart';
 import '../services/job_queue.dart';
+import '../services/output_directory.dart';
 import '../src/media/capabilities.dart';
 import '../src/media/codec_spec.dart';
 import '../src/media/container_spec.dart';
@@ -49,6 +50,7 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
   CodecSpec? _video;
   CodecSpec? _audio;
   ContainerSpec? _container;
+  String? _outputDir;
   final Map<String, String> _values = <String, String>{};
   bool _advancedOpen = false;
 
@@ -56,6 +58,7 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
   void initState() {
     super.initState();
     _kind = detectMediaKind(widget.file.name);
+    _outputDir = OutputDirectory.defaultPath;
     _outputName = TextEditingController(
       text: _defaultBaseName(widget.file.name),
     );
@@ -202,10 +205,15 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
   }
 
   String? _outputPath() {
+    final String? directory = _outputDir;
+    if (directory != null) {
+      return p.join(directory, _outputFileName());
+    }
     final String? input = widget.file.path;
     if (input == null || input.isEmpty) {
       return null;
     }
+    // No Downloads folder on this platform: keep the result next to the source.
     return p.join(p.dirname(input), _outputFileName());
   }
 
@@ -253,13 +261,20 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
     );
   }
 
-  void _start() {
+  Future<void> _start() async {
     final ContainerSpec? container = _container;
     if (container == null) {
       return;
     }
     if (_kind == MediaKind.video && _video == null) {
       return;
+    }
+    final String? directory = await OutputDirectory.ensure();
+    if (!mounted) {
+      return;
+    }
+    if (directory != null && directory != _outputDir) {
+      setState(() => _outputDir = directory);
     }
     JobQueue.instance.enqueue(_buildRequest());
     Navigator.of(context).pop();
@@ -305,6 +320,9 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
                       suffix: _container == null
                           ? ''
                           : '.${_container!.extension}',
+                      directory: _outputPath() == null
+                          ? null
+                          : p.dirname(_outputPath()!),
                       onChanged: () => setState(() {}),
                     ),
                     const SizedBox(height: 18),
@@ -613,18 +631,22 @@ class _OutputField extends StatelessWidget {
   const _OutputField({
     required this.controller,
     required this.suffix,
+    required this.directory,
     required this.onChanged,
   });
 
   final TextEditingController controller;
   final String suffix;
+
+  /// Folder the finished file is written to, shown under the name field.
+  final String? directory;
   final VoidCallback onChanged;
 
   @override
   Widget build(BuildContext context) {
     final FluentThemeData theme = FluentTheme.of(context);
     final AppL10n l10n = context.l10n;
-    return Row(
+    final Widget field = Row(
       children: <Widget>[
         SizedBox(
           width: 132,
@@ -653,6 +675,42 @@ class _OutputField extends StatelessWidget {
               ),
             ),
           ),
+      ],
+    );
+    final String? folder = directory;
+    if (folder == null) {
+      return field;
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        field,
+        Padding(
+          padding: const EdgeInsetsDirectional.only(start: 132, top: 6),
+          child: Row(
+            children: <Widget>[
+              Icon(
+                FluentIcons.folder_24_regular,
+                size: 12,
+                color: theme.resources.textFillColorTertiary,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  folder,
+                  style: AppTheme.mono(
+                    theme.typography.caption?.copyWith(
+                      color: theme.resources.textFillColorSecondary,
+                    ),
+                    l10n.locale,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
