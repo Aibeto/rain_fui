@@ -6,6 +6,8 @@
 /// and the options the selected encoder and muxer actually expose.
 library;
 
+import 'dart:math' as math;
+
 import 'package:fluent_ui/fluent_ui.dart' hide FluentIcons;
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:path/path.dart' as p;
@@ -618,6 +620,34 @@ class _CodecSelectors extends StatelessWidget {
   }
 }
 
+/// Width a dropdown needs so its widest entry fits without being cut.
+///
+/// Fluent sizes a popup from its longest item but leaves the closed field at
+/// whatever width the parent gives it, so the two drift apart. Measuring the
+/// same strings here keeps the field, the popup and the row edge consistent.
+double _comboWidth(
+  BuildContext context,
+  Iterable<String> labels, {
+  double min = 120,
+  double max = 280,
+  TextStyle? style,
+}) {
+  final TextStyle textStyle = style ?? FluentTheme.of(context).typography.body!;
+  final TextScaler scaler = MediaQuery.textScalerOf(context);
+  final TextDirection direction = Directionality.of(context);
+  double widest = 0;
+  for (final String label in labels) {
+    final TextPainter painter = TextPainter(
+      text: TextSpan(text: label, style: textStyle),
+      textDirection: direction,
+      textScaler: scaler,
+    )..layout();
+    widest = math.max(widest, painter.width);
+  }
+  // Chevron, horizontal padding and a little slack for the caret.
+  return (widest + 45).clamp(min, max);
+}
+
 class _PickerRow<T> extends StatelessWidget {
   const _PickerRow({
     required this.label,
@@ -640,22 +670,30 @@ class _PickerRow<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final FluentThemeData theme = FluentTheme.of(context);
+    final double width = _comboWidth(context, <String>[
+      if (allowNone) noneLabel,
+      for (final T item in items) labelOf(item),
+    ]);
     return Padding(
       padding: const EdgeInsetsDirectional.only(bottom: 8),
       child: Row(
         children: <Widget>[
-          SizedBox(
-            width: 132,
-            child: Text(label, style: theme.typography.body),
-          ),
           Expanded(
+            child: Text(
+              label,
+              style: theme.typography.body,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: width,
             child: ComboBox<T?>(
               isExpanded: true,
-              // Sizing the popup here keeps a long encoder name from
-              // stretching the menu across the whole window.
-              popupConstraints: const BoxConstraints(
-                minWidth: 280,
-                maxWidth: 320,
+              popupConstraints: BoxConstraints(
+                minWidth: width,
+                maxWidth: width,
                 maxHeight: 360,
               ),
               popupColor: FluentTheme.of(context).menuColor,
@@ -664,7 +702,14 @@ class _PickerRow<T> extends StatelessWidget {
                 if (allowNone)
                   ComboBoxItem<T?>(value: null, child: Text(noneLabel)),
                 for (final T item in items)
-                  ComboBoxItem<T?>(value: item, child: Text(labelOf(item))),
+                  ComboBoxItem<T?>(
+                    value: item,
+                    child: Text(
+                      labelOf(item),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
               ],
               onChanged: (T? selected) {
                 if (selected == null && !allowNone) {
@@ -739,23 +784,22 @@ class _DecoderRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final FluentThemeData theme = FluentTheme.of(context);
     final AppL10n l10n = context.l10n;
+    final double width = _comboWidth(context, <String>[
+      l10n(I18nKey.jobDecoderAuto),
+      ...options,
+    ], max: 200);
     return Row(
       children: <Widget>[
+        Expanded(child: Text(l10n(labelKey), style: theme.typography.body)),
+        const SizedBox(width: 12),
         SizedBox(
-          width: 132,
-          child: Text(l10n(labelKey), style: theme.typography.body),
-        ),
-        SizedBox(
-          // Decoder names are short (h264, aac), so the field does not need
-          // the width of a codec name; the popup is pinned to the same width
-          // instead of stretching to the longest entry.
-          width: 160,
+          width: width,
           child: ComboBox<String?>(
             isExpanded: true,
             popupColor: theme.menuColor,
-            popupConstraints: const BoxConstraints(
-              minWidth: 160,
-              maxWidth: 160,
+            popupConstraints: BoxConstraints(
+              minWidth: width,
+              maxWidth: width,
               maxHeight: 320,
             ),
             value: value,
@@ -992,9 +1036,23 @@ class _OptionField extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        SizedBox(width: 132, child: _editor(context)),
+        SizedBox(width: _trailingWidth(context), child: _editor(context)),
       ],
     );
+  }
+
+  /// Width of the trailing control: dropdowns take the width of their widest
+  /// entry, everything else keeps the compact column width.
+  double _trailingWidth(BuildContext context) {
+    final OptionSpec option = spec;
+    if (option is! ChoiceOption) {
+      return 132;
+    }
+    return _comboWidth(context, <String>[
+      if (option.allowEmpty) context.l10n(I18nKey.optionUnset),
+      for (final OptionChoice choice in option.choices)
+        choice.labelKey == null ? choice.value : context.l10n(choice.labelKey!),
+    ]);
   }
 
   Widget _editor(BuildContext context) {
@@ -1011,10 +1069,15 @@ class _OptionField extends StatelessWidget {
       case final ChoiceOption choice:
         final String? current =
             host.valueOf[choice.flag] ?? choice.initialValue;
+        final double width = _trailingWidth(context);
         return ComboBox<String>(
           isExpanded: true,
-          // Solid popup fill; the default tint lets the page show through.
           popupColor: FluentTheme.of(context).menuColor,
+          popupConstraints: BoxConstraints(
+            minWidth: width,
+            maxWidth: width,
+            maxHeight: 320,
+          ),
           value: current,
           placeholder: Text(context.l10n(I18nKey.optionUnset)),
           items: <ComboBoxItem<String>>[
