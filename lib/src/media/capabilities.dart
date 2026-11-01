@@ -115,6 +115,8 @@ abstract final class MediaCapabilities {
     'jpeg',
     'bmp',
     'tiff',
+    'avif',
+    'ico',
   };
 
   static List<ContainerSpec> containersFor({

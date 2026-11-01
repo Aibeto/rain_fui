@@ -645,8 +645,8 @@ ADPCM / DPCM 编码器：
   `msmpeg4v3 → msmpeg4`、`roq → roqvideo`、`ra_144 → real_144`、`adpcm_g722 → g722`、
   `adpcm_g726 → g726`、`adpcm_g726le → g726le`。这些名字在 `-encoders` 里查不到时，命令行
   靠回退能跑，但 FFI 与 CI 会失败。
-- **容器白名单**：27 个容器 × 158 个编码器逐对做最小编码（视频一帧、音频 0.2 秒），成功才收录，
-  共 519 组正向 + 623 组反向。原先从本文第 4 节抄来的白名单有 43.9% 会被 muxer 拒绝，
+- **容器白名单**：48 个容器（46 个 muxer 行）× 197 个 codec id 逐对做最小编码（视频一帧、音频 0.2 秒），成功才收录，
+  共 1393 组被 muxer 接受。原先从本文第 4 节抄来的白名单有 43.9% 会被 muxer 拒绝，
   mp4 尤其严重（35 个视频编码器里只有 7 个真能写）。`dv` 需要单独用 720×576、25 帧测，
   `mxf`/`dv` 的音频要带一路视频才成立。
 - **参数**：`-b:v`/`-b:a`/`-maxrate`/`-bufsize` 的单位是 bit/s，界面按 kbps 输入，渲染时补 `k`；
@@ -667,6 +667,6 @@ ADPCM / DPCM 编码器：
 容器能不能放某个编码器，按 codec id 判断，不按编码器名：`libx264`、`h264_nvenc`、`h264_qsv` 都算 `h264`，映射表由 `tool/gen_capabilities.py` 生成。数据来源都在 `tool/data/`：
 
 * `encoders-system.json`、`encoders-bundled.json`：两个真实二进制各自报的编码器、codec id 与像素格式；
-* `containers-system.json`：27 个 muxer 对哪些 codec id 真的能写，靠一只 64×64 的单帧和 0.2 秒静音逐个试出来，dv 和 mxf 另用 720×576 与带视频流的组合手工量过。
+* `containers-system.json`：48 个 muxer 对哪些 codec id 真的能写，靠一只 64×64 的单帧和 0.2 秒静音逐个试出来，dv 和 mxf 另用 720×576 与带视频流的组合手工量过。
 
 `tool/check_catalog.dart` 用原生构建和完整构建两种假设各查一遍，验证 mp4 收 H.264、WebM 不收、flac 不收 opus、原生构建不列 libx264 这些结论。

@@ -127,6 +127,8 @@ CONTAINER_OVERRIDES: dict[str, dict[str, list[str]]] = {
     "ac3": {"video": [], "audio": ["ac3"]},
     "adts": {"video": [], "audio": ["aac"]},
     "wv": {"video": [], "audio": ["wavpack"]},
+    # The Ogg muxer accepts every Ogg payload; Speex is a Speex container.
+    "spx": {"video": [], "audio": ["speex"]},
 }
 
 HEADER = """// GENERATED FILE. Do not edit by hand.
