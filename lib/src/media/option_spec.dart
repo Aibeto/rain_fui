@@ -12,6 +12,7 @@ sealed class OptionSpec {
     this.labelKey,
     this.defaultValue,
     this.advanced = false,
+    this.exclusiveGroup,
   });
 
   /// The CLI flag, for example `-b:v`. Shown verbatim next to the label because
@@ -27,6 +28,10 @@ sealed class OptionSpec {
   /// Advanced options live behind the "more options" expander.
   final bool advanced;
 
+  /// Flags sharing a non-null group are mutually exclusive, for example
+  /// `-q:v` (constant quality) and `-b:v` (target bitrate).
+  final String? exclusiveGroup;
+
   /// CLI fragment for [value], or an empty list when the flag must not appear.
   List<String> render(String? value);
 
@@ -41,6 +46,7 @@ class ToggleOption extends OptionSpec {
     required super.labelKey,
     super.defaultValue = '0',
     super.advanced,
+    super.exclusiveGroup,
   });
 
   @override
@@ -55,6 +61,7 @@ class IntOption extends OptionSpec {
     required super.labelKey,
     super.defaultValue,
     super.advanced,
+    super.exclusiveGroup,
     this.min,
     this.max,
     this.unit,
@@ -89,6 +96,7 @@ class DecimalOption extends OptionSpec {
     required super.labelKey,
     super.defaultValue,
     super.advanced,
+    super.exclusiveGroup,
     this.min,
     this.max,
     this.unit,
@@ -135,6 +143,7 @@ class ChoiceOption extends OptionSpec {
     required this.choices,
     super.defaultValue,
     super.advanced,
+    super.exclusiveGroup,
     this.allowEmpty = true,
   });
 
@@ -174,6 +183,7 @@ class TextOption extends OptionSpec {
     required super.labelKey,
     super.defaultValue,
     super.advanced,
+    super.exclusiveGroup,
     this.hint,
   });
 

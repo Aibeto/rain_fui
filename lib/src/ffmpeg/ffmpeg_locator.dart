@@ -46,9 +46,9 @@ class FfmpegLocator {
     this.androidNativeLibraryDir,
     this.executableSuffix = '',
     this.includeSystemPath = true,
-  })  : _environment = environment ?? Platform.environment,
-        _executablePath = executablePath ?? Platform.resolvedExecutable,
-        _workingDirectory = workingDirectory ?? _safeCurrentDirectory();
+  }) : _environment = environment ?? Platform.environment,
+       _executablePath = executablePath ?? Platform.resolvedExecutable,
+       _workingDirectory = workingDirectory ?? _safeCurrentDirectory();
 
   static const String envOverride = 'RAIN_FUI_FFMPEG_BIN';
   static const String envFallback = 'FFMPEG_BIN';
@@ -132,25 +132,49 @@ class FfmpegLocator {
         // Built as an executable but shipped with an .so suffix so that it
         // lands in nativeLibraryDir, the only exec-capable location on
         // Android 10+.
-        yield FfmpegLocation(_join(libDir, 'libffmpeg_exe.so'), FfmpegLocationSource.bundled);
-        yield FfmpegLocation(_join(libDir, 'libffmpeg.so'), FfmpegLocationSource.bundled);
+        yield FfmpegLocation(
+          _join(libDir, 'libffmpeg_exe.so'),
+          FfmpegLocationSource.bundled,
+        );
+        yield FfmpegLocation(
+          _join(libDir, 'libffmpeg.so'),
+          FfmpegLocationSource.bundled,
+        );
       }
       return;
     }
 
     if (Platform.isMacOS) {
-      yield FfmpegLocation(_join(_join(exeDir, '..'), 'Frameworks/$name'), FfmpegLocationSource.bundled);
-      yield FfmpegLocation(_join(_join(exeDir, '..'), 'Resources/$name'), FfmpegLocationSource.bundled);
+      yield FfmpegLocation(
+        _join(_join(exeDir, '..'), 'Frameworks/$name'),
+        FfmpegLocationSource.bundled,
+      );
+      yield FfmpegLocation(
+        _join(_join(exeDir, '..'), 'Resources/$name'),
+        FfmpegLocationSource.bundled,
+      );
     }
 
     if (Platform.isLinux) {
       // linux/CMakeLists.txt installs the program into INSTALL_BUNDLE_LIB_DIR
       // (= <bundle>/lib) under its own name, so the shipped path is the *file*
       // <bundle>/lib/ffmpeg. The directory layout is accepted as a fallback.
-      yield FfmpegLocation(_join(exeDir, 'lib/$name'), FfmpegLocationSource.bundled);
-      yield FfmpegLocation(_join(exeDir, 'lib/ffmpeg/$name'), FfmpegLocationSource.bundled);
-      yield FfmpegLocation(_join(_join(exeDir, '..'), 'lib/$name'), FfmpegLocationSource.bundled);
-      yield FfmpegLocation(_join(_join(exeDir, '..'), 'lib/ffmpeg/$name'), FfmpegLocationSource.bundled);
+      yield FfmpegLocation(
+        _join(exeDir, 'lib/$name'),
+        FfmpegLocationSource.bundled,
+      );
+      yield FfmpegLocation(
+        _join(exeDir, 'lib/ffmpeg/$name'),
+        FfmpegLocationSource.bundled,
+      );
+      yield FfmpegLocation(
+        _join(_join(exeDir, '..'), 'lib/$name'),
+        FfmpegLocationSource.bundled,
+      );
+      yield FfmpegLocation(
+        _join(_join(exeDir, '..'), 'lib/ffmpeg/$name'),
+        FfmpegLocationSource.bundled,
+      );
     }
 
     if (Platform.isWindows) {
@@ -164,13 +188,19 @@ class FfmpegLocator {
     final name = 'ffmpeg$executableSuffix';
 
     if (Platform.isLinux) {
-      yield FfmpegLocation(_join(_workingDirectory, 'linux/ffmpeg/$name'), FfmpegLocationSource.development);
+      yield FfmpegLocation(
+        _join(_workingDirectory, 'linux/ffmpeg/$name'),
+        FfmpegLocationSource.development,
+      );
       yield FfmpegLocation(
         _join(_workingDirectory, 'build/ffmpeg/dist/linux-x64/$name'),
         FfmpegLocationSource.development,
       );
     } else if (Platform.isWindows) {
-      yield FfmpegLocation(_join(_workingDirectory, 'windows/ffmpeg/$name'), FfmpegLocationSource.development);
+      yield FfmpegLocation(
+        _join(_workingDirectory, 'windows/ffmpeg/$name'),
+        FfmpegLocationSource.development,
+      );
       yield FfmpegLocation(
         _join(_workingDirectory, 'build/ffmpeg/dist/windows-x64/$name'),
         FfmpegLocationSource.development,
@@ -181,7 +211,10 @@ class FfmpegLocator {
   Iterable<FfmpegLocation> _pathCandidates() sync* {
     if (!includeSystemPath) return;
     if (Platform.isAndroid) return; // No POSIX PATH for app processes.
-    yield FfmpegLocation('ffmpeg$executableSuffix', FfmpegLocationSource.systemPath);
+    yield FfmpegLocation(
+      'ffmpeg$executableSuffix',
+      FfmpegLocationSource.systemPath,
+    );
   }
 
   static String _directoryOf(String path) {

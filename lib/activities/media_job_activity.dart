@@ -350,8 +350,25 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
   }
 
   void _onOptionChanged(OptionSpec spec, String? value) {
+    final bool clearing = value == null || value.isEmpty;
     setState(() {
-      if (value == null || value.isEmpty) {
+      if (!clearing && spec.exclusiveGroup != null) {
+        // Constant quality and target bitrate are two answers to one question,
+        // so picking one has to take the others off the command line.
+        for (final OptionSpec sibling in <OptionSpec>[
+          ..._basicOptions,
+          ..._advancedOptions,
+        ]) {
+          if (identical(sibling, spec) ||
+              sibling.exclusiveGroup != spec.exclusiveGroup) {
+            continue;
+          }
+          if (_values.remove(sibling.flag) != null) {
+            _fields[sibling.flag]?.clear();
+          }
+        }
+      }
+      if (clearing) {
         _values.remove(spec.flag);
       } else {
         _values[spec.flag] = value;

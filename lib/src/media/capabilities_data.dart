@@ -19,9 +19,16 @@ import 'option_spec.dart';
 
 /// Quality and rate control knobs almost every video encoder honours.
 const List<OptionSpec> _videoRateOptions = <OptionSpec>[
-  IntOption(flag: '-q:v', labelKey: I18nKey.optQualityScale, min: 1, max: 31),
+  IntOption(
+    flag: '-q:v',
+    exclusiveGroup: 'rate',
+    labelKey: I18nKey.optQualityScale,
+    min: 1,
+    max: 31,
+  ),
   IntOption(
     flag: '-b:v',
+    exclusiveGroup: 'rate',
     labelKey: I18nKey.optBitrateVideo,
     min: 1,
     unit: 'kbps',
@@ -43,6 +50,7 @@ const List<OptionSpec> _videoRateOptions = <OptionSpec>[
   ),
   IntOption(
     flag: '-maxrate',
+    exclusiveGroup: 'rate',
     labelKey: I18nKey.optMaxRate,
     min: 1,
     unit: 'kbps',
@@ -50,6 +58,7 @@ const List<OptionSpec> _videoRateOptions = <OptionSpec>[
   ),
   IntOption(
     flag: '-bufsize',
+    exclusiveGroup: 'rate',
     labelKey: I18nKey.optBufSize,
     min: 1,
     unit: 'kbps',
@@ -217,6 +226,7 @@ final List<CodecSpec> kVideoCodecs = <CodecSpec>[
     options: <OptionSpec>[
       IntOption(
         flag: '-q:v',
+        exclusiveGroup: 'rate',
         labelKey: I18nKey.optQualityScale,
         min: 1,
         max: 31,
@@ -552,6 +562,7 @@ final List<CodecSpec> kAudioCodecs = <CodecSpec>[
     options: <OptionSpec>[
       IntOption(
         flag: '-b:a',
+        exclusiveGroup: 'audioRate',
         labelKey: I18nKey.optBitrateAudio,
         min: 8,
         unit: 'kbps',
@@ -780,6 +791,7 @@ final List<CodecSpec> kAudioCodecs = <CodecSpec>[
     options: <OptionSpec>[
       IntOption(
         flag: '-q:a',
+        exclusiveGroup: 'audioRate',
         labelKey: I18nKey.optQualityScaleAudio,
         min: -1,
         max: 10,

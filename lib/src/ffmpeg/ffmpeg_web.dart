@@ -104,7 +104,10 @@ class WebFfmpegBackend extends FfmpegBackend {
       );
     }
 
-    final task = WebFfmpegTask._(command: command, onCancel: () => bridge.cancel());
+    final task = WebFfmpegTask._(
+      command: command,
+      onCancel: () => bridge.cancel(),
+    );
     final argv = command.toArgv().map((arg) => arg.toJS).toList().toJS;
     final onLine = ((JSString stream, JSString line) {
       task.handleLine(stream.toDart, line.toDart);

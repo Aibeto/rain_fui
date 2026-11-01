@@ -57,9 +57,18 @@ class EncodeRequest {
   /// CLI arguments for [optionValues], in the order the specs declare.
   List<String> buildOptionArgs() {
     final List<String> args = <String>[];
+    final Set<String> usedGroups = <String>{};
     for (final OptionSpec spec in activeOptions) {
       final String? value = optionValues[spec.flag] ?? spec.initialValue;
-      args.addAll(spec.render(value));
+      final List<String> rendered = spec.render(value);
+      final String? group = spec.exclusiveGroup;
+      if (rendered.isEmpty || (group != null && usedGroups.contains(group))) {
+        continue;
+      }
+      if (group != null) {
+        usedGroups.add(group);
+      }
+      args.addAll(rendered);
     }
     return args;
   }

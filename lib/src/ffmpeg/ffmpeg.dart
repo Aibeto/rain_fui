@@ -10,7 +10,8 @@ library;
 import 'ffmpeg_api.dart';
 import 'ffmpeg_unsupported.dart'
     if (dart.library.io) 'ffmpeg_io.dart'
-    if (dart.library.js_interop) 'ffmpeg_web.dart' as platform;
+    if (dart.library.js_interop) 'ffmpeg_web.dart'
+    as platform;
 
 export 'ffmpeg_api.dart';
 

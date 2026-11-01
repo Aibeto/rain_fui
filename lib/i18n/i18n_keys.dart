@@ -43,6 +43,7 @@ abstract final class I18nKey {
   static const String addSourceConfirmTitle = 'add_source_confirm_title';
   static const String addSourceConfirmBody = 'add_source_confirm_body';
   static const String actionAdd = 'action_add';
+
   /// Shown as the empty entry of an option that may be left unset.
   static const String optionUnset = 'option_unset';
 

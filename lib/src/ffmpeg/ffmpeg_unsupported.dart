@@ -20,7 +20,8 @@ class UnsupportedFfmpegBackend extends FfmpegBackend {
   Future<void> initialize() async {}
 
   @override
-  Future<String> version() async => throw FfmpegNotFoundException(unavailableReason ?? 'Unsupported');
+  Future<String> version() async =>
+      throw FfmpegNotFoundException(unavailableReason ?? 'Unsupported');
 
   @override
   Future<FfmpegTask> run(FfmpegCommand command) async =>
