@@ -26,6 +26,7 @@ import '../src/media/media_kind.dart';
 import '../src/media/option_spec.dart';
 import '../theme/app_theme.dart';
 import '../theme/metrics.dart';
+import '../widgets/mini_icon_button.dart';
 
 /// Encode settings for one picked file.
 class MediaJobActivity extends StatefulWidget {
@@ -117,6 +118,22 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
   }
 
   CodecSpec? _preferredVideoCodec() {
+    // A still image has to start on an image encoder; mpeg4 as the first entry
+    // of the full list would send a PNG through an MP4 muxer.
+    if (_kind == MediaKind.image) {
+      for (final String id in const <String>[
+        'png',
+        'mjpeg',
+        'ljpeg',
+        'gif',
+        'zmbv',
+      ]) {
+        final CodecSpec? codec = MediaCapabilities.videoCodec(id);
+        if (codec != null) {
+          return codec;
+        }
+      }
+    }
     final List<CodecSpec> codecs = MediaCapabilities.videoCodecs;
     return codecs.isEmpty ? null : codecs.first;
   }
@@ -276,14 +293,64 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
 
   String _outputFileName() {
     final ContainerSpec? container = _container;
-    final String base = _outputName.text.trim().isEmpty
-        ? _defaultBaseName(widget.file.name)
-        : _outputName.text.trim();
-    if (container == null || base.endsWith('.${container.extension}')) {
+    final String typed = _outputName.text.trim();
+    String base = typed.isEmpty ? _defaultBaseName(widget.file.name) : typed;
+    if (container == null) {
       return base;
     }
-    return '$base.${container.extension}';
+    final String suffix = '.${container.extension}';
+    if (base.toLowerCase().endsWith(suffix)) {
+      return base;
+    }
+    // Typing "clip.mkv" while the container is MP4 has to produce "clip.mp4",
+    // not "clip.mkv.mp4": a known media extension is replaced, anything else
+    // is kept and the container extension is appended.
+    final String extension = p.extension(base).toLowerCase();
+    if (_mediaExtensions.contains(extension.replaceFirst('.', ''))) {
+      base = base.substring(0, base.length - extension.length);
+    }
+    return '$base$suffix';
   }
+
+  /// Extensions that name a real media file, used to decide whether a typed
+  /// name already carries one.
+  static const Set<String> _mediaExtensions = <String>{
+    'mp4',
+    'm4v',
+    'mov',
+    'mkv',
+    'mka',
+    'webm',
+    'avi',
+    'ts',
+    'm2ts',
+    'flv',
+    'gif',
+    'png',
+    'apng',
+    'jpg',
+    'jpeg',
+    'bmp',
+    'tiff',
+    'wav',
+    'flac',
+    'ogg',
+    'opus',
+    'm4a',
+    'ac3',
+    'adts',
+    'aac',
+    'wv',
+    'nut',
+    'asf',
+    'wmv',
+    'dv',
+    'mxf',
+    'yuv',
+    'y4m',
+    'smjpeg',
+    'swf',
+  };
 
   String? _outputPath() {
     final String? directory = _outputDir;
@@ -377,6 +444,7 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
             _Header(
               title: l10n(I18nKey.jobPageTitle),
               subtitle: widget.file.name,
+              onBack: () => Navigator.of(context).maybePop(),
             ),
             Expanded(
               child: SingleChildScrollView(
@@ -386,95 +454,107 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
                   AppMetrics.gutter,
                   24,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    _FileCard(file: widget.file, kind: _kind),
-                    const SizedBox(height: AppMetrics.sectionGap),
-                    _sectionTitle(context, I18nKey.jobSectionCodecs),
-                    const SizedBox(height: AppMetrics.sectionTitleGap),
-                    _CodecSelectors(
-                      kind: _kind,
-                      video: _video,
-                      audio: _audio,
-                      container: _container,
-                      onVideo: _setVideo,
-                      onAudio: _setAudio,
-                      onContainer: _setContainer,
+                // A wide window would otherwise stretch every field across the
+                // screen; the form keeps a readable measure and stays centred.
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: AppMetrics.contentWidth,
                     ),
-                    const SizedBox(height: 10),
-                    _OutputField(
-                      controller: _outputName,
-                      suffix: _container == null
-                          ? ''
-                          : '.${_container!.extension}',
-                      directory: _outputPath() == null
-                          ? null
-                          : p.dirname(_outputPath()!),
-                      onChanged: () => setState(() {}),
-                    ),
-                    const SizedBox(height: AppMetrics.sectionGap),
-                    _sectionTitle(context, I18nKey.jobSectionInput),
-                    const SizedBox(height: AppMetrics.sectionTitleGap),
-                    _DecoderRows(
-                      kind: _kind,
-                      videoDecoder: _videoDecoder,
-                      audioDecoder: _audioDecoder,
-                      onVideo: (String? value) =>
-                          setState(() => _videoDecoder = value),
-                      onAudio: (String? value) =>
-                          setState(() => _audioDecoder = value),
-                    ),
-                    const SizedBox(height: AppMetrics.sectionGap),
-                    _sectionTitle(context, I18nKey.jobSectionBasic),
-                    const SizedBox(height: AppMetrics.sectionTitleGap),
-                    if (_showsRateMode) ...<Widget>[
-                      _RateModeRow(
-                        mode: _videoRateMode,
-                        hasQuality: _videoHasQuality,
-                        hasBitrate: _videoHasBitrate,
-                        onChanged: _setVideoRateMode,
-                      ),
-                      if (!_rateReady) ...<Widget>[
-                        Text(
-                          l10n(I18nKey.jobRateRequired),
-                          style: theme.typography.caption?.copyWith(
-                            color: theme.accentColor,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        _FileCard(file: widget.file, kind: _kind),
+                        const SizedBox(height: AppMetrics.sectionGap),
+                        _sectionTitle(context, I18nKey.jobSectionCodecs),
+                        const SizedBox(height: AppMetrics.sectionTitleGap),
+                        _CodecSelectors(
+                          kind: _kind,
+                          video: _video,
+                          audio: _audio,
+                          container: _container,
+                          onVideo: _setVideo,
+                          onAudio: _setAudio,
+                          onContainer: _setContainer,
+                        ),
+                        const SizedBox(height: 10),
+                        _OutputField(
+                          controller: _outputName,
+                          suffix: _container == null
+                              ? ''
+                              : '.${_container!.extension}',
+                          directory: _outputPath() == null
+                              ? null
+                              : p.dirname(_outputPath()!),
+                          onChanged: () => setState(() {}),
+                        ),
+                        const SizedBox(height: AppMetrics.sectionGap),
+                        _sectionTitle(context, I18nKey.jobSectionInput),
+                        const SizedBox(height: AppMetrics.sectionTitleGap),
+                        _DecoderRows(
+                          kind: _kind,
+                          videoDecoder: _videoDecoder,
+                          audioDecoder: _audioDecoder,
+                          onVideo: (String? value) =>
+                              setState(() => _videoDecoder = value),
+                          onAudio: (String? value) =>
+                              setState(() => _audioDecoder = value),
+                        ),
+                        const SizedBox(height: AppMetrics.sectionGap),
+                        _sectionTitle(context, I18nKey.jobSectionBasic),
+                        const SizedBox(height: AppMetrics.sectionTitleGap),
+                        if (_showsRateMode) ...<Widget>[
+                          _RateModeRow(
+                            mode: _videoRateMode,
+                            hasQuality: _videoHasQuality,
+                            hasBitrate: _videoHasBitrate,
+                            onChanged: _setVideoRateMode,
+                          ),
+                          if (!_rateReady) ...<Widget>[
+                            Text(
+                              l10n(I18nKey.jobRateRequired),
+                              style: theme.typography.caption?.copyWith(
+                                color: theme.accentColor,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                          ],
+                          const SizedBox(height: 6),
+                        ],
+                        _OptionGrid(
+                          specs: _basicOptions,
+                          valueOf: _values,
+                          controllerFor: _controllerFor,
+                          onChanged: _onOptionChanged,
+                        ),
+                        const SizedBox(height: AppMetrics.rowGap + 6),
+                        _AdvancedExpander(
+                          open: _advancedOpen,
+                          count: advanced.length,
+                          onToggle: () =>
+                              setState(() => _advancedOpen = !_advancedOpen),
+                          child: _OptionGrid(
+                            specs: advanced,
+                            valueOf: _values,
+                            controllerFor: _controllerFor,
+                            onChanged: _onOptionChanged,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: AppMetrics.sectionGap),
+                        _sectionTitle(context, I18nKey.jobSectionCustom),
+                        const SizedBox(height: AppMetrics.sectionTitleGap),
+                        TextBox(
+                          controller: _customArgs,
+                          placeholder: l10n(I18nKey.jobCustomHint),
+                          style: AppTheme.mono(
+                            theme.typography.body,
+                            l10n.locale,
+                          ),
+                          maxLines: 2,
+                        ),
                       ],
-                      const SizedBox(height: 6),
-                    ],
-                    _OptionGrid(
-                      specs: _basicOptions,
-                      valueOf: _values,
-                      controllerFor: _controllerFor,
-                      onChanged: _onOptionChanged,
                     ),
-                    const SizedBox(height: AppMetrics.rowGap + 6),
-                    _AdvancedExpander(
-                      open: _advancedOpen,
-                      count: advanced.length,
-                      onToggle: () =>
-                          setState(() => _advancedOpen = !_advancedOpen),
-                      child: _OptionGrid(
-                        specs: advanced,
-                        valueOf: _values,
-                        controllerFor: _controllerFor,
-                        onChanged: _onOptionChanged,
-                      ),
-                    ),
-                    const SizedBox(height: AppMetrics.sectionGap),
-                    _sectionTitle(context, I18nKey.jobSectionCustom),
-                    const SizedBox(height: AppMetrics.sectionTitleGap),
-                    TextBox(
-                      controller: _customArgs,
-                      placeholder: l10n(I18nKey.jobCustomHint),
-                      style: AppTheme.mono(theme.typography.body, l10n.locale),
-                      maxLines: 2,
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -541,15 +621,25 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
 
   Widget _sectionTitle(BuildContext context, String key) {
     final FluentThemeData theme = FluentTheme.of(context);
-    return Text(context.l10n(key), style: theme.typography.bodyStrong);
+    return Text(
+      context.l10n(key),
+      style: theme.typography.bodyStrong?.copyWith(
+        color: theme.resources.textFillColorSecondary,
+      ),
+    );
   }
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.title, required this.subtitle});
+  const _Header({
+    required this.title,
+    required this.subtitle,
+    required this.onBack,
+  });
 
   final String title;
   final String subtitle;
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
@@ -570,6 +660,14 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: <Widget>[
+          MiniIconButton(
+            icon: FluentIcons.arrow_left_24_regular,
+            tooltip: context.l10n(I18nKey.actionClose),
+            onPressed: onBack,
+            size: 28,
+            iconSize: 14,
+          ),
+          const SizedBox(width: 6),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -687,6 +785,18 @@ class _CodecSelectors extends StatelessWidget {
         ? MediaCapabilities.audioCodecs
         : MediaCapabilities.audioCodecsFor(container!);
 
+    // Only the containers that can hold what is currently selected, plus the
+    // current one so a stale choice never disappears out from under the field.
+    final ContainerSpec? current = container;
+    final List<ContainerSpec> containers = MediaCapabilities.containersFor(
+      kind: kind,
+      videoCodecId: video?.id,
+      audioCodecId: audio?.id,
+    );
+    if (current != null && !containers.contains(current)) {
+      containers.insert(0, current);
+    }
+
     // One width for the three pickers: measuring each row on its own left the
     // fields starting at three different x.
     final double width = _comboWidth(context, <String>[
@@ -695,9 +805,7 @@ class _CodecSelectors extends StatelessWidget {
       if (kind != MediaKind.image) l10n(I18nKey.jobNoAudio),
       if (kind != MediaKind.image) ...audios.map((CodecSpec c) => c.name),
       l10n(I18nKey.jobNoContainer),
-      ...MediaCapabilities.containers.map(
-        (ContainerSpec c) => '${c.name} (.${c.extension})',
-      ),
+      ...containers.map((ContainerSpec c) => '${c.name} (.${c.extension})'),
     ]);
 
     return Column(
@@ -727,8 +835,8 @@ class _CodecSelectors extends StatelessWidget {
           ),
         _PickerRow<ContainerSpec>(
           label: l10n(I18nKey.jobLabelContainer),
-          items: MediaCapabilities.containers,
-          value: container,
+          items: containers,
+          value: current,
           labelOf: (ContainerSpec c) => '${c.name} (.${c.extension})',
           onChanged: onContainer,
           allowNone: false,
@@ -917,6 +1025,7 @@ class _PickerRow<T> extends StatelessWidget {
                 maxHeight: 360,
               ),
               popupColor: FluentTheme.of(context).menuColor,
+              placeholder: Text(noneLabel),
               value: value,
               items: <ComboBoxItem<T?>>[
                 if (allowNone)
@@ -1508,12 +1617,12 @@ class _RangeFieldState extends State<_RangeField> {
               ),
             ),
             const SizedBox(width: 6),
-            _MiniIconButton(
+            MiniIconButton(
               icon: FluentIcons.edit_24_regular,
               tooltip: l10n(I18nKey.optionEdit),
               onPressed: _editing ? null : () => _startEditing(current),
             ),
-            _MiniIconButton(
+            MiniIconButton(
               icon: FluentIcons.dismiss_24_regular,
               tooltip: l10n(I18nKey.optionUnset),
               onPressed: current == null && !_editing
@@ -1545,7 +1654,7 @@ class _RangeFieldState extends State<_RangeField> {
               ),
               Padding(
                 padding: const EdgeInsetsDirectional.only(start: 6),
-                child: _MiniIconButton(
+                child: MiniIconButton(
                   icon: FluentIcons.checkmark_24_regular,
                   tooltip: l10n(I18nKey.optionEdit),
                   onPressed: _commit,
@@ -1570,56 +1679,6 @@ class _RangeFieldState extends State<_RangeField> {
                 host.onChanged(widget.spec, _format(value)),
           ),
       ],
-    );
-  }
-}
-
-/// A 24 px square icon button.
-///
-/// The stock `IconButton` reserves 40 px around a 10 px glyph, which made the
-/// header row of every ranged option taller than the label it sits next to and
-/// pushed the value chip off centre. This keeps the hit target and the row
-/// height in step with the text.
-class _MiniIconButton extends StatelessWidget {
-  const _MiniIconButton({
-    required this.icon,
-    required this.tooltip,
-    this.onPressed,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final FluentThemeData theme = FluentTheme.of(context);
-    final ResourceDictionary resources = theme.resources;
-    final bool enabled = onPressed != null;
-    return Tooltip(
-      message: tooltip,
-      child: HoverButton(
-        onPressed: onPressed,
-        builder: (BuildContext context, Set<WidgetState> states) {
-          return Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              color: enabled && states.contains(WidgetState.hovered)
-                  ? resources.subtleFillColorSecondary
-                  : null,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Icon(
-              icon,
-              size: 12,
-              color: enabled
-                  ? resources.textFillColorSecondary
-                  : resources.textFillColorDisabled,
-            ),
-          );
-        },
-      ),
     );
   }
 }

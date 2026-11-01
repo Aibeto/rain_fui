@@ -72,6 +72,17 @@ abstract final class MediaCapabilities {
   /// Containers that can hold the given selection.
   ///
   /// Passing null for a stream means "this file has no such stream".
+  /// Extensions that hold a single still image.
+  static const Set<String> _imageContainerExtensions = <String>{
+    'png',
+    'apng',
+    'gif',
+    'jpg',
+    'jpeg',
+    'bmp',
+    'tiff',
+  };
+
   static List<ContainerSpec> containersFor({
     required MediaKind kind,
     String? videoCodecId,
@@ -84,8 +95,14 @@ abstract final class MediaCapabilities {
           // container silently drops the picture.
           switch (kind) {
             case MediaKind.video:
+              // A still-image muxer would quietly write a single frame.
+              if (container.videoCodecs.isEmpty ||
+                  _imageContainerExtensions.contains(container.extension)) {
+                return false;
+              }
             case MediaKind.image:
-              if (container.videoCodecs.isEmpty) {
+              if (container.videoCodecs.isEmpty ||
+                  !_imageContainerExtensions.contains(container.extension)) {
                 return false;
               }
             case MediaKind.audio:

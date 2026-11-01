@@ -66,7 +66,8 @@ lib/
     ├── drop_surface.dart           DropTarget wrapper + drop overlay      [lead]
     ├── add_source_dialog.dart      the "+" ContentDialog                  [dialogs]
     ├── selection_result_dialog.dart  shared result ContentDialog          [dialogs]
-    └── message_dialog.dart         localized error/notice dialog          [dialogs]
+    ├── message_dialog.dart         localized error/notice dialog          [dialogs]
+    └── mini_icon_button.dart       MiniIconButton, small square icon button [lead]
 ```
 
 ## Frozen public API
@@ -242,6 +243,13 @@ encoder and container that the static table says can work together, renders
 reports progress back to the home list. Pause is a real `SIGSTOP` on POSIX; when
 the platform cannot signal a process the job says so instead of pretending.
 
+The pickers only offer pairs the table allows: containers are filtered by media
+kind and by the codecs already chosen, still-image sources start on an image
+encoder and an image container, and a video source never gets a still-image
+muxer. A typed output name that already carries a media extension has it
+replaced, so `clip.mkv` in an MP4 job becomes `clip.mp4` rather than
+`clip.mkv.mp4`.
+
 ## Layout behaviour
 
 - The sidebar starts collapsed. `HomeActivity` pushes the content region aside
@@ -251,8 +259,14 @@ the platform cannot signal a process the job says so instead of pretending.
   wording of the empty state) exist only where dragging does:
   `supportsDropTarget` = web, Windows, Linux, macOS. Touch platforms get their
   own copy and never see a hint.
-- The home region has no page heading: the empty state or the source summary is
-  the first thing under the top bar.
+- The home region opens on the task list. When the queue is empty the list is
+  replaced by the empty-state card, which explains the `+` button and, where
+  dragging exists, the drop hint.
+- Every page reads its insets from `AppMetrics`: 20 px gutter, 20 px above a
+  section title, 8 px between that title and its controls. Forms and the task
+  list stop at 960 px and centre themselves on wider windows. The option grid
+  splits the available width into equal columns instead of wrapping fixed
+  300 px cells, so the input at the end of a cell lines up with the one below.
 
 ## i18n keys (frozen)
 

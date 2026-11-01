@@ -6,6 +6,7 @@ import '../i18n/i18n_keys.dart';
 import '../services/job_queue.dart';
 import '../theme/app_theme.dart';
 import '../theme/metrics.dart';
+import '../widgets/mini_icon_button.dart';
 
 /// Terminal output of one encode job.
 ///
@@ -148,14 +149,14 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: <Widget>[
-          Tooltip(
-            message: l10n(I18nKey.actionClose),
-            child: IconButton(
-              icon: const Icon(FluentIcons.arrow_left_24_regular, size: 14),
-              onPressed: () => Navigator.of(context).maybePop(),
-            ),
+          MiniIconButton(
+            icon: FluentIcons.arrow_left_24_regular,
+            tooltip: l10n(I18nKey.actionClose),
+            onPressed: () => Navigator.of(context).maybePop(),
+            size: 28,
+            iconSize: 14,
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 6),
           Text(title, style: theme.typography.bodyStrong),
           const SizedBox(width: 8),
           Expanded(
