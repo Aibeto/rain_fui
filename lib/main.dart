@@ -4,11 +4,12 @@ import 'app.dart';
 import 'i18n/i18n.dart';
 import 'services/font_license_service.dart';
 import 'services/locale_service.dart';
+import 'services/theme_service.dart';
 
 /// Entrypoint.
 ///
 /// Everything the app needs before its first visible frame happens here: font
-/// licenses are registered and the startup locale is resolved from
+/// licenses are registered, and the startup locale and theme are resolved from
 /// `SharedPreferences` (spec §1). `runApp` is only reached once that work is
 /// done, and [StartupActivity] paints nothing, so there is no intermediate UI
 /// to flash before the home screen appears.
@@ -32,5 +33,25 @@ Future<void> main() async {
     );
   }
 
-  runApp(RainFuiApp(initialLocale: locale));
+  ThemeMode themeMode = ThemeMode.system;
+  try {
+    themeMode = await ThemeService.loadStartupMode();
+  } catch (error, stackTrace) {
+    // Same rule as the locale: a broken store must not block startup.
+    FlutterError.reportError(
+      FlutterErrorDetails(
+        exception: error,
+        stack: stackTrace,
+        library: 'rain_fui',
+        context: ErrorDescription('while resolving the startup theme'),
+      ),
+    );
+  }
+
+  runApp(
+    RainFuiApp(
+      initialLocale: locale,
+      themeService: ThemeService(initial: themeMode),
+    ),
+  );
 }
