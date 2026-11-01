@@ -88,6 +88,9 @@ Android 无法在主机执行，写 `ffmpeg version <TAG> (cross-compiled for <t
 
 ```
 scripts/ffmpeg/common.sh                               # 共享函数，source 使用
+scripts/ffmpeg/build.sh         [--targets LIST] [--all] [--jobs N] [--api N]
+                                [--clean] [--no-install] [--dry-run] [-y]
+                                                       # 交互选择目标后逐个调用 build-*.sh
 scripts/ffmpeg/build-linux.sh   [--jobs N] [--clean] [--arch x86_64]
 scripts/ffmpeg/build-android.sh [--jobs N] [--abis arm64-v8a,armeabi-v7a,x86_64] [--api 24]
 scripts/ffmpeg/build-windows.sh [--jobs N]             # 在 MSYS2/Git-Bash 下运行
@@ -96,6 +99,10 @@ scripts/ffmpeg/install-to-app.sh <target> [<target>…]  # 拷贝产物进平台
 ```
 
 * 全部脚本 `set -euo pipefail`，可重复执行（幂等），失败返回非 0。
+* `build.sh` 只是编排层：不带参数且 stdin 是终端时打印编号菜单并询问要构建哪些目标
+  （支持 `1 4`、`2-4`、`linux`、`android`、`web`、`all`），选完后按顺序调用对应的
+  `build-<target>.sh`，默认再调 `install-to-app.sh <target>`；CI 不依赖它，仍直接调用
+  单目标脚本。
 * 环境变量：`FFMPEG_SRC`（默认 `third_party/ffmpeg`）、`FFMPEG_DIST`（默认 `build/ffmpeg/dist`）、
   `JOBS`、`FFMPEG_LTO`（默认 1）。
 * 脚本必须自检前提（`git submodule` 是否初始化、`nasm`/`emcc`/NDK 是否存在），给出可操作的报错。

@@ -43,14 +43,19 @@ prebuilt: full LTO plus parallel compilation, with the build scripts in
 ```sh
 git submodule update --init --depth 1
 
-# Linux (host build, 20 jobs by default: use --jobs N to change)
-scripts/ffmpeg/build-linux.sh
-# Android (arm64-v8a by default, see --abis)
-scripts/ffmpeg/build-android.sh
-# Windows (MSYS2 on Windows, or MinGW-w64 cross-compilation on Linux)
-scripts/ffmpeg/build-windows.sh
-# Web (needs an activated emsdk with emcc/emar/emnm on PATH)
-scripts/ffmpeg/build-web.sh
+# Interactive: asks which targets to build, then builds and installs them
+scripts/ffmpeg/build.sh
+
+# Non-interactive equivalents (menu numbers, names, or --all)
+scripts/ffmpeg/build.sh --targets linux                # one target
+scripts/ffmpeg/build.sh --targets android              # all three ABIs
+scripts/ffmpeg/build.sh --all --jobs 12                # everything
+
+# The per-target scripts still work on their own (that is what CI calls):
+scripts/ffmpeg/build-linux.sh                          # Linux host build, 20 jobs by default
+scripts/ffmpeg/build-android.sh --abis arm64-v8a       # one ABI at a time
+scripts/ffmpeg/build-windows.sh                        # MSYS2 on Windows, or MinGW-w64 cross on Linux
+scripts/ffmpeg/build-web.sh                            # needs an activated emsdk
 
 # Copy the result into the app tree, then build the app
 scripts/ffmpeg/install-to-app.sh linux      # or windows, android, web, all

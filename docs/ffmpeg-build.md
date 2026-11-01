@@ -68,6 +68,14 @@ use API 24 (Flutter's `minSdk`) and the NDK's clang wrappers.
 ## Quick start
 
 ```bash
+# Interactive: pick the targets (numbers, ranges, names, or "a" for all)
+scripts/ffmpeg/build.sh
+
+# Same selection without the prompt (CI-friendly); --dry-run just prints
+scripts/ffmpeg/build.sh --targets 1,4 --dry-run
+scripts/ffmpeg/build.sh --all
+
+# Individual targets still work on their own:
 # Linux (native, LTO)
 scripts/ffmpeg/build-linux.sh --jobs "$(nproc)"
 
@@ -96,6 +104,16 @@ build tree first. `bash -n` is enough to syntax-check them.
   Adds `--enable-zlib` when `zlib.h` is available, `--disable-x86asm` when nasm
   is missing, then verifies that the produced binary prints `9.0.2`.
 
+`scripts/ffmpeg/build.sh [--targets LIST] [--all] [--jobs N] [--api N] [--clean] [--no-install] [--dry-run] [-y]`
+: the interactive front door: prints the target menu and asks which ones to
+  build, then runs the matching `build-<target>.sh` and (unless `--no-install`)
+  `install-to-app.sh` for each. Selection accepts menu numbers (`1 4`), ranges
+  (`2-4`), names/aliases (`linux`, `android`, `web`, `all`) and is validated in
+  the main shell so a typo fails fast. Non-interactive callers must pass
+  `--targets`/`--all`; `--dry-run` prints the exact commands without running
+  them. It is a convenience wrapper only — CI keeps calling the per-target
+  scripts directly, so nothing in the pipeline depends on this file.
+
 `scripts/ffmpeg/build-android.sh [--jobs N] [--abis a,b,c] [--api 24] [--clean]`
 : one build per ABI with the NDK clang toolchain. Defaults to all three
   Flutter-supported ABIs (`arm64-v8a,armeabi-v7a,x86_64`). The ELF executable is
@@ -113,7 +131,7 @@ build tree first. `bash -n` is enough to syntax-check them.
   CI builds all three ABIs, one parallel job per ABI (`build-android` matrix in
   `.github/workflows/ci.yml`): the three cross-compiles are independent, so
   splitting them shortens the wall clock to the slowest ABI instead of summing
-  them.
+  them. Locally `build.sh --targets android` does the same thing sequentially.
 
 `scripts/ffmpeg/build-windows.sh [--jobs N] [--clean] [--arch x86_64]`
 : detects its host. On MSYS2/Git-Bash it builds natively; on Linux it
