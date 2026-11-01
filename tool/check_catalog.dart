@@ -52,8 +52,15 @@ void main() {
   check(offersVideo('ffv1'), 'baseline offers ffv1');
   check(offersAudio('aac'), 'baseline offers aac');
   check(offersAudio('opus'), 'baseline offers opus');
-  check(!offersVideo('libx264'), 'baseline hides libx264');
-  check(!offersVideo('av1_nvenc'), 'baseline hides av1_nvenc');
+  // The shipped linux build is the full one now, so its own baseline has the
+  // external libraries; the platform encoders of other systems stay hidden.
+  check(offersVideo('libx264'), 'baseline offers libx264');
+  check(offersVideo('av1_nvenc'), 'baseline offers av1_nvenc');
+  check(!offersVideo('h264_mf'), 'baseline hides Windows-only h264_mf');
+  check(
+    !offersVideo('h264_mediacodec'),
+    'baseline hides Android-only h264_mediacodec',
+  );
   check(offersVideo('prores_ks'), 'baseline offers prores_ks');
 
   // 2. A distribution build: the lib* and hardware encoders are there.

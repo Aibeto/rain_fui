@@ -8,13 +8,19 @@ library;
 
 import '../src/media/codec_spec.dart';
 import '../src/media/generated/baseline_encoders.dart';
+import '../src/media/generated/platform_baselines.dart';
+import 'platform_key.dart';
 import 'encoder_probe_stub.dart'
     if (dart.library.io) 'encoder_probe_io.dart'
     as probe;
 
 /// Result of asking FFmpeg for its encoder list.
 class EncoderAvailability {
-  const EncoderAvailability({required this.names, required this.probed});
+  const EncoderAvailability({
+    required this.names,
+    required this.probed,
+    this.error,
+  });
 
   /// Encoder names (`-c:v` / `-c:a` values) the binary reports.
   final Set<String> names;
@@ -22,12 +28,23 @@ class EncoderAvailability {
   /// True when [names] came from the binary, false when it is the baseline.
   final bool probed;
 
-  /// What to use when the probe cannot run at all: only encoders the bundled
-  /// build is known to contain.
-  static const EncoderAvailability baseline = EncoderAvailability(
-    names: kBaselineEncoderNames,
+  /// Why the probe gave up, when it did.
+  final String? error;
+
+  /// What to use when the probe cannot run at all: only encoders the shipped
+  /// build for this platform is known to contain.
+  ///
+  /// The list comes from the build itself (`config_components.h`), so the
+  /// Android fallback still offers the MediaCodec encoders instead of the
+  /// Linux list.
+  static EncoderAvailability get baseline => EncoderAvailability(
+    names: baselineNamesForCurrentPlatform,
     probed: false,
   );
+
+  /// Encoders compiled into the shipped binary for the running platform.
+  static Set<String> get baselineNamesForCurrentPlatform =>
+      kPlatformBaselineEncoders[baselinePlatformKey()] ?? kBaselineEncoderNames;
 
   bool allows(CodecSpec spec) => names.contains(spec.encoder);
 

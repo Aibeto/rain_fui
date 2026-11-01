@@ -55,11 +55,15 @@ Future<void> main() async {
   // build brings libx264, libaom or the hardware encoders; the bundled one is
   // native-only. Whatever the answer, the form only offers what can run.
   try {
-    MediaCapabilities.useAvailability(
-      await EncoderAvailability.load(
-        androidNativeLibraryDir: await AndroidPaths.nativeLibraryDir(),
-      ),
+    final EncoderAvailability availability = await EncoderAvailability.load(
+      androidNativeLibraryDir: await AndroidPaths.nativeLibraryDir(),
     );
+    if (!availability.probed && availability.error != null) {
+      // Not fatal: the fallback list is the shipped build's own, but the log
+      // line is the only way to see why a device fell back.
+      debugPrint('[rain_fui] encoder probe fell back: ${availability.error}');
+    }
+    MediaCapabilities.useAvailability(availability);
   } catch (error, stackTrace) {
     FlutterError.reportError(
       FlutterErrorDetails(

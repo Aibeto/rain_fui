@@ -28,6 +28,7 @@ Set<String> parseEncoderNames(String output) {
 Future<EncoderAvailability> probeEncoderAvailability({
   String? androidNativeLibraryDir,
 }) async {
+  final List<String> attempted = <String>[];
   // On Android the binary lives in the app's native library directory, which
   // only the platform side can report; without it every candidate misses and
   // the app would fall back to the bundled list even when the build carries
@@ -36,6 +37,7 @@ Future<EncoderAvailability> probeEncoderAvailability({
     androidNativeLibraryDir: androidNativeLibraryDir,
   );
   for (final FfmpegLocation location in locator.candidates()) {
+    attempted.add(location.path);
     try {
       final ProcessResult result = await Process.run(
         location.path,
@@ -49,11 +51,19 @@ Future<EncoderAvailability> probeEncoderAvailability({
       if (names.isNotEmpty) {
         return EncoderAvailability(names: names, probed: true);
       }
-    } on ProcessException {
+    } on ProcessException catch (error) {
+      attempted[attempted.length - 1] = '${attempted.last} (${error.message})';
       continue;
-    } on Object {
+    } on Object catch (error) {
+      attempted[attempted.length - 1] = '${attempted.last} ($error)';
       continue;
     }
   }
-  return EncoderAvailability.baseline;
+  // Nothing ran. Say which paths were tried, so a device log shows why the
+  // picker fell back instead of silently offering fewer encoders.
+  return EncoderAvailability(
+    names: EncoderAvailability.baselineNamesForCurrentPlatform,
+    probed: false,
+    error: 'no ffmpeg candidate answered -encoders: ${attempted.join(', ')}',
+  );
 }
