@@ -41,6 +41,22 @@ class ContainerSpec {
   /// True for containers that carry sound only (`mp3`, `flac`, `wav`, …).
   final bool audioOnly;
 
+  /// Copy with different codec sets, used to attach the measured tables.
+  ContainerSpec withCodecs({
+    required Set<String> video,
+    required Set<String> audio,
+    bool? audioOnly,
+  }) => ContainerSpec(
+    id: id,
+    muxer: muxer,
+    name: name,
+    extension: extension,
+    videoCodecs: video,
+    audioCodecs: audio,
+    options: options,
+    audioOnly: audioOnly ?? this.audioOnly,
+  );
+
   /// Whether [codecId] can be muxed here.
   bool acceptsVideo(String codecId) => videoCodecs.contains(codecId);
 

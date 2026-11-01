@@ -4,18 +4,42 @@
 /// bundled FFmpeg build can actually do (see docs/ffmpeg-capabilities.md).
 library;
 
+import '../../services/encoder_availability.dart';
 import 'capabilities_data.dart';
+import 'codec_ids.dart';
 import 'codec_spec.dart';
 import 'container_spec.dart';
 import 'media_kind.dart';
 
 /// Query helpers over [kVideoCodecs], [kAudioCodecs] and [kContainers].
+///
+/// The tables describe every encoder FFmpeg can be built with. What the form
+/// shows is filtered by [availability], which asks the binary in use, so a
+/// native-only build never offers `libx264` and a distribution build does.
 abstract final class MediaCapabilities {
+  static EncoderAvailability _availability = EncoderAvailability.baseline;
+  static List<CodecSpec>? _videoCache;
+  static List<CodecSpec>? _audioCache;
+
+  /// What the FFmpeg binary in use can run.
+  static EncoderAvailability get availability => _availability;
+
+  /// Installs a probe result. Passing null restores the bundled baseline.
+  static void useAvailability(EncoderAvailability? availability) {
+    _availability = availability ?? EncoderAvailability.baseline;
+    _videoCache = null;
+    _audioCache = null;
+  }
+
   /// Every video encoder the form offers, in display order.
-  static List<CodecSpec> get videoCodecs => kVideoCodecs;
+  static List<CodecSpec> get videoCodecs => _videoCache ??= kVideoCodecs
+      .where(_availability.allows)
+      .toList(growable: false);
 
   /// Every audio encoder the form offers, in display order.
-  static List<CodecSpec> get audioCodecs => kAudioCodecs;
+  static List<CodecSpec> get audioCodecs => _audioCache ??= kAudioCodecs
+      .where(_availability.allows)
+      .toList(growable: false);
 
   /// Every container the form offers, in display order.
   static List<ContainerSpec> get containers => kContainers;
@@ -25,7 +49,7 @@ abstract final class MediaCapabilities {
     if (id == null) {
       return null;
     }
-    for (final CodecSpec codec in kVideoCodecs) {
+    for (final CodecSpec codec in videoCodecs) {
       if (codec.id == id) {
         return codec;
       }
@@ -38,7 +62,7 @@ abstract final class MediaCapabilities {
     if (id == null) {
       return null;
     }
-    for (final CodecSpec codec in kAudioCodecs) {
+    for (final CodecSpec codec in audioCodecs) {
       if (codec.id == id) {
         return codec;
       }
@@ -60,13 +84,13 @@ abstract final class MediaCapabilities {
   }
 
   /// Video encoders [container] can hold.
-  static List<CodecSpec> videoCodecsFor(ContainerSpec container) => kVideoCodecs
-      .where((CodecSpec codec) => container.acceptsVideo(codec.id))
+  static List<CodecSpec> videoCodecsFor(ContainerSpec container) => videoCodecs
+      .where((CodecSpec codec) => container.acceptsVideo(codecIdOf(codec)))
       .toList(growable: false);
 
   /// Audio encoders [container] can hold.
-  static List<CodecSpec> audioCodecsFor(ContainerSpec container) => kAudioCodecs
-      .where((CodecSpec codec) => container.acceptsAudio(codec.id))
+  static List<CodecSpec> audioCodecsFor(ContainerSpec container) => audioCodecs
+      .where((CodecSpec codec) => container.acceptsAudio(codecIdOf(codec)))
       .toList(growable: false);
 
   /// Containers that can hold the given selection.
@@ -112,10 +136,12 @@ abstract final class MediaCapabilities {
             case MediaKind.unknown:
               break;
           }
-          if (videoCodecId != null && !container.acceptsVideo(videoCodecId)) {
+          final CodecSpec? video = videoCodec(videoCodecId);
+          if (video != null && !container.acceptsVideo(codecIdOf(video))) {
             return false;
           }
-          if (audioCodecId != null && !container.acceptsAudio(audioCodecId)) {
+          final CodecSpec? audio = audioCodec(audioCodecId);
+          if (audio != null && !container.acceptsAudio(codecIdOf(audio))) {
             return false;
           }
           return true;

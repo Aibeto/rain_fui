@@ -1,0 +1,2018 @@
+[
+  {
+    "name": "=",
+    "kind": "video",
+    "description": "Video",
+    "codecHint": "",
+    "codecId": "=",
+    "pixelFormats": []
+  },
+  {
+    "name": "=",
+    "kind": "audio",
+    "description": "Audio",
+    "codecHint": "",
+    "codecId": "=",
+    "sampleFormats": []
+  },
+  {
+    "name": "a64multi",
+    "kind": "video",
+    "description": "Multicolor charset for Commodore 64 (codec a64_multi)",
+    "codecHint": "a64_multi",
+    "codecId": "a64_multi",
+    "pixelFormats": [
+      "gray"
+    ]
+  },
+  {
+    "name": "a64multi5",
+    "kind": "video",
+    "description": "Multicolor charset for Commodore 64, extended with 5th color (colram) (codec a64_multi5)",
+    "codecHint": "a64_multi5",
+    "codecId": "a64_multi5",
+    "pixelFormats": [
+      "gray"
+    ]
+  },
+  {
+    "name": "alias_pix",
+    "kind": "video",
+    "description": "Alias/Wavefront PIX image",
+    "codecHint": "",
+    "codecId": "alias_pix",
+    "pixelFormats": [
+      "bgr24",
+      "gray"
+    ]
+  },
+  {
+    "name": "amv",
+    "kind": "video",
+    "description": "AMV Video",
+    "codecHint": "",
+    "codecId": "amv",
+    "pixelFormats": [
+      "yuvj420p"
+    ]
+  },
+  {
+    "name": "apng",
+    "kind": "video",
+    "description": "APNG (Animated Portable Network Graphics) image",
+    "codecHint": "",
+    "codecId": "apng",
+    "pixelFormats": [
+      "rgb24",
+      "rgba",
+      "rgb48be",
+      "rgba64be",
+      "pal8",
+      "gray",
+      "ya8",
+      "gray16be",
+      "ya16be"
+    ]
+  },
+  {
+    "name": "asv1",
+    "kind": "video",
+    "description": "ASUS V1",
+    "codecHint": "",
+    "codecId": "asv1",
+    "pixelFormats": [
+      "yuv420p"
+    ]
+  },
+  {
+    "name": "asv2",
+    "kind": "video",
+    "description": "ASUS V2",
+    "codecHint": "",
+    "codecId": "asv2",
+    "pixelFormats": [
+      "yuv420p"
+    ]
+  },
+  {
+    "name": "avrp",
+    "kind": "video",
+    "description": "Avid 1:1 10-bit RGB Packer",
+    "codecHint": "",
+    "codecId": "avrp",
+    "pixelFormats": [
+      "gbrp10le"
+    ]
+  },
+  {
+    "name": "avui",
+    "kind": "video",
+    "description": "Avid Meridien Uncompressed",
+    "codecHint": "",
+    "codecId": "avui",
+    "pixelFormats": [
+      "uyvy422"
+    ]
+  },
+  {
+    "name": "bitpacked",
+    "kind": "video",
+    "description": "Bitpacked",
+    "codecHint": "",
+    "codecId": "bitpacked",
+    "pixelFormats": [
+      "yuv422p10le"
+    ]
+  },
+  {
+    "name": "bmp",
+    "kind": "video",
+    "description": "BMP (Windows and OS/2 bitmap)",
+    "codecHint": "",
+    "codecId": "bmp",
+    "pixelFormats": [
+      "bgra",
+      "bgr24",
+      "rgb565le",
+      "rgb555le",
+      "rgb444le",
+      "rgb8",
+      "bgr8",
+      "rgb4_byte",
+      "bgr4_byte",
+      "gray",
+      "pal8",
+      "monob"
+    ]
+  },
+  {
+    "name": "cfhd",
+    "kind": "video",
+    "description": "GoPro CineForm HD",
+    "codecHint": "",
+    "codecId": "cfhd",
+    "pixelFormats": [
+      "yuv422p10le",
+      "gbrp12le",
+      "gbrap12le"
+    ]
+  },
+  {
+    "name": "cinepak",
+    "kind": "video",
+    "description": "Cinepak",
+    "codecHint": "",
+    "codecId": "cinepak",
+    "pixelFormats": [
+      "rgb24",
+      "gray"
+    ]
+  },
+  {
+    "name": "cljr",
+    "kind": "video",
+    "description": "Cirrus Logic AccuPak",
+    "codecHint": "",
+    "codecId": "cljr",
+    "pixelFormats": [
+      "yuv411p"
+    ]
+  },
+  {
+    "name": "vc2",
+    "kind": "video",
+    "description": "SMPTE VC-2 (codec dirac)",
+    "codecHint": "dirac",
+    "codecId": "dirac",
+    "pixelFormats": [
+      "yuv420p",
+      "yuv422p",
+      "yuv444p",
+      "yuv420p10le",
+      "yuv422p10le",
+      "yuv444p10le",
+      "yuv420p12le",
+      "yuv422p12le",
+      "yuv444p12le"
+    ]
+  },
+  {
+    "name": "dnxhd",
+    "kind": "video",
+    "description": "VC3/DNxHD",
+    "codecHint": "",
+    "codecId": "dnxhd",
+    "pixelFormats": [
+      "yuv422p",
+      "yuv422p10le",
+      "yuv444p10le",
+      "gbrp10le"
+    ]
+  },
+  {
+    "name": "dpx",
+    "kind": "video",
+    "description": "DPX (Digital Picture Exchange) image",
+    "codecHint": "",
+    "codecId": "dpx",
+    "pixelFormats": [
+      "gray",
+      "rgb24",
+      "rgba",
+      "abgr",
+      "gray16le",
+      "gray16be",
+      "rgb48le",
+      "rgb48be",
+      "rgba64le",
+      "rgba64be",
+      "gbrp10le",
+      "gbrp10be",
+      "gbrp12le",
+      "gbrp12be"
+    ]
+  },
+  {
+    "name": "dvvideo",
+    "kind": "video",
+    "description": "DV (Digital Video)",
+    "codecHint": "",
+    "codecId": "dvvideo",
+    "pixelFormats": [
+      "yuv411p",
+      "yuv422p",
+      "yuv420p"
+    ]
+  },
+  {
+    "name": "dxv",
+    "kind": "video",
+    "description": "Resolume DXV",
+    "codecHint": "",
+    "codecId": "dxv",
+    "pixelFormats": [
+      "rgba"
+    ]
+  },
+  {
+    "name": "exr",
+    "kind": "video",
+    "description": "OpenEXR image",
+    "codecHint": "",
+    "codecId": "exr",
+    "pixelFormats": [
+      "grayf32le",
+      "gbrpf32le",
+      "gbrapf32le"
+    ]
+  },
+  {
+    "name": "ffv1",
+    "kind": "video",
+    "description": "FFmpeg video codec #1",
+    "codecHint": "",
+    "codecId": "ffv1",
+    "pixelFormats": [
+      "yuv420p",
+      "yuva420p",
+      "yuva422p",
+      "yuv444p",
+      "yuva444p",
+      "yuv440p",
+      "yuv422p",
+      "yuv411p",
+      "yuv410p",
+      "bgr0",
+      "bgra",
+      "yuv420p16le",
+      "yuv422p16le",
+      "yuv444p16le",
+      "yuv444p9le",
+      "yuv422p9le",
+      "yuv420p9le",
+      "yuv420p10le",
+      "yuv422p10le",
+      "yuv444p10le",
+      "yuv420p12le",
+      "yuv422p12le",
+      "yuv444p12le",
+      "yuva444p16le",
+      "yuva422p16le",
+      "yuva420p16le",
+      "yuva444p12le",
+      "yuva422p12le",
+      "yuva444p10le",
+      "yuva422p10le",
+      "yuva420p10le",
+      "yuva444p9le",
+      "yuva422p9le",
+      "yuva420p9le",
+      "gray16le",
+      "gray",
+      "gbrp9le",
+      "gbrp10le",
+      "gbrp12le",
+      "gbrp14le",
+      "gbrap14le",
+      "gbrap10le",
+      "gbrap12le",
+      "ya8",
+      "gray10le",
+      "gray12le",
+      "gray14le",
+      "gbrp16le",
+      "rgb48le",
+      "gbrap16le",
+      "rgba64le",
+      "gray9le",
+      "yuv420p14le",
+      "yuv422p14le",
+      "yuv444p14le",
+      "yuv440p10le",
+      "yuv440p12le",
+      "yaf16le",
+      "grayf16le",
+      "gbrpf16le",
+      "gbrpf32le",
+      "bayer_rggb16le"
+    ]
+  },
+  {
+    "name": "ffvhuff",
+    "kind": "video",
+    "description": "Huffyuv FFmpeg variant",
+    "codecHint": "",
+    "codecId": "ffvhuff",
+    "pixelFormats": [
+      "yuv420p",
+      "yuv422p",
+      "yuv444p",
+      "yuv411p",
+      "yuv410p",
+      "yuv440p",
+      "gbrp",
+      "gbrp9le",
+      "gbrp10le",
+      "gbrp12le",
+      "gbrp14le",
+      "gbrp16le",
+      "gray",
+      "gray16le",
+      "yuva420p",
+      "yuva422p",
+      "yuva444p",
+      "gbrap",
+      "yuv420p9le",
+      "yuv420p10le",
+      "yuv420p12le",
+      "yuv420p14le",
+      "yuv420p16le",
+      "yuv422p9le",
+      "yuv422p10le",
+      "yuv422p12le",
+      "yuv422p14le",
+      "yuv422p16le",
+      "yuv444p9le",
+      "yuv444p10le",
+      "yuv444p12le",
+      "yuv444p14le",
+      "yuv444p16le",
+      "yuva420p9le",
+      "yuva420p10le",
+      "yuva420p16le",
+      "yuva422p9le",
+      "yuva422p10le",
+      "yuva422p16le",
+      "yuva444p9le",
+      "yuva444p10le",
+      "yuva444p16le",
+      "rgb24",
+      "bgra"
+    ]
+  },
+  {
+    "name": "fits",
+    "kind": "video",
+    "description": "Flexible Image Transport System",
+    "codecHint": "",
+    "codecId": "fits",
+    "pixelFormats": [
+      "gbrap16be",
+      "gbrp16be",
+      "gbrp",
+      "gbrap",
+      "gray16be",
+      "gray"
+    ]
+  },
+  {
+    "name": "flashsv",
+    "kind": "video",
+    "description": "Flash Screen Video",
+    "codecHint": "",
+    "codecId": "flashsv",
+    "pixelFormats": [
+      "bgr24"
+    ]
+  },
+  {
+    "name": "flashsv2",
+    "kind": "video",
+    "description": "Flash Screen Video Version 2",
+    "codecHint": "",
+    "codecId": "flashsv2",
+    "pixelFormats": [
+      "bgr24"
+    ]
+  },
+  {
+    "name": "flv",
+    "kind": "video",
+    "description": "FLV / Sorenson Spark / Sorenson H.263 (Flash Video) (codec flv1)",
+    "codecHint": "flv1",
+    "codecId": "flv1",
+    "pixelFormats": [
+      "yuv420p"
+    ]
+  },
+  {
+    "name": "gif",
+    "kind": "video",
+    "description": "GIF (Graphics Interchange Format)",
+    "codecHint": "",
+    "codecId": "gif",
+    "pixelFormats": [
+      "rgb8",
+      "bgr8",
+      "rgb4_byte",
+      "bgr4_byte",
+      "gray",
+      "pal8"
+    ]
+  },
+  {
+    "name": "h261",
+    "kind": "video",
+    "description": "H.261",
+    "codecHint": "",
+    "codecId": "h261",
+    "pixelFormats": [
+      "yuv420p"
+    ]
+  },
+  {
+    "name": "h263",
+    "kind": "video",
+    "description": "H.263 / H.263-1996",
+    "codecHint": "",
+    "codecId": "h263",
+    "pixelFormats": [
+      "yuv420p"
+    ]
+  },
+  {
+    "name": "h263p",
+    "kind": "video",
+    "description": "H.263+ / H.263-1998 / H.263 version 2",
+    "codecHint": "",
+    "codecId": "h263p",
+    "pixelFormats": [
+      "yuv420p"
+    ]
+  },
+  {
+    "name": "hdr",
+    "kind": "video",
+    "description": "HDR (Radiance RGBE format) image",
+    "codecHint": "",
+    "codecId": "hdr",
+    "pixelFormats": [
+      "gbrpf32le"
+    ]
+  },
+  {
+    "name": "huffyuv",
+    "kind": "video",
+    "description": "Huffyuv / HuffYUV",
+    "codecHint": "",
+    "codecId": "huffyuv",
+    "pixelFormats": [
+      "yuv422p",
+      "rgb24",
+      "bgra"
+    ]
+  },
+  {
+    "name": "jpeg2000",
+    "kind": "video",
+    "description": "JPEG 2000",
+    "codecHint": "",
+    "codecId": "jpeg2000",
+    "pixelFormats": [
+      "rgb24",
+      "rgb48le",
+      "gbrp",
+      "gbrp9le",
+      "gbrp10le",
+      "gbrp12le",
+      "gbrp14le",
+      "gbrp16le",
+      "gray",
+      "gray9le",
+      "gray10le",
+      "gray12le",
+      "gray14le",
+      "gray16le",
+      "yuv420p",
+      "yuv420p9le",
+      "yuv420p10le",
+      "yuv420p12le",
+      "yuv420p14le",
+      "yuv420p16le",
+      "yuv422p",
+      "yuv422p9le",
+      "yuv422p10le",
+      "yuv422p12le",
+      "yuv422p14le",
+      "yuv422p16le",
+      "yuv444p",
+      "yuv444p9le",
+      "yuv444p10le",
+      "yuv444p12le",
+      "yuv444p14le",
+      "yuv444p16le",
+      "yuv440p",
+      "yuv440p10le",
+      "yuv440p12le",
+      "yuv411p",
+      "yuv410p",
+      "ya8",
+      "ya16le",
+      "rgba",
+      "rgba64le",
+      "gbrap",
+      "gbrap10le",
+      "gbrap12le",
+      "gbrap16le",
+      "yuva420p",
+      "yuva420p9le",
+      "yuva420p10le",
+      "yuva420p16le",
+      "yuva422p",
+      "yuva422p9le",
+      "yuva422p10le",
+      "yuva422p16le",
+      "yuva444p",
+      "yuva444p9le",
+      "yuva444p10le",
+      "yuva444p16le",
+      "pal8"
+    ]
+  },
+  {
+    "name": "jpegls",
+    "kind": "video",
+    "description": "JPEG-LS",
+    "codecHint": "",
+    "codecId": "jpegls",
+    "pixelFormats": [
+      "bgr24",
+      "rgb24",
+      "gray",
+      "gray16le"
+    ]
+  },
+  {
+    "name": "ljpeg",
+    "kind": "video",
+    "description": "Lossless JPEG",
+    "codecHint": "",
+    "codecId": "ljpeg",
+    "pixelFormats": [
+      "bgr24",
+      "bgra",
+      "bgr0",
+      "yuvj420p",
+      "yuvj444p",
+      "yuvj422p",
+      "yuv420p",
+      "yuv444p",
+      "yuv422p"
+    ]
+  },
+  {
+    "name": "magicyuv",
+    "kind": "video",
+    "description": "MagicYUV video",
+    "codecHint": "",
+    "codecId": "magicyuv",
+    "pixelFormats": [
+      "gbrp",
+      "gbrap",
+      "yuv422p",
+      "yuv420p",
+      "yuv444p",
+      "yuva444p",
+      "gray"
+    ]
+  },
+  {
+    "name": "mjpeg",
+    "kind": "video",
+    "description": "MJPEG (Motion JPEG)",
+    "codecHint": "",
+    "codecId": "mjpeg",
+    "pixelFormats": [
+      "yuvj420p",
+      "yuvj422p",
+      "yuvj444p",
+      "yuv420p",
+      "yuv422p",
+      "yuv444p"
+    ]
+  },
+  {
+    "name": "mpeg1video",
+    "kind": "video",
+    "description": "MPEG-1 video",
+    "codecHint": "",
+    "codecId": "mpeg1video",
+    "pixelFormats": [
+      "yuv420p"
+    ]
+  },
+  {
+    "name": "mpeg2video",
+    "kind": "video",
+    "description": "MPEG-2 video",
+    "codecHint": "",
+    "codecId": "mpeg2video",
+    "pixelFormats": [
+      "yuv420p",
+      "yuv422p"
+    ]
+  },
+  {
+    "name": "mpeg4",
+    "kind": "video",
+    "description": "MPEG-4 part 2",
+    "codecHint": "",
+    "codecId": "mpeg4",
+    "pixelFormats": [
+      "yuv420p"
+    ]
+  },
+  {
+    "name": "msmpeg4v2",
+    "kind": "video",
+    "description": "MPEG-4 part 2 Microsoft variant version 2",
+    "codecHint": "",
+    "codecId": "msmpeg4v2",
+    "pixelFormats": [
+      "yuv420p"
+    ]
+  },
+  {
+    "name": "msmpeg4",
+    "kind": "video",
+    "description": "MPEG-4 part 2 Microsoft variant version 3 (codec msmpeg4v3)",
+    "codecHint": "msmpeg4v3",
+    "codecId": "msmpeg4v3",
+    "pixelFormats": [
+      "yuv420p"
+    ]
+  },
+  {
+    "name": "msrle",
+    "kind": "video",
+    "description": "Microsoft RLE",
+    "codecHint": "",
+    "codecId": "msrle",
+    "pixelFormats": [
+      "pal8"
+    ]
+  },
+  {
+    "name": "msvideo1",
+    "kind": "video",
+    "description": "Microsoft Video-1",
+    "codecHint": "",
+    "codecId": "msvideo1",
+    "pixelFormats": [
+      "rgb555le"
+    ]
+  },
+  {
+    "name": "pam",
+    "kind": "video",
+    "description": "PAM (Portable AnyMap) image",
+    "codecHint": "",
+    "codecId": "pam",
+    "pixelFormats": [
+      "rgb24",
+      "rgba",
+      "rgb48be",
+      "rgba64be",
+      "gray",
+      "ya8",
+      "gray16be",
+      "ya16be",
+      "monob"
+    ]
+  },
+  {
+    "name": "pbm",
+    "kind": "video",
+    "description": "PBM (Portable BitMap) image",
+    "codecHint": "",
+    "codecId": "pbm",
+    "pixelFormats": [
+      "monow"
+    ]
+  },
+  {
+    "name": "pcx",
+    "kind": "video",
+    "description": "PC Paintbrush PCX image",
+    "codecHint": "",
+    "codecId": "pcx",
+    "pixelFormats": [
+      "rgb24",
+      "rgb8",
+      "bgr8",
+      "rgb4_byte",
+      "bgr4_byte",
+      "gray",
+      "pal8",
+      "monob"
+    ]
+  },
+  {
+    "name": "pdv",
+    "kind": "video",
+    "description": "PDV (PlayDate Video)",
+    "codecHint": "",
+    "codecId": "pdv",
+    "pixelFormats": [
+      "monob"
+    ]
+  },
+  {
+    "name": "pfm",
+    "kind": "video",
+    "description": "PFM (Portable FloatMap) image",
+    "codecHint": "",
+    "codecId": "pfm",
+    "pixelFormats": [
+      "gbrpf32le",
+      "grayf32le",
+      "gbrpf32be",
+      "grayf32be"
+    ]
+  },
+  {
+    "name": "pgm",
+    "kind": "video",
+    "description": "PGM (Portable GrayMap) image",
+    "codecHint": "",
+    "codecId": "pgm",
+    "pixelFormats": [
+      "gray",
+      "gray16be"
+    ]
+  },
+  {
+    "name": "pgmyuv",
+    "kind": "video",
+    "description": "PGMYUV (Portable GrayMap YUV) image",
+    "codecHint": "",
+    "codecId": "pgmyuv",
+    "pixelFormats": [
+      "yuv420p",
+      "yuv420p16be"
+    ]
+  },
+  {
+    "name": "phm",
+    "kind": "video",
+    "description": "PHM (Portable HalfFloatMap) image",
+    "codecHint": "",
+    "codecId": "phm",
+    "pixelFormats": [
+      "gbrpf32le",
+      "grayf32le"
+    ]
+  },
+  {
+    "name": "png",
+    "kind": "video",
+    "description": "PNG (Portable Network Graphics) image",
+    "codecHint": "",
+    "codecId": "png",
+    "pixelFormats": [
+      "rgb24",
+      "rgba",
+      "rgb48be",
+      "rgba64be",
+      "pal8",
+      "gray",
+      "ya8",
+      "gray16be",
+      "ya16be",
+      "monob"
+    ]
+  },
+  {
+    "name": "ppm",
+    "kind": "video",
+    "description": "PPM (Portable PixelMap) image",
+    "codecHint": "",
+    "codecId": "ppm",
+    "pixelFormats": [
+      "rgb24",
+      "rgb48be"
+    ]
+  },
+  {
+    "name": "prores",
+    "kind": "video",
+    "description": "Apple ProRes",
+    "codecHint": "",
+    "codecId": "prores",
+    "pixelFormats": [
+      "yuv422p10le",
+      "yuv444p10le",
+      "yuva444p10le"
+    ]
+  },
+  {
+    "name": "prores_aw",
+    "kind": "video",
+    "description": "Apple ProRes (codec prores)",
+    "codecHint": "prores",
+    "codecId": "prores",
+    "pixelFormats": [
+      "yuv422p10le",
+      "yuv444p10le",
+      "yuva444p10le"
+    ]
+  },
+  {
+    "name": "prores_ks",
+    "kind": "video",
+    "description": "Apple ProRes (iCodec Pro) (codec prores)",
+    "codecHint": "prores",
+    "codecId": "prores",
+    "pixelFormats": [
+      "yuv422p10le",
+      "yuv444p10le",
+      "yuva444p10le"
+    ]
+  },
+  {
+    "name": "qoi",
+    "kind": "video",
+    "description": "QOI (Quite OK Image format) image",
+    "codecHint": "",
+    "codecId": "qoi",
+    "pixelFormats": [
+      "rgba",
+      "rgb24"
+    ]
+  },
+  {
+    "name": "qtrle",
+    "kind": "video",
+    "description": "QuickTime Animation (RLE) video",
+    "codecHint": "",
+    "codecId": "qtrle",
+    "pixelFormats": [
+      "rgb24",
+      "rgb555be",
+      "argb",
+      "gray"
+    ]
+  },
+  {
+    "name": "r10k",
+    "kind": "video",
+    "description": "AJA Kona 10-bit RGB Codec",
+    "codecHint": "",
+    "codecId": "r10k",
+    "pixelFormats": [
+      "gbrp10le"
+    ]
+  },
+  {
+    "name": "r210",
+    "kind": "video",
+    "description": "Uncompressed RGB 10-bit",
+    "codecHint": "",
+    "codecId": "r210",
+    "pixelFormats": [
+      "gbrp10le"
+    ]
+  },
+  {
+    "name": "rawvideo",
+    "kind": "video",
+    "description": "raw video",
+    "codecHint": "",
+    "codecId": "rawvideo",
+    "pixelFormats": []
+  },
+  {
+    "name": "roqvideo",
+    "kind": "video",
+    "description": "id RoQ video (codec roq)",
+    "codecHint": "roq",
+    "codecId": "roq",
+    "pixelFormats": [
+      "yuvj444p"
+    ]
+  },
+  {
+    "name": "rpza",
+    "kind": "video",
+    "description": "QuickTime video (RPZA)",
+    "codecHint": "",
+    "codecId": "rpza",
+    "pixelFormats": [
+      "rgb555le"
+    ]
+  },
+  {
+    "name": "rv10",
+    "kind": "video",
+    "description": "RealVideo 1.0",
+    "codecHint": "",
+    "codecId": "rv10",
+    "pixelFormats": [
+      "yuv420p"
+    ]
+  },
+  {
+    "name": "rv20",
+    "kind": "video",
+    "description": "RealVideo 2.0",
+    "codecHint": "",
+    "codecId": "rv20",
+    "pixelFormats": [
+      "yuv420p"
+    ]
+  },
+  {
+    "name": "sgi",
+    "kind": "video",
+    "description": "SGI image",
+    "codecHint": "",
+    "codecId": "sgi",
+    "pixelFormats": [
+      "rgb24",
+      "rgba",
+      "rgb48le",
+      "rgb48be",
+      "rgba64le",
+      "rgba64be",
+      "gray16le",
+      "gray16be",
+      "gray"
+    ]
+  },
+  {
+    "name": "smc",
+    "kind": "video",
+    "description": "QuickTime Graphics (SMC)",
+    "codecHint": "",
+    "codecId": "smc",
+    "pixelFormats": [
+      "pal8"
+    ]
+  },
+  {
+    "name": "snow",
+    "kind": "video",
+    "description": "Snow",
+    "codecHint": "",
+    "codecId": "snow",
+    "pixelFormats": [
+      "yuv420p",
+      "yuv410p",
+      "yuv444p",
+      "gray"
+    ]
+  },
+  {
+    "name": "speedhq",
+    "kind": "video",
+    "description": "NewTek SpeedHQ",
+    "codecHint": "",
+    "codecId": "speedhq",
+    "pixelFormats": [
+      "yuv420p",
+      "yuv422p",
+      "yuv444p"
+    ]
+  },
+  {
+    "name": "sunrast",
+    "kind": "video",
+    "description": "Sun Rasterfile image",
+    "codecHint": "",
+    "codecId": "sunrast",
+    "pixelFormats": [
+      "bgr24",
+      "pal8",
+      "gray",
+      "monow"
+    ]
+  },
+  {
+    "name": "svq1",
+    "kind": "video",
+    "description": "Sorenson Vector Quantizer 1 / Sorenson Video 1 / SVQ1",
+    "codecHint": "",
+    "codecId": "svq1",
+    "pixelFormats": [
+      "yuv410p"
+    ]
+  },
+  {
+    "name": "targa",
+    "kind": "video",
+    "description": "Truevision Targa image",
+    "codecHint": "",
+    "codecId": "targa",
+    "pixelFormats": [
+      "bgr24",
+      "bgra",
+      "rgb555le",
+      "gray",
+      "pal8"
+    ]
+  },
+  {
+    "name": "tiff",
+    "kind": "video",
+    "description": "TIFF image",
+    "codecHint": "",
+    "codecId": "tiff",
+    "pixelFormats": [
+      "rgb24",
+      "rgb48le",
+      "pal8",
+      "rgba",
+      "rgba64le",
+      "gray",
+      "ya8",
+      "gray16le",
+      "ya16le",
+      "monob",
+      "monow",
+      "yuv420p",
+      "yuv422p",
+      "yuv440p",
+      "yuv444p",
+      "yuv410p",
+      "yuv411p"
+    ]
+  },
+  {
+    "name": "utvideo",
+    "kind": "video",
+    "description": "Ut Video",
+    "codecHint": "",
+    "codecId": "utvideo",
+    "pixelFormats": [
+      "gbrp",
+      "gbrap",
+      "yuv422p",
+      "yuv420p",
+      "yuv444p"
+    ]
+  },
+  {
+    "name": "v210",
+    "kind": "video",
+    "description": "Uncompressed 4:2:2 10-bit",
+    "codecHint": "",
+    "codecId": "v210",
+    "pixelFormats": [
+      "yuv422p10le",
+      "yuv422p"
+    ]
+  },
+  {
+    "name": "vbn",
+    "kind": "video",
+    "description": "Vizrt Binary Image",
+    "codecHint": "",
+    "codecId": "vbn",
+    "pixelFormats": [
+      "rgba",
+      "rgb24"
+    ]
+  },
+  {
+    "name": "vnull",
+    "kind": "video",
+    "description": "null video",
+    "codecHint": "",
+    "codecId": "vnull",
+    "pixelFormats": []
+  },
+  {
+    "name": "wbmp",
+    "kind": "video",
+    "description": "WBMP (Wireless Application Protocol Bitmap) image",
+    "codecHint": "",
+    "codecId": "wbmp",
+    "pixelFormats": [
+      "monob"
+    ]
+  },
+  {
+    "name": "wmv1",
+    "kind": "video",
+    "description": "Windows Media Video 7",
+    "codecHint": "",
+    "codecId": "wmv1",
+    "pixelFormats": [
+      "yuv420p"
+    ]
+  },
+  {
+    "name": "wmv2",
+    "kind": "video",
+    "description": "Windows Media Video 8",
+    "codecHint": "",
+    "codecId": "wmv2",
+    "pixelFormats": [
+      "yuv420p"
+    ]
+  },
+  {
+    "name": "wrapped_avframe",
+    "kind": "video",
+    "description": "AVFrame to AVPacket passthrough",
+    "codecHint": "",
+    "codecId": "wrapped_avframe",
+    "pixelFormats": []
+  },
+  {
+    "name": "xbm",
+    "kind": "video",
+    "description": "XBM (X BitMap) image",
+    "codecHint": "",
+    "codecId": "xbm",
+    "pixelFormats": [
+      "monow"
+    ]
+  },
+  {
+    "name": "xface",
+    "kind": "video",
+    "description": "X-face image",
+    "codecHint": "",
+    "codecId": "xface",
+    "pixelFormats": [
+      "monow"
+    ]
+  },
+  {
+    "name": "xwd",
+    "kind": "video",
+    "description": "XWD (X Window Dump) image",
+    "codecHint": "",
+    "codecId": "xwd",
+    "pixelFormats": [
+      "bgra",
+      "rgba",
+      "argb",
+      "abgr",
+      "rgb24",
+      "bgr24",
+      "rgb565be",
+      "rgb565le",
+      "bgr565be",
+      "bgr565le",
+      "rgb555be",
+      "rgb555le",
+      "bgr555be",
+      "bgr555le",
+      "rgb8",
+      "bgr8",
+      "rgb4_byte",
+      "bgr4_byte",
+      "pal8",
+      "gray",
+      "monow"
+    ]
+  },
+  {
+    "name": "y41p",
+    "kind": "video",
+    "description": "Uncompressed YUV 4:1:1 12-bit",
+    "codecHint": "",
+    "codecId": "y41p",
+    "pixelFormats": [
+      "yuv411p"
+    ]
+  },
+  {
+    "name": "yuv4",
+    "kind": "video",
+    "description": "Uncompressed packed 4:2:0",
+    "codecHint": "",
+    "codecId": "yuv4",
+    "pixelFormats": [
+      "yuv420p"
+    ]
+  },
+  {
+    "name": "zlib",
+    "kind": "video",
+    "description": "LCL (LossLess Codec Library) ZLIB",
+    "codecHint": "",
+    "codecId": "zlib",
+    "pixelFormats": [
+      "bgr24"
+    ]
+  },
+  {
+    "name": "zmbv",
+    "kind": "video",
+    "description": "Zip Motion Blocks Video",
+    "codecHint": "",
+    "codecId": "zmbv",
+    "pixelFormats": [
+      "pal8",
+      "rgb555le",
+      "rgb565le",
+      "bgr0"
+    ]
+  },
+  {
+    "name": "aac",
+    "kind": "audio",
+    "description": "AAC (Advanced Audio Coding)",
+    "codecHint": "",
+    "codecId": "aac",
+    "sampleFormats": [
+      "fltp"
+    ]
+  },
+  {
+    "name": "ac3",
+    "kind": "audio",
+    "description": "ATSC A/52A (AC-3)",
+    "codecHint": "",
+    "codecId": "ac3",
+    "sampleFormats": [
+      "fltp"
+    ]
+  },
+  {
+    "name": "ac3_fixed",
+    "kind": "audio",
+    "description": "ATSC A/52A (AC-3) (codec ac3)",
+    "codecHint": "ac3",
+    "codecId": "ac3",
+    "sampleFormats": [
+      "s32p"
+    ]
+  },
+  {
+    "name": "adpcm_adx",
+    "kind": "audio",
+    "description": "SEGA CRI ADX ADPCM",
+    "codecHint": "",
+    "codecId": "adpcm_adx",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "adpcm_argo",
+    "kind": "audio",
+    "description": "ADPCM Argonaut Games",
+    "codecHint": "",
+    "codecId": "adpcm_argo",
+    "sampleFormats": [
+      "s16p"
+    ]
+  },
+  {
+    "name": "g722",
+    "kind": "audio",
+    "description": "G.722 ADPCM (codec adpcm_g722)",
+    "codecHint": "adpcm_g722",
+    "codecId": "adpcm_g722",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "g726",
+    "kind": "audio",
+    "description": "G.726 ADPCM (codec adpcm_g726)",
+    "codecHint": "adpcm_g726",
+    "codecId": "adpcm_g726",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "g726le",
+    "kind": "audio",
+    "description": "G.726 little endian ADPCM (\"right-justified\") (codec adpcm_g726le)",
+    "codecHint": "adpcm_g726le",
+    "codecId": "adpcm_g726le",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "adpcm_ima_alp",
+    "kind": "audio",
+    "description": "ADPCM IMA High Voltage Software ALP",
+    "codecHint": "",
+    "codecId": "adpcm_ima_alp",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "adpcm_ima_amv",
+    "kind": "audio",
+    "description": "ADPCM IMA AMV",
+    "codecHint": "",
+    "codecId": "adpcm_ima_amv",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "adpcm_ima_apm",
+    "kind": "audio",
+    "description": "ADPCM IMA Ubisoft APM",
+    "codecHint": "",
+    "codecId": "adpcm_ima_apm",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "adpcm_ima_qt",
+    "kind": "audio",
+    "description": "ADPCM IMA QuickTime",
+    "codecHint": "",
+    "codecId": "adpcm_ima_qt",
+    "sampleFormats": [
+      "s16p"
+    ]
+  },
+  {
+    "name": "adpcm_ima_ssi",
+    "kind": "audio",
+    "description": "ADPCM IMA Simon & Schuster Interactive",
+    "codecHint": "",
+    "codecId": "adpcm_ima_ssi",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "adpcm_ima_wav",
+    "kind": "audio",
+    "description": "ADPCM IMA WAV",
+    "codecHint": "",
+    "codecId": "adpcm_ima_wav",
+    "sampleFormats": [
+      "s16p"
+    ]
+  },
+  {
+    "name": "adpcm_ima_ws",
+    "kind": "audio",
+    "description": "ADPCM IMA Westwood",
+    "codecHint": "",
+    "codecId": "adpcm_ima_ws",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "adpcm_ms",
+    "kind": "audio",
+    "description": "ADPCM Microsoft",
+    "codecHint": "",
+    "codecId": "adpcm_ms",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "adpcm_swf",
+    "kind": "audio",
+    "description": "ADPCM Shockwave Flash",
+    "codecHint": "",
+    "codecId": "adpcm_swf",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "adpcm_yamaha",
+    "kind": "audio",
+    "description": "ADPCM Yamaha",
+    "codecHint": "",
+    "codecId": "adpcm_yamaha",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "alac",
+    "kind": "audio",
+    "description": "ALAC (Apple Lossless Audio Codec)",
+    "codecHint": "",
+    "codecId": "alac",
+    "sampleFormats": [
+      "s32p",
+      "s16p"
+    ]
+  },
+  {
+    "name": "anull",
+    "kind": "audio",
+    "description": "null audio",
+    "codecHint": "",
+    "codecId": "anull",
+    "sampleFormats": [
+      "u8",
+      "u8p",
+      "s16",
+      "s16p",
+      "s32",
+      "s32p",
+      "s64",
+      "s64p",
+      "flt",
+      "fltp",
+      "dbl",
+      "dblp"
+    ]
+  },
+  {
+    "name": "aptx",
+    "kind": "audio",
+    "description": "aptX (Audio Processing Technology for Bluetooth)",
+    "codecHint": "",
+    "codecId": "aptx",
+    "sampleFormats": [
+      "s32p"
+    ]
+  },
+  {
+    "name": "aptx_hd",
+    "kind": "audio",
+    "description": "aptX HD (Audio Processing Technology for Bluetooth)",
+    "codecHint": "",
+    "codecId": "aptx_hd",
+    "sampleFormats": [
+      "s32p"
+    ]
+  },
+  {
+    "name": "comfortnoise",
+    "kind": "audio",
+    "description": "RFC 3389 comfort noise generator",
+    "codecHint": "",
+    "codecId": "comfortnoise",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "dfpwm",
+    "kind": "audio",
+    "description": "DFPWM1a audio",
+    "codecHint": "",
+    "codecId": "dfpwm",
+    "sampleFormats": [
+      "u8"
+    ]
+  },
+  {
+    "name": "dca",
+    "kind": "audio",
+    "description": "DCA (DTS Coherent Acoustics) (codec dts)",
+    "codecHint": "dts",
+    "codecId": "dts",
+    "sampleFormats": [
+      "s32"
+    ]
+  },
+  {
+    "name": "eac3",
+    "kind": "audio",
+    "description": "ATSC A/52 E-AC-3",
+    "codecHint": "",
+    "codecId": "eac3",
+    "sampleFormats": [
+      "fltp"
+    ]
+  },
+  {
+    "name": "flac",
+    "kind": "audio",
+    "description": "FLAC (Free Lossless Audio Codec)",
+    "codecHint": "",
+    "codecId": "flac",
+    "sampleFormats": [
+      "s16",
+      "s32"
+    ]
+  },
+  {
+    "name": "g723_1",
+    "kind": "audio",
+    "description": "G.723.1",
+    "codecHint": "",
+    "codecId": "g723_1",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "mlp",
+    "kind": "audio",
+    "description": "MLP (Meridian Lossless Packing)",
+    "codecHint": "",
+    "codecId": "mlp",
+    "sampleFormats": [
+      "s16p",
+      "s32p"
+    ]
+  },
+  {
+    "name": "mp2",
+    "kind": "audio",
+    "description": "MP2 (MPEG audio layer 2)",
+    "codecHint": "",
+    "codecId": "mp2",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "mp2fixed",
+    "kind": "audio",
+    "description": "MP2 fixed point (MPEG audio layer 2) (codec mp2)",
+    "codecHint": "mp2",
+    "codecId": "mp2",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "nellymoser",
+    "kind": "audio",
+    "description": "Nellymoser Asao",
+    "codecHint": "",
+    "codecId": "nellymoser",
+    "sampleFormats": [
+      "flt"
+    ]
+  },
+  {
+    "name": "opus",
+    "kind": "audio",
+    "description": "Opus",
+    "codecHint": "",
+    "codecId": "opus",
+    "sampleFormats": [
+      "fltp"
+    ]
+  },
+  {
+    "name": "pcm_alaw",
+    "kind": "audio",
+    "description": "PCM A-law / G.711 A-law",
+    "codecHint": "",
+    "codecId": "pcm_alaw",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "pcm_bluray",
+    "kind": "audio",
+    "description": "PCM signed 16|20|24-bit big-endian for Blu-ray media",
+    "codecHint": "",
+    "codecId": "pcm_bluray",
+    "sampleFormats": [
+      "s16",
+      "s32"
+    ]
+  },
+  {
+    "name": "pcm_dvd",
+    "kind": "audio",
+    "description": "PCM signed 16|20|24-bit big-endian for DVD media",
+    "codecHint": "",
+    "codecId": "pcm_dvd",
+    "sampleFormats": [
+      "s16",
+      "s32"
+    ]
+  },
+  {
+    "name": "pcm_f32be",
+    "kind": "audio",
+    "description": "PCM 32-bit floating point big-endian",
+    "codecHint": "",
+    "codecId": "pcm_f32be",
+    "sampleFormats": [
+      "flt"
+    ]
+  },
+  {
+    "name": "pcm_f32le",
+    "kind": "audio",
+    "description": "PCM 32-bit floating point little-endian",
+    "codecHint": "",
+    "codecId": "pcm_f32le",
+    "sampleFormats": [
+      "flt"
+    ]
+  },
+  {
+    "name": "pcm_f64be",
+    "kind": "audio",
+    "description": "PCM 64-bit floating point big-endian",
+    "codecHint": "",
+    "codecId": "pcm_f64be",
+    "sampleFormats": [
+      "dbl"
+    ]
+  },
+  {
+    "name": "pcm_f64le",
+    "kind": "audio",
+    "description": "PCM 64-bit floating point little-endian",
+    "codecHint": "",
+    "codecId": "pcm_f64le",
+    "sampleFormats": [
+      "dbl"
+    ]
+  },
+  {
+    "name": "pcm_mulaw",
+    "kind": "audio",
+    "description": "PCM mu-law / G.711 mu-law",
+    "codecHint": "",
+    "codecId": "pcm_mulaw",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "pcm_s16be",
+    "kind": "audio",
+    "description": "PCM signed 16-bit big-endian",
+    "codecHint": "",
+    "codecId": "pcm_s16be",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "pcm_s16be_planar",
+    "kind": "audio",
+    "description": "PCM signed 16-bit big-endian planar",
+    "codecHint": "",
+    "codecId": "pcm_s16be_planar",
+    "sampleFormats": [
+      "s16p"
+    ]
+  },
+  {
+    "name": "pcm_s16le",
+    "kind": "audio",
+    "description": "PCM signed 16-bit little-endian",
+    "codecHint": "",
+    "codecId": "pcm_s16le",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "pcm_s16le_planar",
+    "kind": "audio",
+    "description": "PCM signed 16-bit little-endian planar",
+    "codecHint": "",
+    "codecId": "pcm_s16le_planar",
+    "sampleFormats": [
+      "s16p"
+    ]
+  },
+  {
+    "name": "pcm_s24be",
+    "kind": "audio",
+    "description": "PCM signed 24-bit big-endian",
+    "codecHint": "",
+    "codecId": "pcm_s24be",
+    "sampleFormats": [
+      "s32"
+    ]
+  },
+  {
+    "name": "pcm_s24daud",
+    "kind": "audio",
+    "description": "PCM D-Cinema audio signed 24-bit",
+    "codecHint": "",
+    "codecId": "pcm_s24daud",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "pcm_s24le",
+    "kind": "audio",
+    "description": "PCM signed 24-bit little-endian",
+    "codecHint": "",
+    "codecId": "pcm_s24le",
+    "sampleFormats": [
+      "s32"
+    ]
+  },
+  {
+    "name": "pcm_s24le_planar",
+    "kind": "audio",
+    "description": "PCM signed 24-bit little-endian planar",
+    "codecHint": "",
+    "codecId": "pcm_s24le_planar",
+    "sampleFormats": [
+      "s32p"
+    ]
+  },
+  {
+    "name": "pcm_s32be",
+    "kind": "audio",
+    "description": "PCM signed 32-bit big-endian",
+    "codecHint": "",
+    "codecId": "pcm_s32be",
+    "sampleFormats": [
+      "s32"
+    ]
+  },
+  {
+    "name": "pcm_s32le",
+    "kind": "audio",
+    "description": "PCM signed 32-bit little-endian",
+    "codecHint": "",
+    "codecId": "pcm_s32le",
+    "sampleFormats": [
+      "s32"
+    ]
+  },
+  {
+    "name": "pcm_s32le_planar",
+    "kind": "audio",
+    "description": "PCM signed 32-bit little-endian planar",
+    "codecHint": "",
+    "codecId": "pcm_s32le_planar",
+    "sampleFormats": [
+      "s32p"
+    ]
+  },
+  {
+    "name": "pcm_s64be",
+    "kind": "audio",
+    "description": "PCM signed 64-bit big-endian",
+    "codecHint": "",
+    "codecId": "pcm_s64be",
+    "sampleFormats": [
+      "s64"
+    ]
+  },
+  {
+    "name": "pcm_s64le",
+    "kind": "audio",
+    "description": "PCM signed 64-bit little-endian",
+    "codecHint": "",
+    "codecId": "pcm_s64le",
+    "sampleFormats": [
+      "s64"
+    ]
+  },
+  {
+    "name": "pcm_s8",
+    "kind": "audio",
+    "description": "PCM signed 8-bit",
+    "codecHint": "",
+    "codecId": "pcm_s8",
+    "sampleFormats": [
+      "u8"
+    ]
+  },
+  {
+    "name": "pcm_s8_planar",
+    "kind": "audio",
+    "description": "PCM signed 8-bit planar",
+    "codecHint": "",
+    "codecId": "pcm_s8_planar",
+    "sampleFormats": [
+      "u8p"
+    ]
+  },
+  {
+    "name": "pcm_u16be",
+    "kind": "audio",
+    "description": "PCM unsigned 16-bit big-endian",
+    "codecHint": "",
+    "codecId": "pcm_u16be",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "pcm_u16le",
+    "kind": "audio",
+    "description": "PCM unsigned 16-bit little-endian",
+    "codecHint": "",
+    "codecId": "pcm_u16le",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "pcm_u24be",
+    "kind": "audio",
+    "description": "PCM unsigned 24-bit big-endian",
+    "codecHint": "",
+    "codecId": "pcm_u24be",
+    "sampleFormats": [
+      "s32"
+    ]
+  },
+  {
+    "name": "pcm_u24le",
+    "kind": "audio",
+    "description": "PCM unsigned 24-bit little-endian",
+    "codecHint": "",
+    "codecId": "pcm_u24le",
+    "sampleFormats": [
+      "s32"
+    ]
+  },
+  {
+    "name": "pcm_u32be",
+    "kind": "audio",
+    "description": "PCM unsigned 32-bit big-endian",
+    "codecHint": "",
+    "codecId": "pcm_u32be",
+    "sampleFormats": [
+      "s32"
+    ]
+  },
+  {
+    "name": "pcm_u32le",
+    "kind": "audio",
+    "description": "PCM unsigned 32-bit little-endian",
+    "codecHint": "",
+    "codecId": "pcm_u32le",
+    "sampleFormats": [
+      "s32"
+    ]
+  },
+  {
+    "name": "pcm_u8",
+    "kind": "audio",
+    "description": "PCM unsigned 8-bit",
+    "codecHint": "",
+    "codecId": "pcm_u8",
+    "sampleFormats": [
+      "u8"
+    ]
+  },
+  {
+    "name": "pcm_vidc",
+    "kind": "audio",
+    "description": "PCM Archimedes VIDC",
+    "codecHint": "",
+    "codecId": "pcm_vidc",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "real_144",
+    "kind": "audio",
+    "description": "RealAudio 1.0 (14.4K) (codec ra_144)",
+    "codecHint": "ra_144",
+    "codecId": "ra_144",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "roq_dpcm",
+    "kind": "audio",
+    "description": "id RoQ DPCM",
+    "codecHint": "",
+    "codecId": "roq_dpcm",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "s302m",
+    "kind": "audio",
+    "description": "SMPTE 302M",
+    "codecHint": "",
+    "codecId": "s302m",
+    "sampleFormats": [
+      "s32",
+      "s16"
+    ]
+  },
+  {
+    "name": "sbc",
+    "kind": "audio",
+    "description": "SBC (low-complexity subband codec)",
+    "codecHint": "",
+    "codecId": "sbc",
+    "sampleFormats": [
+      "s16"
+    ]
+  },
+  {
+    "name": "truehd",
+    "kind": "audio",
+    "description": "TrueHD",
+    "codecHint": "",
+    "codecId": "truehd",
+    "sampleFormats": [
+      "s16p",
+      "s32p"
+    ]
+  },
+  {
+    "name": "tta",
+    "kind": "audio",
+    "description": "TTA (True Audio)",
+    "codecHint": "",
+    "codecId": "tta",
+    "sampleFormats": [
+      "u8",
+      "s16",
+      "s32"
+    ]
+  },
+  {
+    "name": "vorbis",
+    "kind": "audio",
+    "description": "Vorbis",
+    "codecHint": "",
+    "codecId": "vorbis",
+    "sampleFormats": [
+      "fltp"
+    ]
+  },
+  {
+    "name": "wavpack",
+    "kind": "audio",
+    "description": "WavPack",
+    "codecHint": "",
+    "codecId": "wavpack",
+    "sampleFormats": [
+      "u8p",
+      "s16p",
+      "s32p",
+      "fltp"
+    ]
+  },
+  {
+    "name": "wmav1",
+    "kind": "audio",
+    "description": "Windows Media Audio 1",
+    "codecHint": "",
+    "codecId": "wmav1",
+    "sampleFormats": [
+      "fltp"
+    ]
+  },
+  {
+    "name": "wmav2",
+    "kind": "audio",
+    "description": "Windows Media Audio 2",
+    "codecHint": "",
+    "codecId": "wmav2",
+    "sampleFormats": [
+      "fltp"
+    ]
+  }
+]

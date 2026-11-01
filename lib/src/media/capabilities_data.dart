@@ -10,6 +10,8 @@ library;
 import '../../i18n/i18n_keys.dart';
 import 'codec_spec.dart';
 import 'container_spec.dart';
+import 'generated/container_codecs.dart';
+import 'generated/extra_encoders.dart';
 import 'media_kind.dart';
 import 'option_spec.dart';
 
@@ -976,15 +978,19 @@ const List<OptionSpec> _movFlags = <OptionSpec>[
 final List<CodecSpec> kVideoCodecs = <CodecSpec>[
   ..._coreVideoCodecs,
   ..._extraVideoCodecs,
+  // lib* and hardware encoders: they exist in distribution builds, and the
+  // runtime probe decides whether the binary in use can actually run them.
+  ...kExtraVideoEncoders,
 ];
 
 /// Every audio encoder the form offers.
 final List<CodecSpec> kAudioCodecs = <CodecSpec>[
   ..._coreAudioCodecs,
   ..._extraAudioCodecs,
+  ...kExtraAudioEncoders,
 ];
 
-final List<ContainerSpec> kContainers = <ContainerSpec>[
+final List<ContainerSpec> _containerDefs = <ContainerSpec>[
   ContainerSpec(
     id: 'mp4',
     muxer: 'mp4',
@@ -1250,7 +1256,9 @@ final List<ContainerSpec> kContainers = <ContainerSpec>[
     extension: 'webm',
     videoCodecs: <String>{},
     audioCodecs: <String>{'opus', 'vorbis'},
-    audioOnly: true,
+    // Not audio-only any more: a distribution build has VP8/VP9/AV1, and the
+    // measured table below decides what this build can actually write.
+    audioOnly: false,
     options: <OptionSpec>[
       IntOption(
         flag: '-cluster_time_limit',
@@ -3507,3 +3515,26 @@ const List<CodecSpec> _extraAudioCodecs = <CodecSpec>[
     options: _extraAudioOptions,
   ),
 ];
+
+/// Containers with the codec ids measured from real FFmpeg binaries.
+///
+/// The literal sets above are only a fallback for a container the probe never
+/// saw; [kContainerVideoCodecIds] and [kContainerAudioCodecIds] are the truth.
+final List<ContainerSpec> kContainers = <ContainerSpec>[
+  for (final ContainerSpec def in _containerDefs) _withMeasuredCodecs(def),
+];
+
+/// Applies the measured codec sets, and decides "audio only" from what is left
+/// instead of from the old hand-written flag. WebM used to be audio-only
+/// because the bundled build had no VP8/VP9 encoder; a distribution build has
+/// both, and the container can hold video again.
+ContainerSpec _withMeasuredCodecs(ContainerSpec def) {
+  final Set<String> video = def.audioOnly
+      ? const <String>{}
+      : (kContainerVideoCodecIds[def.muxer] ?? def.videoCodecs);
+  return def.withCodecs(
+    video: video,
+    audio: kContainerAudioCodecIds[def.muxer] ?? def.audioCodecs,
+    audioOnly: video.isEmpty,
+  );
+}
