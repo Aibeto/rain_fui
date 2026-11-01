@@ -102,6 +102,9 @@ if [ "${FFMPEG_EXTERNAL_LIBS:-0}" = "1" ]; then
     while IFS= read -r flag; do
         [ -n "$flag" ] && args+=( "$flag" )
     done < <(ffmpeg_external_flags linux)
+    while IFS= read -r flag; do
+        [ -n "$flag" ] && args+=( "$flag" )
+    done < <(ffmpeg_external_pkg_config_flags)
     log "external libraries: enabled (prefix $(ffmpeg_deps_prefix))"
 fi
 

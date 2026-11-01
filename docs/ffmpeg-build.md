@@ -218,11 +218,17 @@ what is actually installed and emits only flags whose dependency resolves:
 line names it explicitly; without it configure stops at
 `nvenc requested, but not all dependencies are satisfied: ffnvcodec`.
 
-Libraries the sysroot does not provide come from `scripts/ffmpeg/build-deps.sh`:
+Libraries the sysroot does not provide come from `scripts/ffmpeg/build-deps.sh`.
+It builds the same recipes for a desktop target and for the cross targets, so a
+platform is never stuck with fewer encoders just because its libraries happened
+to be missing on the build machine:
 
 ```text
-scripts/ffmpeg/build-deps.sh --only nvcodec,lame
-scripts/ffmpeg/build-deps.sh --only svtav1
+scripts/ffmpeg/build-deps.sh --only nvcodec,lame            # linux-x64 (default)
+scripts/ffmpeg/build-deps.sh --target android-arm64-v8a \
+    --only x264,lame,opus,ogg,vorbis,vpx,webp
+scripts/ffmpeg/build-deps.sh --target windows-x64 \
+    --only x264,lame,opus,ogg,vorbis,vpx,webp
 FFMPEG_EXTERNAL_LIBS=1 scripts/ffmpeg/build-linux.sh
 ```
 
@@ -234,7 +240,9 @@ Cross builds must not read the host's pkg-config: a host `libaom.pc` would add
 `--enable-libaom` and then link x86-64 libraries into an Android binary. For any
 target other than `linux`, the probe runs `pkg-config` with
 `PKG_CONFIG_LIBDIR=<prefix>/lib/pkgconfig` and an empty `PKG_CONFIG_PATH`, so only
-the target prefix counts. Two consequences worth knowing:
+the target prefix counts; `build-android.sh` and `build-windows.sh` export the
+same `PKG_CONFIG_LIBDIR` so FFmpeg's own configure sees the same view. Two
+consequences worth knowing:
 
 * Android with no dependencies installed ends up with exactly
   `--enable-jni --enable-mediacodec`, which is enough for MediaCodec.
@@ -244,23 +252,34 @@ the target prefix counts. Two consequences worth knowing:
   `build-deps.sh` on Windows itself (MSYS2) so the `.pc` exists, or point
   `FFMPEG_DEPS_PREFIX` at a prefix that has one.
 
-Hardware encoders only prove themselves at run time: the build can carry them,
-but a machine without the matching GPU reports FFmpeg's own `Cannot load libcuda`
-or `No VA display` error in the job log.
+Three pkg-config details cost real time and are handled inside the script, kept
+here because they look like FFmpeg bugs when they bite:
+
+* `opus.pc` from a source archive has no git tag to read and reports version 0,
+  which fails FFmpeg's `opus >= 1.1` check; the recipe rewrites the version.
+* Static archives need their reference libraries on the `Libs:` line, not in
+  `Libs.private`: `-lm` for opus/vorbis/vpx/webp, `-logg` for libvorbis,
+  `-lvorbis` for libvorbisenc, `-lsharpyuv` for libwebp. bionic has no separate
+  `libpthread`, so `-lpthread` is only added for non-Android targets.
+* libvpx's `armv7-android-gcc` target hands `-march=armv7-a` to the host
+  assembler under this NDK, so armeabi-v7a builds libvpx as `generic-gnu`
+  (portable C, no NEON) instead of failing outright.
 
 Builds verified on this machine (FFmpeg 9.0.2 source, `FFMPEG_EXTERNAL_LIBS=1`,
-`FFMPEG_LTO=0`):
+`FFMPEG_LTO=0`, NDK r28c for Android, mingw-w64 for Windows):
 
-| target | artifact | size | encoders |
+| target | artifact | size | software encoders |
 |---|---|---|---|
-| linux-x64 | `dist/linux-x64/ffmpeg` | 32 676 024 B | 115 video / 78 audio, incl. libx264/x265/vpx/aom/svtav1/opus/vorbis/mp3lame/webp and nvenc/qsv/vaapi |
-| android-arm64-v8a | `dist/android-arm64-v8a/libffmpeg_exe.so` | 22 115 776 B | native set + 11 MediaCodec encoders |
-| android-armeabi-v7a | `dist/android-armeabi-v7a/libffmpeg_exe.so` | 19 911 816 B | native set + 11 MediaCodec encoders |
-| android-x86_64 | `dist/android-x86_64/libffmpeg_exe.so` | 27 311 008 B | native set + 11 MediaCodec encoders |
-| windows-x64 | `dist/windows-x64/ffmpeg.exe` | 30 676 494 B | native set (no NVENC, see above) |
+| linux-x64 | `dist/linux-x64/ffmpeg` | 32 676 024 B | libx264/libx265/libvpx/libaom/libsvtav1/libopus/libvorbis/libmp3lame/libwebp + nvenc/qsv/vaapi |
+| android-arm64-v8a | `dist/android-arm64-v8a/libffmpeg_exe.so` | 27 059 816 B | libx264/libvpx/libopus/libvorbis/libmp3lame/libwebp + 11 MediaCodec |
+| android-armeabi-v7a | `dist/android-armeabi-v7a/libffmpeg_exe.so` | 24 465 472 B | same software set (libvpx without NEON) + MediaCodec |
+| android-x86_64 | `dist/android-x86_64/libffmpeg_exe.so` | 33 390 824 B | same software set + MediaCodec |
+| windows-x64 | `dist/windows-x64/ffmpeg.exe` | 37 356 558 B | libx264/libvpx/libopus/libvorbis/libmp3lame/libwebp |
 
-The wasm targets stay native-only: a wasm module cannot dlopen the system's
-libx264, so `build-web.sh` never passes `FFMPEG_EXTERNAL_LIBS`.
+The wasm target stays native-only: a wasm module cannot link these system
+libraries, so `build-web.sh` never passes `FFMPEG_EXTERNAL_LIBS`. Web still has
+every encoder FFmpeg implements itself (mpeg4, mpeg2, ffv1, flac, aac, native
+opus and vorbis, png, mjpeg …), just not libx264.
 
 ## LTO and parallelism
 

@@ -79,12 +79,30 @@ ffmpeg_external_flags() {
         fi
     done | awk '!seen[$0]++'
 
-    # LAME ships no pkg-config file, so probe its header in the prefix.
-    if [ -f "$prefix/include/lame/lame.h" ] \
-       && ! pkg-config --exists mp3lame 2>/dev/null \
-       && ! pkg-config --exists lame 2>/dev/null; then
-        printf '%s\n' --enable-libmp3lame
-    fi
+    # Not every library ships a pkg-config file. Each of these is enabled from
+    # its header in the target prefix when no .pc answered above.
+    local header flag pkg_name
+    for entry in \
+        "lame/lame.h:--enable-libmp3lame:mp3lame lame" \
+        "x264.h:--enable-libx264:x264" \
+        "vpx/vpx_encoder.h:--enable-libvpx:vpx" \
+        "webp/encode.h:--enable-libwebp:libwebp" \
+        "opus/opus.h:--enable-libopus:opus" \
+        "vorbis/vorbisenc.h:--enable-libvorbis:vorbisenc"
+    do
+        header="${entry%%:*}"
+        rest="${entry#*:}"
+        flag="${rest%%:*}"
+        pkg_name="${rest#*:}"
+        [ -f "$prefix/include/$header" ] || continue
+        local known=0
+        for one in $pkg_name; do
+            if ffmpeg_have_pkg "$one" "$target_os" "$prefix"; then
+                known=1
+            fi
+        done
+        [ "$known" = "1" ] || printf '%s\n' "$flag"
+    done | awk '!seen[$0]++'
 
     # Hardware back ends. nvenc only needs headers at build time; the runtime
     # needs a driver, and without one the encoder fails at Start with FFmpeg's
@@ -124,6 +142,18 @@ ffmpeg_external_flags() {
             fi
             ;;
     esac
+}
+
+# configure prefixes pkg-config with the cross prefix (x86_64-w64-mingw32-), so
+# a cross build silently disables it; name the real tool and ask for static
+# libraries, because every archive here is static.
+ffmpeg_external_pkg_config_flags() {
+    [ "${FFMPEG_EXTERNAL_LIBS:-0}" = "1" ] || return 0
+    local tool
+    tool="$(command -v pkg-config || true)"
+    [ -n "$tool" ] || return 0
+    printf '%s\n' "--pkg-config=$tool"
+    printf '%s\n' "--pkg-config-flags=--static"
 }
 
 # Extra flags so configure can see a non-system prefix.

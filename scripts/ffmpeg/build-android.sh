@@ -198,8 +198,11 @@ API $API may be unsupported by this NDK — try --api 24 (Flutter minSdk) or a n
     fi
 
     if [ "${FFMPEG_EXTERNAL_LIBS:-0}" = "1" ]; then
-        export PKG_CONFIG_PATH
+        export PKG_CONFIG_PATH PKG_CONFIG_LIBDIR
         PKG_CONFIG_PATH="$(ffmpeg_deps_pkg_config_path "$(ffmpeg_deps_prefix)")"
+        # PKG_CONFIG_PATH only prepends to the default search path, so a host
+        # libogg would still win; LIBDIR replaces the defaults entirely.
+        PKG_CONFIG_LIBDIR="$PKG_CONFIG_PATH"
         extra_cflags="$(ffmpeg_external_extra_cflags)"
         extra_ldflags="$(ffmpeg_external_extra_ldflags)"
         [ -n "$extra_cflags" ] && args+=( --extra-cflags="$extra_cflags" )
@@ -207,6 +210,9 @@ API $API may be unsupported by this NDK — try --api 24 (Flutter minSdk) or a n
         while IFS= read -r flag; do
             [ -n "$flag" ] && args+=( "$flag" )
         done < <(ffmpeg_external_flags android)
+    while IFS= read -r flag; do
+        [ -n "$flag" ] && args+=( "$flag" )
+    done < <(ffmpeg_external_pkg_config_flags)
         log "external libraries: android set from $(ffmpeg_deps_prefix)"
     fi
 

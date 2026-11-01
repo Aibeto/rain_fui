@@ -129,8 +129,11 @@ else
 fi
 
 if [ "${FFMPEG_EXTERNAL_LIBS:-0}" = "1" ]; then
-    export PKG_CONFIG_PATH
+    export PKG_CONFIG_PATH PKG_CONFIG_LIBDIR
     PKG_CONFIG_PATH="$(ffmpeg_deps_pkg_config_path "$(ffmpeg_deps_prefix)")"
+    # Replace the default search path so host .pc files never leak into a
+    # cross build.
+    PKG_CONFIG_LIBDIR="$PKG_CONFIG_PATH"
     extra_cflags="$(ffmpeg_external_extra_cflags)"
     extra_ldflags="$(ffmpeg_external_extra_ldflags)"
     [ -n "$extra_cflags" ] && args+=( --extra-cflags="$extra_cflags" )
@@ -138,6 +141,9 @@ if [ "${FFMPEG_EXTERNAL_LIBS:-0}" = "1" ]; then
     while IFS= read -r flag; do
         [ -n "$flag" ] && args+=( "$flag" )
     done < <(ffmpeg_external_flags windows)
+    while IFS= read -r flag; do
+        [ -n "$flag" ] && args+=( "$flag" )
+    done < <(ffmpeg_external_pkg_config_flags)
     log "external libraries: windows set from $(ffmpeg_deps_prefix)"
 fi
 
