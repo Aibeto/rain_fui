@@ -444,7 +444,9 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
             _Header(
               title: l10n(I18nKey.jobPageTitle),
               subtitle: widget.file.name,
-              onBack: () => Navigator.of(context).maybePop(),
+              // Same path as the Cancel button: leaving the page throws away
+              // the settings, so both ask first.
+              onBack: _cancel,
             ),
             Expanded(
               child: SingleChildScrollView(
