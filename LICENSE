@@ -1,5 +1,5 @@
-rain_fui — a cross-platform FFmpeg GUI
-Copyright (C) <YEAR> <COPYRIGHT HOLDER>            <-- TODO: fill in before distributing
+rain_fui
+Copyright (C) 2026 Aibeto
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -13,26 +13,6 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
--------------------------------------------------------------------------------
-Why GPL v3 and not LGPL?
--------------------------------------------------------------------------------
-
-This project deliberately allows FFmpeg's strictest *free* license: GPL v3
-(`--enable-gpl --enable-version3`, never `--enable-nonfree`). Consequences,
-in plain terms:
-
-  * The FFmpeg binaries bundled with the app are GPL v3 (or later), so the
-    combined work — the app itself included — must be distributed under
-    GPL v3-compatible terms.
-  * Distributors of a built app must make the Corresponding Source of both
-    this application and the bundled FFmpeg available, and must include the
-    license texts in `LICENSES/ffmpeg/` plus `NOTICE`.
-  * No component may be linked with `--enable-nonfree`; doing so would make
-    the whole binary non-distributable.
-
-The GPL v3 text follows verbatim. Keep it verbatim; only the notice above is
-project-specific (that is the part this template asks you to fill in).
 
 -------------------------------------------------------------------------------
 
