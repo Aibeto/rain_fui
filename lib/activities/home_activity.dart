@@ -31,11 +31,28 @@ class HomeActivity extends StatefulWidget {
 }
 
 class _HomeActivityState extends State<HomeActivity> {
-  bool _sidebarVisible = true;
+  /// Width at which the sidebar may start eating into the content region.
+  ///
+  /// Below this the sidebar floats above the content instead, because squeezing
+  /// a narrow window would leave the content region unusable.
+  static const double _pushSidebarBreakpoint = kHomeSidebarWidth + 600;
+
+  /// Fraction of the window width the floating sidebar may cover.
+  static const double _floatingSidebarMaxFraction = 0.85;
+
+  /// The rail starts closed so the content region gets the whole window first.
+  bool _sidebarVisible = false;
   SourceSelection? _selection;
 
   void _toggleSidebar() {
     setState(() => _sidebarVisible = !_sidebarVisible);
+  }
+
+  void _hideSidebar() {
+    if (!_sidebarVisible) {
+      return;
+    }
+    setState(() => _sidebarVisible = false);
   }
 
   /// Keeps the last selection on screen. The bottom bar shows its own result
@@ -70,6 +87,47 @@ class _HomeActivityState extends State<HomeActivity> {
     setState(() => _selection = null);
   }
 
+  /// Builds the shell body: pushes the content aside when the window can afford
+  /// a permanent rail, floats the rail above the content when it cannot.
+  Widget _buildBody(BuildContext context, BoxConstraints constraints) {
+    final Widget content = DropSurface(
+      onSelection: _handleDroppedSelection,
+      onError: _handleDropError,
+      child: HomeContent(
+        selection: _selection,
+        onClearRequested: _selection == null ? null : _clearSelection,
+      ),
+    );
+
+    if (constraints.maxWidth >= _pushSidebarBreakpoint) {
+      return Row(
+        children: <Widget>[
+          if (_sidebarVisible) const HomeSidebar(),
+          Expanded(child: content),
+        ],
+      );
+    }
+
+    final double widest = constraints.maxWidth * _floatingSidebarMaxFraction;
+    return Stack(
+      children: <Widget>[
+        Positioned.fill(child: content),
+        if (_sidebarVisible) ...<Widget>[
+          // Tapping the smoked area closes the floating rail, the same gesture
+          // a modal pane would offer.
+          Positioned.fill(child: _Scrim(onTap: _hideSidebar)),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: HomeSidebar(
+              floating: true,
+              width: widest < kHomeSidebarWidth ? widest : kHomeSidebarWidth,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final ResourceDictionary resources = FluentTheme.of(context).resources;
@@ -88,22 +146,9 @@ class _HomeActivityState extends State<HomeActivity> {
             ),
           ),
           Expanded(
-            child: Row(
-              children: <Widget>[
-                if (_sidebarVisible) const HomeSidebar(),
-                Expanded(
-                  child: DropSurface(
-                    onSelection: _handleDroppedSelection,
-                    onError: _handleDropError,
-                    child: HomeContent(
-                      selection: _selection,
-                      onClearRequested: _selection == null
-                          ? null
-                          : _clearSelection,
-                    ),
-                  ),
-                ),
-              ],
+            child: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) =>
+                  _buildBody(context, constraints),
             ),
           ),
           SafeArea(
@@ -111,6 +156,26 @@ class _HomeActivityState extends State<HomeActivity> {
             child: AppBottomBar(onSelection: _rememberSelection),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Dimming layer that turns a tap outside the floating sidebar into a dismiss.
+class _Scrim extends StatelessWidget {
+  const _Scrim({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: ColoredBox(
+        // Smoke fill is a plain translucent colour — no blur is involved, so it
+        // stays within the no-blur rule.
+        color: FluentTheme.of(context).resources.smokeFillColorDefault,
       ),
     );
   }

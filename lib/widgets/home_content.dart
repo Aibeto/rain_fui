@@ -4,15 +4,19 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import '../i18n/i18n.dart';
 import '../i18n/i18n_keys.dart';
 import '../models/source_selection.dart';
+import '../services/platform_support.dart';
 import '../theme/app_theme.dart';
 
 /// Main content region of the home shell.
 ///
-/// With no [selection] it shows the empty state: what this screen is for, how to
-/// add something and the reminder that nothing is wired to FFmpeg yet. Once a
-/// source has been added it summarises what was picked, so the content region
-/// keeps the last result on screen after the result dialog is dismissed.
-/// [onClearRequested] is null when there is nothing to clear.
+/// With no [selection] it shows the empty state: what to do next and the
+/// reminder that nothing is wired to FFmpeg yet. Once a source has been added it
+/// summarises what was picked, so the content region keeps the last result on
+/// screen after the result dialog is dismissed. [onClearRequested] is null when
+/// there is nothing to clear.
+///
+/// There is no page heading on purpose: the window title in the top bar already
+/// names the app, so the region starts with the state instead of a label.
 class HomeContent extends StatelessWidget {
   /// Creates the content region.
   const HomeContent({super.key, this.selection, this.onClearRequested});
@@ -37,16 +41,6 @@ class HomeContent extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(l10n(I18nKey.homeTitle), style: theme.typography.title),
-            const SizedBox(height: 2),
-            Text(
-              l10n(I18nKey.appTagline),
-              style: theme.typography.caption?.copyWith(
-                color: resources.textFillColorSecondary,
-              ),
-              softWrap: true,
-            ),
-            const SizedBox(height: 16),
             Expanded(
               child: Center(
                 child: ConstrainedBox(
@@ -109,15 +103,23 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              l10n(I18nKey.homeEmptyBody),
+              // Touch targets cannot receive a drop, so they get copy that
+              // only mentions the picker.
+              l10n(
+                supportsDropTarget
+                    ? I18nKey.homeEmptyBody
+                    : I18nKey.homeEmptyBodyTouch,
+              ),
               style: theme.typography.body?.copyWith(
                 color: theme.resources.textFillColorSecondary,
               ),
               textAlign: TextAlign.center,
               softWrap: true,
             ),
-            const SizedBox(height: 16),
-            const _DropHint(),
+            if (supportsDropTarget) ...<Widget>[
+              const SizedBox(height: 16),
+              const _DropHint(),
+            ],
           ],
         ),
       ),
@@ -151,7 +153,7 @@ class _DropHint extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            context.l10n(I18nKey.homeDropHint),
+            context.l10n(I18nKey.homeDropHintIdle),
             style: theme.typography.caption?.copyWith(
               color: theme.resources.textFillColorSecondary,
             ),

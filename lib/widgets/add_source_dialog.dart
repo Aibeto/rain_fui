@@ -6,6 +6,7 @@ import '../i18n/i18n.dart';
 import '../i18n/i18n_keys.dart';
 import '../models/source_selection.dart';
 import '../services/file_source_service.dart';
+import '../theme/app_theme.dart';
 import 'message_dialog.dart';
 
 /// The picker the user asked for in the "+" dialog.
@@ -18,6 +19,11 @@ enum _AddSourceChoice { files, folder }
 /// no dialog is left holding a dead context. Every [FileSourceException] —
 /// including the web and Android folder cases — is surfaced as a localized
 /// [showMessageDialog] with the raw platform text as secondary detail.
+///
+/// A picked folder gets one extra step before it is handed back: the user
+/// confirms the folder, because a directory picker returns on a single click and
+/// the folder brings its whole first level with it. Files need no such step —
+/// the multi-select picker already ends with an explicit confirm action.
 Future<SourceSelection?> showAddSourceDialog(BuildContext context) async {
   final _AddSourceChoice? choice = await showDialog<_AddSourceChoice>(
     context: context,
@@ -32,7 +38,17 @@ Future<SourceSelection?> showAddSourceDialog(BuildContext context) async {
         _AddSourceChoice.folder => FileSourceService.pickFolder,
       };
   try {
-    return await pick(context);
+    final SourceSelection? selection = await pick(context);
+    if (selection == null || !context.mounted) {
+      return null;
+    }
+    if (choice == _AddSourceChoice.folder) {
+      final bool confirmed = await _confirmFolder(context, selection);
+      if (!confirmed) {
+        return null;
+      }
+    }
+    return selection;
   } on FileSourceException catch (error) {
     if (!context.mounted) {
       return null;
@@ -44,6 +60,78 @@ Future<SourceSelection?> showAddSourceDialog(BuildContext context) async {
       detail: error.detail,
     );
     return null;
+  }
+}
+
+/// Asks whether the picked folder should really be added; false on dismiss.
+Future<bool> _confirmFolder(
+  BuildContext context,
+  SourceSelection selection,
+) async {
+  final bool? confirmed = await showDialog<bool>(
+    context: context,
+    builder: (BuildContext context) =>
+        _FolderConfirmDialog(selection: selection),
+  );
+  return confirmed ?? false;
+}
+
+/// Confirmation step for a picked folder: the path plus an explicit Add.
+class _FolderConfirmDialog extends StatelessWidget {
+  const _FolderConfirmDialog({required this.selection});
+
+  final SourceSelection selection;
+
+  @override
+  Widget build(BuildContext context) {
+    final FluentThemeData theme = FluentTheme.of(context);
+    final ResourceDictionary resources = theme.resources;
+    final AppL10n l10n = context.l10n;
+    final SelectedFolder? folder = selection.folders.isEmpty
+        ? null
+        : selection.folders.first;
+
+    return ContentDialog(
+      title: Text(l10n(I18nKey.addSourceConfirmTitle)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(l10n(I18nKey.addSourceConfirmBody), softWrap: true),
+          if (folder != null) ...<Widget>[
+            const SizedBox(height: 12),
+            Text(
+              folder.name,
+              style: theme.typography.bodyStrong,
+              softWrap: true,
+            ),
+            const SizedBox(height: 2),
+            SelectableText(
+              folder.path,
+              // Paths are the one place where a monospaced face helps: it keeps
+              // separators readable and long names wrap predictably.
+              style: AppTheme.mono(
+                theme.typography.caption?.copyWith(
+                  color: resources.textFillColorSecondary,
+                ),
+                l10n.locale,
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ],
+      ),
+      actions: <Widget>[
+        Button(
+          child: Text(l10n(I18nKey.actionCancel)),
+          onPressed: () => Navigator.of(context).pop(false),
+        ),
+        FilledButton(
+          child: Text(l10n(I18nKey.actionAdd)),
+          onPressed: () => Navigator.of(context).pop(true),
+        ),
+      ],
+    );
   }
 }
 

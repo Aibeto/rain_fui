@@ -5,6 +5,7 @@ import '../i18n/i18n.dart';
 import '../i18n/i18n_keys.dart';
 import '../models/source_selection.dart';
 import '../services/file_source_service.dart';
+import '../services/platform_support.dart';
 
 /// Turns its [child] into a drag-and-drop target for files and folders.
 ///
@@ -12,6 +13,9 @@ import '../services/file_source_service.dart';
 /// surface works on desktop and on the web alike. A successful drop is reported
 /// through [onSelection]; a failed one through [onError], leaving the choice of
 /// how to surface it to the owner of this widget.
+///
+/// The hover highlight only ever appears where dragging exists
+/// ([supportsDropTarget]); touch platforms never see it.
 class DropSurface extends StatefulWidget {
   /// Creates a drop surface wrapped around [child].
   const DropSurface({
@@ -78,7 +82,7 @@ class _DropSurfaceState extends State<DropSurface> {
         fit: StackFit.passthrough,
         children: <Widget>[
           widget.child,
-          if (_hovering)
+          if (_hovering && supportsDropTarget)
             Positioned.fill(
               child: IgnorePointer(
                 child: Container(

@@ -33,10 +33,10 @@ class AppTopBar extends StatelessWidget {
 
   /// Glyph that mirrors the current [ThemeMode].
   static IconData _iconFor(ThemeMode mode) => switch (mode) {
-        ThemeMode.light => FluentIcons.weather_sunny_24_regular,
-        ThemeMode.dark => FluentIcons.weather_moon_24_regular,
-        ThemeMode.system => FluentIcons.desktop_24_regular,
-      };
+    ThemeMode.light => FluentIcons.weather_sunny_24_regular,
+    ThemeMode.dark => FluentIcons.weather_moon_24_regular,
+    ThemeMode.system => FluentIcons.desktop_24_regular,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -93,9 +93,8 @@ class AppTopBar extends StatelessWidget {
                 size: 16,
                 color: resources.textFillColorPrimary,
               ),
-              onPressed: () => Navigator.of(context).push(
-                LanguageActivity.route,
-              ),
+              onPressed: () =>
+                  Navigator.of(context).push(LanguageActivity.route),
             ),
           ),
           const SizedBox(width: 4),

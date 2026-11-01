@@ -4,19 +4,37 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import '../i18n/i18n.dart';
 import '../i18n/i18n_keys.dart';
 
-/// Width of the sidebar in logical pixels.
-const double _sidebarWidth = 240;
+/// Preferred width of the sidebar in logical pixels.
+///
+/// The shell squeezes the content region by this much only when the window can
+/// afford it; below that threshold the sidebar floats over the content at a
+/// fraction of the window width instead.
+const double kHomeSidebarWidth = 240;
 
-/// Fixed-width navigation rail of the home shell.
+/// Navigation rail of the home shell.
 ///
 /// Drawn on its own solid layer, one step apart from the content region, with a
 /// single selected row for Home. Selection is fixed to Home in this phase, so
 /// the row is presentational: it answers hover and focus but performs no
 /// navigation. The whole rail scrolls instead of overflowing when the window is
 /// short, and its border follows the ambient [Directionality].
+///
+/// With [floating] set the rail is the narrow-window variant: it stands on the
+/// higher layer fill so it reads as a panel above the content, and it takes
+/// [width] instead of [kHomeSidebarWidth].
 class HomeSidebar extends StatelessWidget {
   /// Creates the sidebar.
-  const HomeSidebar({super.key});
+  const HomeSidebar({
+    super.key,
+    this.floating = false,
+    this.width = kHomeSidebarWidth,
+  });
+
+  /// Whether the rail is floating above the content region.
+  final bool floating;
+
+  /// Width of the rail in logical pixels.
+  final double width;
 
   @override
   Widget build(BuildContext context) {
@@ -25,12 +43,17 @@ class HomeSidebar extends StatelessWidget {
     final AppL10n l10n = context.l10n;
 
     return Container(
-      width: _sidebarWidth,
+      width: width,
       height: double.infinity,
       decoration: BoxDecoration(
-        color: resources.solidBackgroundFillColorSecondary,
+        color: floating
+            ? resources.solidBackgroundFillColorTertiary
+            : resources.solidBackgroundFillColorSecondary,
         border: BorderDirectional(
           end: BorderSide(color: resources.controlStrokeColorDefault),
+          start: floating
+              ? BorderSide(color: resources.controlStrokeColorDefault)
+              : BorderSide.none,
         ),
       ),
       child: SingleChildScrollView(
@@ -38,22 +61,6 @@ class HomeSidebar extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(8, 0, 8, 10),
-              child: Text(
-                // Caption convention only; scripts without letter case (CJK,
-                // Arabic, Thai) are unaffected by the upper-casing.
-                l10n(I18nKey.sidebarWorkspace).toUpperCase(),
-                style: theme.typography.caption?.copyWith(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.7,
-                  color: resources.textFillColorSecondary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
             _SidebarNavRow(
               icon: FluentIcons.list_24_filled,
               label: l10n(I18nKey.sidebarHome),
@@ -119,10 +126,10 @@ class _SidebarNavRow extends StatelessWidget {
             final Color background = selected
                 ? accent.withValues(alpha: pressed ? 0.18 : 0.12)
                 : pressed
-                    ? resources.subtleFillColorTertiary
-                    : hovered
-                        ? resources.subtleFillColorSecondary
-                        : const Color(0x00000000);
+                ? resources.subtleFillColorTertiary
+                : hovered
+                ? resources.subtleFillColorSecondary
+                : const Color(0x00000000);
 
             return Container(
               padding: const EdgeInsetsDirectional.only(start: 8, end: 10),
@@ -155,8 +162,9 @@ class _SidebarNavRow extends StatelessWidget {
                     child: Text(
                       label,
                       style: theme.typography.body?.copyWith(
-                        fontWeight:
-                            selected ? FontWeight.w600 : FontWeight.normal,
+                        fontWeight: selected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
