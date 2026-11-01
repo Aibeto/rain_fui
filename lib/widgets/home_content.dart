@@ -54,9 +54,22 @@ class HomeContent extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     Expanded(
-                      child: jobs.isEmpty
-                          ? const SingleChildScrollView(child: _EmptyState())
-                          : _JobList(jobs: jobs),
+                      // Cross-fade between the empty state and the list so the
+                      // first job does not pop into place.
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 180),
+                        switchInCurve: Curves.easeOut,
+                        switchOutCurve: Curves.easeIn,
+                        child: jobs.isEmpty
+                            ? const SingleChildScrollView(
+                                key: ValueKey<String>('empty'),
+                                child: _EmptyState(),
+                              )
+                            : _JobList(
+                                key: const ValueKey<String>('list'),
+                                jobs: jobs,
+                              ),
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -179,7 +192,7 @@ class _DropHint extends StatelessWidget {
 
 /// Scrollable list of queued and finished encodes.
 class _JobList extends StatelessWidget {
-  const _JobList({required this.jobs});
+  const _JobList({super.key, required this.jobs});
 
   final List<EncodeJob> jobs;
 
@@ -285,11 +298,15 @@ class JobRow extends StatelessWidget {
                             ),
                             if (percent != null) ...<Widget>[
                               const SizedBox(width: 8),
-                              Text(
-                                percent,
-                                style: AppTheme.mono(
-                                  theme.typography.caption,
-                                  l10n.locale,
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 160),
+                                child: Text(
+                                  percent,
+                                  key: ValueKey<String>(percent),
+                                  style: AppTheme.mono(
+                                    theme.typography.caption,
+                                    l10n.locale,
+                                  ),
                                 ),
                               ),
                             ],

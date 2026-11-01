@@ -81,29 +81,35 @@ class _DropSurfaceState extends State<DropSurface> {
         fit: StackFit.passthrough,
         children: <Widget>[
           widget.child,
-          if (_hovering && supportsDropTarget)
+          if (supportsDropTarget)
             Positioned.fill(
               child: IgnorePointer(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.12),
-                    border: Border.all(color: accent, width: 2),
-                  ),
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsetsDirectional.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.scaffoldBackgroundColor,
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: accent),
-                      ),
-                      child: Text(
-                        context.l10n(I18nKey.homeDropHint),
-                        style: theme.typography.bodyStrong?.copyWith(
-                          color: accent,
+                ignoring: !_hovering,
+                child: AnimatedOpacity(
+                  opacity: _hovering ? 1 : 0,
+                  duration: const Duration(milliseconds: 120),
+                  curve: Curves.easeOut,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.12),
+                      border: Border.all(color: accent, width: 2),
+                    ),
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsetsDirectional.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.scaffoldBackgroundColor,
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: accent),
+                        ),
+                        child: Text(
+                          context.l10n(I18nKey.homeDropHint),
+                          style: theme.typography.bodyStrong?.copyWith(
+                            color: accent,
+                          ),
                         ),
                       ),
                     ),
