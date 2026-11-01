@@ -1055,7 +1055,6 @@ final List<ContainerSpec> kContainers = <ContainerSpec>[
       TextOption(
         flag: '-mpegts_flags',
         labelKey: I18nKey.optMpegtsFlags,
-        hint: '+resend_headers',
         advanced: true,
       ),
     ],
@@ -1071,7 +1070,6 @@ final List<ContainerSpec> kContainers = <ContainerSpec>[
       TextOption(
         flag: '-flvflags',
         labelKey: I18nKey.optFlvFlags,
-        hint: 'no_duration_filesize',
         advanced: true,
       ),
     ],

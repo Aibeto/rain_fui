@@ -258,9 +258,7 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
     if (container == null) {
       return;
     }
-    if (_kind != MediaKind.audio &&
-        _video == null &&
-        _kind == MediaKind.video) {
+    if (_kind == MediaKind.video && _video == null) {
       return;
     }
     JobQueue.instance.enqueue(_buildRequest());

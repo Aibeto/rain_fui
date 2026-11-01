@@ -29,6 +29,14 @@ lib/
 ├── app.dart                        FluentApp, themes, locale, i18n scope [lead]
 ├── theme/app_theme.dart            FluentThemeData + font fallback       [lead]
 ├── models/source_selection.dart    data carried from pickers/drop → dialog [lead]
+├── src/media/                      codec + container capability table    [lead]
+│   ├── media_kind.dart             extension → video/audio/image
+│   ├── option_spec.dart            sealed option descriptions
+│   ├── codec_spec.dart             one encoder + its options
+│   ├── container_spec.dart         one muxer + what it accepts
+│   ├── capabilities.dart           lookups and compatibility filters
+│   ├── capabilities_data.dart      the table itself
+│   └── encode_request.dart         frozen form state → argv
 ├── i18n/
 │   ├── i18n_keys.dart              frozen key constants                  [lead]
 │   ├── i18n.dart                   registry + lookup + scope + extension [lead]
@@ -39,12 +47,14 @@ lib/
 │   ├── theme_service.dart          ValueNotifier<ThemeMode> cycle        [lead]
 │   ├── font_license_service.dart   LicenseRegistry OFL registration      [lead]
 │   ├── file_source_service.dart    pickers, folder listing, drop mapping [lead]
+│   ├── job_queue.dart              serial encode queue, progress, pause  [lead]
 │   ├── platform_support.dart       supportsDropTarget (desktop + web only) [lead]
 │   ├── child_listing.dart          name list + truncation flag             [lead]
 │   └── directory_lister.dart       conditional dart:io / web stub          [lead]
 │   └── android_permission_service.dart  notification/all-files skeleton  [dialogs]
 ├── activities/
 │   ├── home_activity.dart          app shell + drop target               [lead]
+│   ├── media_job_activity.dart     single-file encode form               [lead]
 │   └── language_activity.dart      English-only locale list              [lead]
 └── widgets/
     ├── top_bar.dart                AppTopBar                              [lead]
@@ -218,6 +228,17 @@ The `+` flow is: `showAddSourceDialog` (picker, plus a confirm step for a
 folder) → `showSelectionResultDialog`. The drop flow is: `DropSurface` →
 `FileSourceService.selectionFromDrop` → `showSelectionResultDialog`, with
 `FileSourceException` going to `showMessageDialog`.
+
+## Encode flow
+
+A pick that yields exactly one file (picker or drop) opens `MediaJobActivity`
+instead of the result dialog; multi-file and folder picks keep the dialog. The
+form starts from `detectMediaKind(fileName)`, offers the video encoder, audio
+encoder and container that the static table says can work together, renders
+`OptionSpec`s as widgets, and hands the frozen `EncodeRequest` to
+`JobQueue.instance`, which runs one job at a time through the FFmpeg backend and
+reports progress back to the home list. Pause is a real `SIGSTOP` on POSIX; when
+the platform cannot signal a process the job says so instead of pretending.
 
 ## Layout behaviour
 

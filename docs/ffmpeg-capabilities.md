@@ -121,7 +121,7 @@ Matroska 默认拒绝没有原生 CodecID 的编码，必须显式 `-allow_raw_v
 | `rpza` | QuickTime RPZA | `rgb555` | 有损 | mov, avi |
 | `rv10` | RealVideo 1.0 | `yuv420p` | 有损 | rm, mkv |
 | `rv20` | RealVideo 2.0 | `yuv420p` | 有损 | rm, mkv |
-| `s302m` | SMPTE 302M（音频装进视频帧） | 无像素格式 | 无损 | mxf |
+| ~~`s302m`~~ | 见第 3 节，它是音频编码器（`s302m.c:232` 的 `.p.type` 是 `AVMEDIA_TYPE_AUDIO`） | — | — | — |
 | `sgi` | SGI 图像 | `rgb24`,`rgba`,`rgb48le/be`,`rgba64le/be`,`gray16le/be`,`gray8` | 无损 | image2, mov |
 | `smc` | QuickTime SMC | `pal8` | 无损（调色板 RLE） | mov |
 | `snow` | Snow | `yuv420p`,`yuv410p`,`yuv444p`,`gray8` | 有损 | mkv, avi, nut |
@@ -175,6 +175,7 @@ Matroska 默认拒绝没有原生 CodecID 的编码，必须显式 `-allow_raw_v
 | `dca` | DTS Coherent Acoustics | `s16p`,`s32p` | 有损 | dts, mp4, mov, mkv, mpegts |
 | `truehd` | TrueHD | `s16p`,`s32p` | 无损 | mkv, mp4, mpegts |
 | `mlp` | MLP | `s16p`,`s32p` | 无损 | mkv |
+| `s302m` | SMPTE 302M（AES3 打包的 PCM） | `s16`,`s24`,`s32` | 无损 | mxf |
 | `tta` | TTA | `u8`,`s16`,`s32` | 无损 | mkv |
 | `wavpack` | WavPack | `u8p`…`s32p` | 无损 | mkv |
 | `aptx` | aptX（蓝牙） | `s16p`,`s32p` | 有损 | 无常规封装 |
@@ -218,7 +219,7 @@ ADPCM / DPCM 编码器：
 | --- | --- | --- | --- | --- |
 | `mp4` | .mp4 | mpeg4, mpeg2video, mpeg1video, h263, mjpeg, png†, prores*, dnxhd, dvvideo, msmpeg4v3, rawvideo, vc2, jpeg2000, magicyuv, cinepak, svq1, qtrle, v210, y41p, yuv4, r210, r10k, avrp, avui, dxv, dpx, targa, sgi, gif, msrle, smc, rpza, cfhd | aac, ac3, eac3, mp2, flac, alac, opus, dca, truehd, nellymoser, pcm_* | 无 `libx264` 时 `video_codec` 默认退化为 `mpeg4`（`movenc.c:9395-9396`） |
 | `mov` | .mov | 同 mp4 | 同 mp4 | 与 mp4 共用 `MOVMuxContext`，选项相同 |
-| `ipod` | .m4v/.m4a/.m4b | 需显式指定，默认 `h264` 不存在 | aac, alac | 做 m4a 时用 `-c:a aac`，视频轨要显式 `-c:v mpeg4` |
+| `ipod` | .m4v/.m4a/.m4b | 默认 `h264`（本构建不存在），需显式 `-c:v mpeg4` | aac, alac | 做 m4a 时只给 `-c:a aac` |
 | `matroska` | .mkv | ffv1, ffvhuff, mpeg1video, mpeg2video, mpeg4, mjpeg, prores*, rv10, rv20, snow, vc2, rawvideo, msmpeg4v3, jpeg2000 | aac, ac3, eac3, mp2, flac, opus, vorbis, alac, dca, truehd, mlp, tta, wavpack, pcm_*, ra_144 | 无 libvorbis 时默认音频是 `ac3`（`matroskaenc.c:3720-3721`） |
 | `webm` | .webm | **无**（只允许 vp8/vp9/av1，`matroska.c:110-124`） | opus, vorbis（均需 `-strict -2`） | 视频编码在本构建不可用，只能做纯音频 |
 | `avi` | .avi | mpeg4, mpeg2video, mpeg1video, h263, h263p, mjpeg, png†, ffv1, huffyuv, ffvhuff, utvideo, dvvideo, rawvideo, flv, wmv1, wmv2, msmpeg4v2/v3, h261, msvideo1, cinepak, svq1, jpeg2000, jpegls, ljpeg, dpx, targa, zmbv†, v210, speedhq, vc2, asv1, asv2, cljr, roq, rpza, msrle, cfhd, y41p, yuv4, r210, r10k | pcm_*, adpcm_*, mp2, ac3, wmav1/2, g723_1, dfpwm, vorbis | 经典 AVI，索引 4 GB 限制 |
@@ -229,9 +230,7 @@ ADPCM / DPCM 编码器：
 | `flac` | .flac | 仅封面图（png/mjpeg） | flac | 无自有选项 |
 | `wav` | .wav | 无 | pcm_*, adpcm_*, mp2 | 选项 `write_bext`、`rf64` |
 | `ogg` | .ogg | 无（theora 不可用） | vorbis（`-strict -2`）, opus（`-strict -2`）, flac | 选项 `page_duration` |
-| `opus` | .opus | 无 | opus | 只能装 Opus |
-| `ac3` | .ac3 | 无 | ac3, ac3_fixed | 只能装 AC-3 |
-| `adts` | .aac/.adts | 无 | aac | AAC 裸流 |
+| `opus` / `ac3` / `adts` | .opus/.ac3/.aac | 无 | opus / ac3+ac3_fixed / aac | 单一编码的裸音频流 |
 | `image2` | 按编码器决定 | 所有图像编码器（`img2.c:29-102`） | 无 | 文件名需含 `%d` |
 | `apng` | .apng | apng† | 无 | 选项 `plays`、`final_delay` |
 | `nut` | .nut | 大多数 | 大多数 | 选项 `syncpoints`、`write_index` |
@@ -240,7 +239,7 @@ ADPCM / DPCM 编码器：
 | `mxf` | .mxf | mpeg2video, dnxhd | pcm_s16le, s302m | 广播封装 |
 | `rawvideo` | .rgb/.yuv | rawvideo | 无 | 无选项 |
 | `yuv4mpegpipe` | .y4m | rawvideo | 无 | 默认 `wrapped_avframe` |
-| `ivf` | .ivf | **无**（仅 vp8/vp9/av1） | 无 | 本构建不可用 |
+| `ivf` / `h264` / `hevc` | .ivf/.h264/.hevc | **无**原生编码器（ivf 只认 vp8/vp9/av1） | 无 | 只能封装已有码流，本仓库用不上 |
 | `smjpeg` | — | mjpeg | pcm_s16le | 逐帧 JPEG + PCM |
 | `swf` | .swf | flv | mp3（无编码器） | 只能出无声视频 |
 | `h264` / `hevc` | .h264/.hevc | **无**原生编码器 | 无 | 只能封装已有码流（本仓库不适用） |
@@ -309,7 +308,7 @@ ADPCM / DPCM 编码器：
 | `intra_penalty` | int | 0..INT_MAX/2 | 0 | 帧内块惩罚 |
 | `sc_threshold` | int | INT_MIN..INT_MAX | 0 | 场景切换阈值 |
 
-除 `mpeg2video` 外，`h263`/`h263p`/`flv`/`wmv2` 没有 `b_strategy`/`b_sensitivity`/`brd_scale`
+除 `mpeg2video` 外，`h263`/`h263p`/`flv`/`wmv2` 没有 `b_strategy`/`b_sensitivity`
 （它们不含 `FF_MPV_COMMON_BFRAME_OPTS`）。
 
 ### 5.2 `mpeg4`
@@ -489,8 +488,9 @@ ADPCM / DPCM 编码器：
 | `aac_tns` | bool | -1/0/1 | 1 | 时域噪声整形 |
 | `aac_pce` | bool | -1/0/1 | 0 | 强制写 PCE |
 
-`-profile:v` 可用 `aac_low`/`aac_main`/`aac_ssr`/`aac_ltp`/`aac_he`/`aac_he_v2`/`aac_ld`/`aac_eld`
-（`profiles.h:30-40`），但 native 编码器实际只产出 LC；给 HE 只会写错 profile 标记。
+`-profile:a` 只接受 `aac_low` 与 `mpeg2_aac_low`（`libavcodec/aacenctab.h:145-148`），
+其它档位（`aac_he`、`aac_ld` 等虽在 `profiles.h:30-40` 里有名字）会直接报 `Profile not supported!`
+（`aacenc.c:1230`），不是静默降级。
 通用字段：`-b:a` `-ar` `-ac` `-q:a`（映射到 `global_quality`，`aacenc.c:1037`）。
 
 ### 5.18 `ac3` / `eac3`
@@ -573,7 +573,7 @@ ADPCM / DPCM 编码器：
 | `-q:v` | 流级 | 固定量化器，置 `AV_CODEC_FLAG_QSCALE` 并写 `frame->quality`；`-qscale`/`-qscale:v` 是同一选项的旧名（`fftools/ffmpeg_opt.c:1177-1179`） |
 | `-q:a` | 流级 | 音频质量，映射到 `global_quality`（`doc/codecs.texi:603`） |
 | `-crf` | — | **本构建不存在**，见第 5 节开头 |
-| `-profile:v` | 流级 | 档位，取值随编码器；不接受则报 "Profile not supported" |
+| `-profile:v` / `-profile:a` | 流级 | 档位，视频用 `:v`、音频用 `:a`；编码器不接受则报 "Profile not supported" |
 | `-level` | 流级 | 级别，主要对 `mpeg2video` 有意义 |
 | `-threads` | 流级 | 编码线程数，`0` = 自动（`doc/codecs.texi:673`） |
 | `-sn` / `-an` / `-vn` | 流级 | 丢弃字幕 / 音频 / 视频流（`doc/ffmpeg.texi:2155`,`:2107`,`:1593`） |
@@ -612,9 +612,9 @@ ADPCM / DPCM 编码器：
    是编译期就没有。文案建议写"当前构建仅包含 FFmpeg 原生编码器，不含 libx264/libx265/libvpx/libaom/libsvtav1/libwebp"，
    而不是"暂不支持"——后者会让用户以为是运行时开关没打开。
 
-7. **`-profile:v` 与 `-level` 只在部分编码器上成立**。`mpeg4`/`mpeg2video`/`prores*`/`dnxhd`/`aac`
-   有档位表，`h263`/`flv`/`wmv2`/`gif`/`png`/`pcm_*` 没有。给不支持的编码器传 `-profile:v`
-   会直接失败，不是静默忽略。
+7. **`-profile` 只在部分编码器上成立**（视频 `-profile:v`，音频 `-profile:a`）。`mpeg4`/`mpeg2video`/`prores*`/`dnxhd`
+   有档位表，`aac` 只认 `aac_low`/`mpeg2_aac_low`，`h263`/`flv`/`wmv2`/`gif`/`png`/`pcm_*` 没有。
+   给不支持的编码器传 `-profile` 会直接失败，不是静默忽略。
 
 8. **`-q:v` 不是 `-crf`**。本构建没有 `-crf`；恒定质量只能靠 `-q:v`（MPEG 系 1-31，越小越好）
    或 `-b:v`。GUI 的"质量"滑杆应映射到 `-q:v`，并为每个编码器配合适量程，而不是照搬
