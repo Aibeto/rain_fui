@@ -139,6 +139,7 @@ for abi in "${ABI_LIST[@]}"; do
     [ -n "$abi" ] || continue
 
     target="android-$abi"
+    FFMPEG_DEPS_TARGET="$target"
     ffmpeg_check_target_name "$target"
     arch="$(abi_arch "$abi")"
     cpu="$(abi_cpu "$abi")"
@@ -194,6 +195,19 @@ API $API may be unsupported by this NDK — try --api 24 (Flutter minSdk) or a n
         log "zlib: enabled (NDK sysroot provides zlib.h)"
     else
         log "zlib: not available, skipping --enable-zlib"
+    fi
+
+    if [ "${FFMPEG_EXTERNAL_LIBS:-0}" = "1" ]; then
+        export PKG_CONFIG_PATH
+        PKG_CONFIG_PATH="$(ffmpeg_deps_pkg_config_path "$(ffmpeg_deps_prefix)")"
+        extra_cflags="$(ffmpeg_external_extra_cflags)"
+        extra_ldflags="$(ffmpeg_external_extra_ldflags)"
+        [ -n "$extra_cflags" ] && args+=( --extra-cflags="$extra_cflags" )
+        [ -n "$extra_ldflags" ] && args+=( --extra-ldflags="$extra_ldflags" )
+        while IFS= read -r flag; do
+            [ -n "$flag" ] && args+=( "$flag" )
+        done < <(ffmpeg_external_flags android)
+        log "external libraries: android set from $(ffmpeg_deps_prefix)"
     fi
 
     if [ "$arch" = "x86_64" ] && ! ffmpeg_has_x86asm; then

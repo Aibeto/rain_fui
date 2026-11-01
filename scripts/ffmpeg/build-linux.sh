@@ -34,6 +34,8 @@ Environment:
       CC                 C compiler (default: gcc; clang is auto-detected for LTO policy)
       FFMPEG_LTO=0       disable LTO (debug only; CI keeps LTO on)
       FFMPEG_WITH_FFPROBE=1  also build ffprobe
+      FFMPEG_EXTERNAL_LIBS=1 link libopus/libvorbis/libvpx/libx264/libx265/
+                           libaom/libsvtav1/libmp3lame plus vaapi and qsv
       JOBS               same as --jobs
 EOF
 }
@@ -88,6 +90,19 @@ if ffmpeg_zlib_available "$CC"; then
     log "zlib: enabled (host sysroot provides zlib.h)"
 else
     log "zlib: not available, skipping --enable-zlib (contract §4)"
+fi
+
+if [ "${FFMPEG_EXTERNAL_LIBS:-0}" = "1" ]; then
+    export PKG_CONFIG_PATH
+    PKG_CONFIG_PATH="$(ffmpeg_deps_pkg_config_path "$(ffmpeg_deps_prefix)")"
+    extra_cflags="$(ffmpeg_external_extra_cflags)"
+    extra_ldflags="$(ffmpeg_external_extra_ldflags)"
+    [ -n "$extra_cflags" ] && args+=( --extra-cflags="$extra_cflags" )
+    [ -n "$extra_ldflags" ] && args+=( --extra-ldflags="$extra_ldflags" )
+    while IFS= read -r flag; do
+        [ -n "$flag" ] && args+=( "$flag" )
+    done < <(ffmpeg_external_flags linux)
+    log "external libraries: enabled (prefix $(ffmpeg_deps_prefix))"
 fi
 
 if ffmpeg_has_x86asm; then

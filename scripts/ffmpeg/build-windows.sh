@@ -99,6 +99,7 @@ if [ "$CLEAN" = "1" ]; then
 fi
 
 args=( "${FFMPEG_BASE_FLAGS[@]}" )
+FFMPEG_DEPS_TARGET="${FFMPEG_DEPS_TARGET:-windows-x64}"
 args+=( --prefix="$builddir/prefix" --target-os=mingw32 --arch="$ARCH" --cc="$CC" )
 
 if [ "$NATIVE" = "0" ]; then
@@ -125,6 +126,19 @@ if ffmpeg_zlib_available "$CC"; then
     log "zlib: enabled"
 else
     log "zlib: not available in the mingw sysroot, skipping --enable-zlib (contract §4)"
+fi
+
+if [ "${FFMPEG_EXTERNAL_LIBS:-0}" = "1" ]; then
+    export PKG_CONFIG_PATH
+    PKG_CONFIG_PATH="$(ffmpeg_deps_pkg_config_path "$(ffmpeg_deps_prefix)")"
+    extra_cflags="$(ffmpeg_external_extra_cflags)"
+    extra_ldflags="$(ffmpeg_external_extra_ldflags)"
+    [ -n "$extra_cflags" ] && args+=( --extra-cflags="$extra_cflags" )
+    [ -n "$extra_ldflags" ] && args+=( --extra-ldflags="$extra_ldflags" )
+    while IFS= read -r flag; do
+        [ -n "$flag" ] && args+=( "$flag" )
+    done < <(ffmpeg_external_flags windows)
+    log "external libraries: windows set from $(ffmpeg_deps_prefix)"
 fi
 
 if ffmpeg_has_x86asm; then

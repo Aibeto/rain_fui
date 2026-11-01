@@ -14,6 +14,9 @@
 #   JOBS                parallel make jobs      (default nproc / NUMBER_OF_PROCESSORS)
 #   FFMPEG_LTO          1 = LTO on, 0 = off     (default 1; debug only)
 #   FFMPEG_WITH_FFPROBE 1 = also build ffprobe  (default 0)
+#   FFMPEG_EXTERNAL_LIBS 1 = link third-party codecs and hardware back ends
+#                            (default 0: native encoders only)
+#   FFMPEG_DEPS_PREFIX   dependency prefix      (default build/ffmpeg/deps/<target>)
 # =============================================================================
 # shellcheck shell=bash
 
@@ -32,6 +35,10 @@ FFMPEG_FFBUILD="${FFMPEG_FFBUILD:-$FFMPEG_BUILD_ROOT/ffbuild}"
 FFMPEG_DIST="${FFMPEG_DIST:-$FFMPEG_BUILD_ROOT/dist}"
 FFMPEG_LTO="${FFMPEG_LTO:-1}"
 FFMPEG_WITH_FFPROBE="${FFMPEG_WITH_FFPROBE:-0}"
+FFMPEG_EXTERNAL_LIBS="${FFMPEG_EXTERNAL_LIBS:-0}"
+
+# shellcheck source=scripts/ffmpeg/external-libs.sh
+source "$FFMPEG_SCRIPT_DIR/external-libs.sh"
 
 # ---------------------------------------------------------------------------
 # logging

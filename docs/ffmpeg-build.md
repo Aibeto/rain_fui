@@ -183,8 +183,56 @@ build tree first. `bash -n` is enough to syntax-check them.
 | `JOBS` | `nproc` / `NUMBER_OF_PROCESSORS` | parallel make jobs |
 | `FFMPEG_LTO` | `1` | `0` disables LTO (debug only) |
 | `FFMPEG_WITH_FFPROBE` | `0` | `1` also builds `ffprobe` |
+| `FFMPEG_EXTERNAL_LIBS` | `0` | `1` links third-party codecs and hardware back ends |
+| `FFMPEG_DEPS_PREFIX` | `build/ffmpeg/deps/<target>` | where `build-deps.sh` installs them |
 | `ANDROID_NDK_HOME` / `ANDROID_NDK_ROOT` | auto-detect | NDK location |
 | `EMSDK` | `~/emsdk` | Emscripten SDK location |
+
+## Optional third-party libraries
+
+The default build is native-only: `--disable-autodetect` with no `--enable-lib*`,
+so the encoders are the ones FFmpeg ships itself. That keeps the binary small and
+the build reproducible, but it also means `libx264`, `libaom-av1`, `libsvtav1`,
+`libopus` and the hardware encoders are absent.
+
+`FFMPEG_EXTERNAL_LIBS=1` changes that. `scripts/ffmpeg/external-libs.sh` probes
+what is actually installed and emits only flags whose dependency resolves:
+
+| Library | Flag | Probe |
+| --- | --- | --- |
+| libopus | `--enable-libopus` | `pkg-config opus` |
+| libvorbis | `--enable-libvorbis` | `pkg-config vorbisenc` |
+| libvpx | `--enable-libvpx` | `pkg-config vpx` |
+| x264 / x265 | `--enable-libx264` / `--enable-libx265` | `pkg-config x264` / `x265` |
+| libaom | `--enable-libaom` | `pkg-config aom` |
+| SVT-AV1 | `--enable-libsvtav1` | `pkg-config SvtAv1Enc` |
+| LAME | `--enable-libmp3lame` | `pkg-config mp3lame` |
+| libwebp | `--enable-libwebp` | `pkg-config libwebp` |
+| NVENC | `--enable-ffnvcodec --enable-nvenc` | `ffnvcodec/nvEncodeAPI.h` in the prefix |
+| VAAPI | `--enable-vaapi` | `pkg-config libva` |
+| QSV | `--enable-libvpl` | `pkg-config vpl` |
+| AMF | `--enable-amf` | AMF headers (Windows only) |
+| MediaCodec | `--enable-jni --enable-mediacodec` | Android target only |
+
+`--disable-autodetect` turns `ffnvcodec` off as well, which is why the NVENC
+line names it explicitly; without it configure stops at
+`nvenc requested, but not all dependencies are satisfied: ffnvcodec`.
+
+Libraries the sysroot does not provide come from `scripts/ffmpeg/build-deps.sh`:
+
+```text
+scripts/ffmpeg/build-deps.sh --only nvcodec,lame
+scripts/ffmpeg/build-deps.sh --only svtav1
+FFMPEG_EXTERNAL_LIBS=1 scripts/ffmpeg/build-linux.sh
+```
+
+The dependency prefix is `build/ffmpeg/deps/<target>`, so a cross build needs its
+own prefix (`android-arm64-v8a`, `windows-x64`, …) built with that target's `CC`,
+`CFLAGS`, `LDFLAGS` and `HOST`.
+
+Hardware encoders only prove themselves at run time: the build can carry them,
+but a machine without the matching GPU reports FFmpeg's own `Cannot load libcuda`
+or `No VA display` error in the job log.
 
 ## LTO and parallelism
 
