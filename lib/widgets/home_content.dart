@@ -211,148 +211,159 @@ class JobRow extends StatelessWidget {
     final FluentThemeData theme = FluentTheme.of(context);
     final ResourceDictionary resources = theme.resources;
     final AppL10n l10n = context.l10n;
-    // A finished job has no live progress, but leaving the bar indeterminate
-    // would make a finished row look busy. Completed reads 100%, a failed or
-    // cancelled job sits at the last known point.
-    final double? progress = job.progress;
-    final double? barValue = switch (job.state) {
-      JobState.completed => 100,
-      JobState.failed || JobState.cancelled => (progress ?? 0) * 100,
-      _ => progress == null ? null : progress * 100,
-    };
-    final String? percent = barValue == null ? null : '${barValue.round()}%';
 
-    // HoverButton gives the row a hover border and keeps the click and the
-    // long press on the same widget.
-    return HoverButton(
-      onPressed: () => Navigator.of(context).push(JobLogActivity.route(job)),
-      onLongPress: job.isFinished ? null : () => _confirmStop(context),
-      builder: (BuildContext context, Set<WidgetState> states) => _Card(
-        borderColor: states.contains(WidgetState.hovered)
-            ? theme.accentColor
-            : null,
-        child: Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(12, 10, 8, 10),
-          child: Row(
-            children: <Widget>[
-              // The dot carries the state colour so a long list can be
-              // scanned without reading every state word.
-              Container(
-                width: 8,
-                height: 8,
-                margin: const EdgeInsetsDirectional.only(top: 6, end: 10),
-                decoration: BoxDecoration(
-                  color: _stateColor(theme),
-                  shape: BoxShape.circle,
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Row(
+    // The queue only notifies on membership and state changes, so the row
+    // listens to its own job to repaint progress while it runs.
+    return ListenableBuilder(
+      listenable: job,
+      builder: (BuildContext context, Widget? _) {
+        // A finished job has no live progress, but leaving the bar
+        // indeterminate would make a finished row look busy. Completed reads
+        // 100%, a failed or cancelled job sits at the last known point.
+        final double? progress = job.progress;
+        final double? barValue = switch (job.state) {
+          JobState.completed => 100,
+          JobState.failed || JobState.cancelled => (progress ?? 0) * 100,
+          _ => progress == null ? null : progress * 100,
+        };
+        final String? percent = barValue == null
+            ? null
+            : '${barValue.round()}%';
+
+        // HoverButton gives the row a hover border and keeps the click and the
+        // long press on the same widget.
+        return HoverButton(
+          onPressed: () =>
+              Navigator.of(context).push(JobLogActivity.route(job)),
+          onLongPress: job.isFinished ? null : () => _confirmStop(context),
+          builder: (BuildContext context, Set<WidgetState> states) => _Card(
+            borderColor: states.contains(WidgetState.hovered)
+                ? theme.accentColor
+                : null,
+            child: Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(12, 10, 8, 10),
+              child: Row(
+                children: <Widget>[
+                  // The dot carries the state colour so a long list can be
+                  // scanned without reading every state word.
+                  Container(
+                    width: 8,
+                    height: 8,
+                    margin: const EdgeInsetsDirectional.only(top: 6, end: 10),
+                    decoration: BoxDecoration(
+                      color: _stateColor(theme),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
-                        Expanded(
-                          child: Text(
-                            job.displayName,
-                            style: theme.typography.bodyStrong,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (percent != null) ...<Widget>[
-                          const SizedBox(width: 8),
-                          Text(
-                            percent,
-                            style: AppTheme.mono(
-                              theme.typography.caption,
-                              l10n.locale,
+                        Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: Text(
+                                job.displayName,
+                                style: theme.typography.bodyStrong,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
+                            if (percent != null) ...<Widget>[
+                              const SizedBox(width: 8),
+                              Text(
+                                percent,
+                                style: AppTheme.mono(
+                                  theme.typography.caption,
+                                  l10n.locale,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${l10n(_stateKey(job.state))} · ${_positionText(job, l10n)}',
+                          style: theme.typography.caption?.copyWith(
+                            color: job.state == JobState.failed
+                                ? resources.systemFillColorCritical
+                                : resources.textFillColorTertiary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 6),
+                        ProgressBar(value: barValue),
+                        if (job.error != null) ...<Widget>[
+                          const SizedBox(height: 4),
+                          Text(
+                            job.error!,
+                            style: theme.typography.caption?.copyWith(
+                              color: resources.systemFillColorCritical,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${l10n(_stateKey(job.state))} · ${_positionText(job, l10n)}',
-                      style: theme.typography.caption?.copyWith(
-                        color: job.state == JobState.failed
-                            ? resources.systemFillColorCritical
-                            : resources.textFillColorTertiary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 6),
-                    ProgressBar(value: barValue),
-                    if (job.error != null) ...<Widget>[
-                      const SizedBox(height: 4),
-                      Text(
-                        job.error!,
-                        style: theme.typography.caption?.copyWith(
-                          color: resources.systemFillColorCritical,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (job.state == JobState.running)
-                MiniIconButton(
-                  icon: FluentIcons.pause_24_regular,
-                  tooltip: l10n(I18nKey.jobPause),
-                  size: 28,
-                  iconSize: 14,
-                  onPressed: () async {
-                    final bool paused = await JobQueue.instance.pause(job);
-                    if (!paused && context.mounted) {
-                      await showDialog<void>(
-                        context: context,
-                        builder: (BuildContext context) => ContentDialog(
-                          title: Text(l10n(I18nKey.jobPause)),
-                          content: Text(l10n(I18nKey.jobPauseUnsupported)),
-                          actions: <Widget>[
-                            FilledButton(
-                              child: Text(l10n(I18nKey.actionClose)),
-                              onPressed: () => Navigator.of(context).pop(),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                  },
-                )
-              else if (job.state == JobState.paused ||
-                  job.state == JobState.queued)
-                MiniIconButton(
-                  icon: FluentIcons.play_24_regular,
-                  tooltip: l10n(
-                    job.state == JobState.paused
-                        ? I18nKey.jobResume
-                        : I18nKey.jobStart,
                   ),
-                  size: 28,
-                  iconSize: 14,
-                  onPressed: job.state == JobState.paused
-                      ? () => JobQueue.instance.resume(job)
-                      : null,
-                ),
-              if (job.isFinished)
-                MiniIconButton(
-                  icon: FluentIcons.dismiss_24_regular,
-                  tooltip: l10n(I18nKey.jobRemove),
-                  size: 28,
-                  iconSize: 14,
-                  onPressed: () => JobQueue.instance.remove(job),
-                ),
-            ],
+                  const SizedBox(width: 8),
+                  if (job.state == JobState.running)
+                    MiniIconButton(
+                      icon: FluentIcons.pause_24_regular,
+                      tooltip: l10n(I18nKey.jobPause),
+                      size: 28,
+                      iconSize: 14,
+                      onPressed: () async {
+                        final bool paused = await JobQueue.instance.pause(job);
+                        if (!paused && context.mounted) {
+                          await showDialog<void>(
+                            context: context,
+                            builder: (BuildContext context) => ContentDialog(
+                              title: Text(l10n(I18nKey.jobPause)),
+                              content: Text(l10n(I18nKey.jobPauseUnsupported)),
+                              actions: <Widget>[
+                                FilledButton(
+                                  child: Text(l10n(I18nKey.actionClose)),
+                                  onPressed: () => Navigator.of(context).pop(),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      },
+                    )
+                  else if (job.state == JobState.paused ||
+                      job.state == JobState.queued)
+                    MiniIconButton(
+                      icon: FluentIcons.play_24_regular,
+                      tooltip: l10n(
+                        job.state == JobState.paused
+                            ? I18nKey.jobResume
+                            : I18nKey.jobStart,
+                      ),
+                      size: 28,
+                      iconSize: 14,
+                      onPressed: job.state == JobState.paused
+                          ? () => JobQueue.instance.resume(job)
+                          : null,
+                    ),
+                  if (job.isFinished)
+                    MiniIconButton(
+                      icon: FluentIcons.dismiss_24_regular,
+                      tooltip: l10n(I18nKey.jobRemove),
+                      size: 28,
+                      iconSize: 14,
+                      onPressed: () => JobQueue.instance.remove(job),
+                    ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
