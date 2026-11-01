@@ -4,6 +4,7 @@ library;
 import 'package:fluent_ui/fluent_ui.dart' hide FluentIcons;
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 
+import '../activities/job_log_activity.dart';
 import '../i18n/i18n.dart';
 import '../i18n/i18n_keys.dart';
 import '../services/job_queue.dart';
@@ -198,6 +199,7 @@ class JobRow extends StatelessWidget {
     final double? progress = job.progress;
 
     return GestureDetector(
+      onTap: () => Navigator.of(context).push(JobLogActivity.route(job)),
       onLongPress: job.isFinished ? null : () => _confirmStop(context),
       child: _Card(
         child: Padding(
