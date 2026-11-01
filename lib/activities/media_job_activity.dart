@@ -361,10 +361,7 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
 
   Widget _sectionTitle(BuildContext context, String key) {
     final FluentThemeData theme = FluentTheme.of(context);
-    return Text(
-      context.l10n(key),
-      style: theme.typography.bodyStrong,
-    );
+    return Text(context.l10n(key), style: theme.typography.bodyStrong);
   }
 }
 
@@ -568,10 +565,7 @@ class _PickerRow<T> extends StatelessWidget {
         children: <Widget>[
           SizedBox(
             width: 132,
-            child: Text(
-              label,
-              style: theme.typography.body,
-            ),
+            child: Text(label, style: theme.typography.body),
           ),
           Expanded(
             child: ComboBox<T?>(
@@ -764,12 +758,88 @@ class _OptionField extends StatelessWidget {
           ],
           onChanged: (String? value) => host.onChanged(choice, value),
         );
+      case final IntOption number when number.min != null && number.max != null:
+        return _numberSlider(
+          context,
+          host,
+          number,
+          number.min!.toDouble(),
+          number.max!.toDouble(),
+          true,
+        );
+      case final DecimalOption number
+          when number.min != null && number.max != null:
+        return _numberSlider(
+          context,
+          host,
+          number,
+          number.min!,
+          number.max!,
+          false,
+        );
       case final OptionSpec other:
         return TextBox(
           controller: host.controllerFor(other),
           onChanged: (String value) => host.onChanged(other, value),
         );
     }
+  }
+
+  /// Slider for options that declare a full range, such as `-q:v` (1..31).
+  ///
+  /// The value stays unset until the thumb is moved, so opening the page does
+  /// not silently start pinning a quality level, and the small dismiss button
+  /// puts it back into the unset state.
+  Widget _numberSlider(
+    BuildContext context,
+    _FieldHost host,
+    OptionSpec spec,
+    double min,
+    double max,
+    bool integral,
+  ) {
+    final AppL10n l10n = context.l10n;
+    final FluentThemeData theme = FluentTheme.of(context);
+    final String? current = host.valueOf[spec.flag] ?? spec.initialValue;
+    final double fallback = (min + max) / 2;
+    final double shown =
+        double.tryParse(current ?? '')?.clamp(min, max) ?? fallback;
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: Slider(
+            value: shown,
+            min: min,
+            max: max,
+            divisions: integral ? (max - min).round() : null,
+            label: current == null
+                ? l10n(I18nKey.optionUnset)
+                : (integral
+                      ? shown.round().toString()
+                      : shown.toStringAsFixed(2)),
+            onChanged: (double value) => host.onChanged(
+              spec,
+              integral ? value.round().toString() : value.toStringAsFixed(2),
+            ),
+          ),
+        ),
+        SizedBox(
+          width: 42,
+          child: current == null
+              ? Text(
+                  l10n(I18nKey.optionUnset),
+                  style: theme.typography.caption,
+                  maxLines: 1,
+                  textAlign: TextAlign.end,
+                  overflow: TextOverflow.ellipsis,
+                )
+              : IconButton(
+                  icon: const Icon(FluentIcons.dismiss_24_regular, size: 10),
+                  onPressed: () => host.onChanged(spec, null),
+                ),
+        ),
+      ],
+    );
   }
 }
 
