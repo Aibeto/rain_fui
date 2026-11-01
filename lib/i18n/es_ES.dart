@@ -40,6 +40,7 @@ const Map<String, String> esEs = <String, String>{
   'add_source_confirm_body':
       'La carpeta aparecerá como fuente en la pantalla de inicio.',
   'action_add': 'Añadir',
+  'option_unset': 'Sin definir',
   'action_cancel': 'Cancelar',
   'action_close': 'Cerrar',
 

@@ -43,6 +43,7 @@ const Map<String, String> itIt = <String, String>{
   'add_source_confirm_body':
       'La cartella comparirà come sorgente nella schermata iniziale.',
   'action_add': 'Aggiungi',
+  'option_unset': 'Non impostato',
   'action_cancel': 'Annulla',
   'action_close': 'Chiudi',
 

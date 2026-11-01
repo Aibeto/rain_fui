@@ -38,6 +38,7 @@ const Map<String, String> zhTw = <String, String>{
   'add_source_confirm_title': '新增此資料夾？',
   'add_source_confirm_body': '該資料夾會作為來源顯示在首頁上。',
   'action_add': '新增',
+  'option_unset': '不設定',
   'action_cancel': '取消',
   'action_close': '關閉',
 

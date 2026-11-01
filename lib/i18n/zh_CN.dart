@@ -38,6 +38,7 @@ const Map<String, String> zhCn = <String, String>{
   'add_source_confirm_title': '添加此文件夹？',
   'add_source_confirm_body': '该文件夹会作为来源显示在主页上。',
   'action_add': '添加',
+  'option_unset': '不设置',
   'action_cancel': '取消',
   'action_close': '关闭',
 

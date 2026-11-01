@@ -40,6 +40,7 @@ const Map<String, String> plPl = <String, String>{
   'add_source_confirm_body':
       'Folder zostanie dodany jako źródło na ekranie głównym.',
   'action_add': 'Dodaj',
+  'option_unset': 'Nie ustawiono',
   'action_cancel': 'Anuluj',
   'action_close': 'Zamknij',
 

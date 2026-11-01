@@ -44,6 +44,7 @@ const Map<String, String> enUs = <String, String>{
   'add_source_confirm_body':
       'The folder will be listed as a source on the home screen.',
   'action_add': 'Add',
+  'option_unset': 'Not set',
   'action_cancel': 'Cancel',
   'action_close': 'Close',
 

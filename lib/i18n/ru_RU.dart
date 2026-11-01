@@ -38,6 +38,7 @@ const Map<String, String> ruRu = <String, String>{
   'add_source_confirm_title': 'Добавить эту папку?',
   'add_source_confirm_body': 'Папка появится как источник на главном экране.',
   'action_add': 'Добавить',
+  'option_unset': 'Не задано',
   'action_cancel': 'Отмена',
   'action_close': 'Закрыть',
 

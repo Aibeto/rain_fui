@@ -40,6 +40,7 @@ const Map<String, String> enGb = <String, String>{
   'add_source_confirm_body':
       'The folder will appear as a source on the home screen.',
   'action_add': 'Add',
+  'option_unset': 'Not set',
   'action_cancel': 'Cancel',
   'action_close': 'Close',
 

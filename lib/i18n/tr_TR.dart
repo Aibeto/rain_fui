@@ -39,6 +39,7 @@ const Map<String, String> trTr = <String, String>{
   'add_source_confirm_title': 'Bu klasör eklensin mi?',
   'add_source_confirm_body': 'Klasör ana ekranda kaynak olarak listelenir.',
   'action_add': 'Ekle',
+  'option_unset': 'Ayarlanmadı',
   'action_cancel': 'İptal',
   'action_close': 'Kapat',
 

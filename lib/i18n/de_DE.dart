@@ -42,6 +42,7 @@ const Map<String, String> deDe = <String, String>{
   'add_source_confirm_body':
       'Der Ordner wird auf der Startseite als Quelle aufgeführt.',
   'action_add': 'Hinzufügen',
+  'option_unset': 'Nicht gesetzt',
   'action_cancel': 'Abbrechen',
   'action_close': 'Schließen',
 

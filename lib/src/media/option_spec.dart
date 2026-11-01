@@ -135,10 +135,17 @@ class ChoiceOption extends OptionSpec {
     required this.choices,
     super.defaultValue,
     super.advanced,
+    this.allowEmpty = true,
   });
 
   /// Selectable literals, in display order.
   final List<OptionChoice> choices;
+
+  /// Whether the form offers an empty entry that clears the flag again.
+  ///
+  /// Most of these flags are optional (`-movflags`, `-profile:v`), so a choice
+  /// once made must be undoable; a picker without the entry traps the user.
+  final bool allowEmpty;
 
   @override
   List<String> render(String? value) {

@@ -41,6 +41,7 @@ const Map<String, String> ptBr = <String, String>{
   'add_source_confirm_title': 'Adicionar esta pasta?',
   'add_source_confirm_body': 'A pasta será listada como fonte na tela inicial.',
   'action_add': 'Adicionar',
+  'option_unset': 'Não definido',
   'action_cancel': 'Cancelar',
   'action_close': 'Fechar',
 

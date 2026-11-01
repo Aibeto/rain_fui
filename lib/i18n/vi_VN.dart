@@ -40,6 +40,7 @@ const Map<String, String> viVn = <String, String>{
   'add_source_confirm_body':
       'Thư mục sẽ được liệt kê làm nguồn trên màn hình chính.',
   'action_add': 'Thêm',
+  'option_unset': 'Không đặt',
   'action_cancel': 'Hủy',
   'action_close': 'Đóng',
 

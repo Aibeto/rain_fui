@@ -38,6 +38,7 @@ const Map<String, String> koKr = <String, String>{
   'add_source_confirm_title': '이 폴더를 추가할까요?',
   'add_source_confirm_body': '폴더가 홈 화면에 소스로 표시됩니다.',
   'action_add': '추가',
+  'option_unset': '설정 안 함',
   'action_cancel': '취소',
   'action_close': '닫기',
 

@@ -39,6 +39,7 @@ const Map<String, String> ar = <String, String>{
   'add_source_confirm_title': 'إضافة هذا المجلد؟',
   'add_source_confirm_body': 'سيظهر المجلد كمصدر في الشاشة الرئيسية.',
   'action_add': 'إضافة',
+  'option_unset': 'غير محدد',
   'action_cancel': 'إلغاء',
   'action_close': 'إغلاق',
 

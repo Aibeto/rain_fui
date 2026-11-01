@@ -41,6 +41,7 @@ const Map<String, String> idId = <String, String>{
   'add_source_confirm_body':
       'Folder akan dicantumkan sebagai sumber di layar utama.',
   'action_add': 'Tambahkan',
+  'option_unset': 'Tidak diatur',
   'action_cancel': 'Batal',
   'action_close': 'Tutup',
 

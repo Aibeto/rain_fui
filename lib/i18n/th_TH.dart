@@ -39,6 +39,7 @@ const Map<String, String> thTh = <String, String>{
   'add_source_confirm_title': 'เพิ่มโฟลเดอร์นี้หรือไม่',
   'add_source_confirm_body': 'โฟลเดอร์จะแสดงเป็นแหล่งข้อมูลบนหน้าหลัก',
   'action_add': 'เพิ่ม',
+  'option_unset': 'ไม่ตั้งค่า',
   'action_cancel': 'ยกเลิก',
   'action_close': 'ปิด',
 

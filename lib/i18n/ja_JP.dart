@@ -38,6 +38,7 @@ const Map<String, String> jaJp = <String, String>{
   'add_source_confirm_title': 'このフォルダーを追加しますか？',
   'add_source_confirm_body': 'フォルダーはホーム画面にソースとして表示されます。',
   'action_add': '追加',
+  'option_unset': '未設定',
   'action_cancel': 'キャンセル',
   'action_close': '閉じる',
 

@@ -745,7 +745,13 @@ class _OptionField extends StatelessWidget {
           // Solid popup fill; the default tint lets the page show through.
           popupColor: FluentTheme.of(context).menuColor,
           value: current,
+          placeholder: Text(context.l10n(I18nKey.optionUnset)),
           items: <ComboBoxItem<String>>[
+            if (choice.allowEmpty)
+              ComboBoxItem<String>(
+                value: null,
+                child: Text(context.l10n(I18nKey.optionUnset)),
+              ),
             for (final OptionChoice option in choice.choices)
               ComboBoxItem<String>(
                 value: option.value,

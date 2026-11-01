@@ -42,6 +42,7 @@ const Map<String, String> frFr = <String, String>{
   'add_source_confirm_body':
       'Le dossier sera ajouté comme source sur l’écran d’accueil.',
   'action_add': 'Ajouter',
+  'option_unset': 'Non défini',
   'action_cancel': 'Annuler',
   'action_close': 'Fermer',
 

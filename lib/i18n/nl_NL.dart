@@ -43,6 +43,7 @@ const Map<String, String> nlNl = <String, String>{
   'add_source_confirm_body':
       'De map wordt als bron op het startscherm vermeld.',
   'action_add': 'Toevoegen',
+  'option_unset': 'Niet ingesteld',
   'action_cancel': 'Annuleren',
   'action_close': 'Sluiten',
 
