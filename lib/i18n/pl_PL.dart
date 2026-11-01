@@ -40,6 +40,12 @@ const Map<String, String> plPl = <String, String>{
   'add_source_confirm_body':
       'Folder zostanie dodany jako źródło na ekranie głównym.',
   'action_add': 'Dodaj',
+  'job_rate_mode': 'Sterowanie bitrate',
+  'job_rate_auto': 'Domyślne kodera',
+  'job_rate_quality': 'Stała jakość (q)',
+  'job_rate_bitrate': 'Docelowy bitrate',
+  'job_rate_cbr': 'Stały bitrate (CBR)',
+  'job_rate_required': 'Najpierw podaj docelowy bitrate',
   'option_unset': 'Domyślne',
   'option_edit': 'Wpisz wartość ręcznie',
   'job_section_input': 'Wejście',

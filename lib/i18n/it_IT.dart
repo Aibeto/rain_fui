@@ -43,6 +43,12 @@ const Map<String, String> itIt = <String, String>{
   'add_source_confirm_body':
       'La cartella comparirà come sorgente nella schermata iniziale.',
   'action_add': 'Aggiungi',
+  'job_rate_mode': 'Controllo bitrate',
+  'job_rate_auto': 'Predefinito del codificatore',
+  'job_rate_quality': 'Qualità costante (q)',
+  'job_rate_bitrate': 'Bitrate target',
+  'job_rate_cbr': 'Bitrate costante (CBR)',
+  'job_rate_required': 'Inserisci prima un bitrate target',
   'option_unset': 'Predefinito',
   'option_edit': 'Inserisci un valore manualmente',
   'job_section_input': 'Ingresso',

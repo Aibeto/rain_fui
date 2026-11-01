@@ -42,6 +42,12 @@ const Map<String, String> deDe = <String, String>{
   'add_source_confirm_body':
       'Der Ordner wird auf der Startseite als Quelle aufgeführt.',
   'action_add': 'Hinzufügen',
+  'job_rate_mode': 'Bitratensteuerung',
+  'job_rate_auto': 'Encoder-Standard',
+  'job_rate_quality': 'Konstante Qualität (q)',
+  'job_rate_bitrate': 'Zielbitrate',
+  'job_rate_cbr': 'Konstante Bitrate (CBR)',
+  'job_rate_required': 'Bitte zuerst eine Zielbitrate eintragen',
   'option_unset': 'Standard',
   'option_edit': 'Wert manuell eingeben',
   'job_section_input': 'Eingabe',

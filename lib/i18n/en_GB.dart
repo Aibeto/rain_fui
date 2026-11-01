@@ -40,6 +40,12 @@ const Map<String, String> enGb = <String, String>{
   'add_source_confirm_body':
       'The folder will appear as a source on the home screen.',
   'action_add': 'Add',
+  'job_rate_mode': 'Rate control',
+  'job_rate_auto': 'Encoder default',
+  'job_rate_quality': 'Constant quality (q)',
+  'job_rate_bitrate': 'Target bitrate',
+  'job_rate_cbr': 'Constant bitrate (CBR)',
+  'job_rate_required': 'Set a target bitrate first',
   'option_unset': 'Default',
   'option_edit': 'Type a value manually',
   'job_section_input': 'Input',

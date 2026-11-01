@@ -49,6 +49,13 @@ abstract final class I18nKey {
   static const String jobLabelAudioDecoder = 'job_label_audio_decoder';
   static const String jobDecoderAuto = 'job_decoder_auto';
 
+  static const String jobRateMode = 'job_rate_mode';
+  static const String jobRateAuto = 'job_rate_auto';
+  static const String jobRateQuality = 'job_rate_quality';
+  static const String jobRateBitrate = 'job_rate_bitrate';
+  static const String jobRateCbr = 'job_rate_cbr';
+  static const String jobRateRequired = 'job_rate_required';
+
   /// Shown as the empty entry of an option that may be left unset.
   static const String optionUnset = 'option_unset';
   static const String optionEdit = 'option_edit';
@@ -206,6 +213,12 @@ abstract final class I18nKey {
     jobLabelVideoDecoder,
     jobLabelAudioDecoder,
     jobDecoderAuto,
+    jobRateMode,
+    jobRateAuto,
+    jobRateQuality,
+    jobRateBitrate,
+    jobRateCbr,
+    jobRateRequired,
     actionCancel,
     actionClose,
     resultFilesTitle,

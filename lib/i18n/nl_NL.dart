@@ -43,6 +43,12 @@ const Map<String, String> nlNl = <String, String>{
   'add_source_confirm_body':
       'De map wordt als bron op het startscherm vermeld.',
   'action_add': 'Toevoegen',
+  'job_rate_mode': 'Bitrate-regeling',
+  'job_rate_auto': 'Standaard van de encoder',
+  'job_rate_quality': 'Constante kwaliteit (q)',
+  'job_rate_bitrate': 'Doelbitrate',
+  'job_rate_cbr': 'Constante bitrate (CBR)',
+  'job_rate_required': 'Vul eerst een doelbitrate in',
   'option_unset': 'Standaard',
   'option_edit': 'Voer handmatig een waarde in',
   'job_section_input': 'Invoer',

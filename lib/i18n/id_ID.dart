@@ -41,6 +41,12 @@ const Map<String, String> idId = <String, String>{
   'add_source_confirm_body':
       'Folder akan dicantumkan sebagai sumber di layar utama.',
   'action_add': 'Tambahkan',
+  'job_rate_mode': 'Kontrol bitrate',
+  'job_rate_auto': 'Bawaan encoder',
+  'job_rate_quality': 'Kualitas tetap (q)',
+  'job_rate_bitrate': 'Bitrate target',
+  'job_rate_cbr': 'Bitrate konstan (CBR)',
+  'job_rate_required': 'Isi bitrate target dulu',
   'option_unset': 'Bawaan',
   'option_edit': 'Masukkan nilai secara manual',
   'job_section_input': 'Masukan',

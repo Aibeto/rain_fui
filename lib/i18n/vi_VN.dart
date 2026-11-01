@@ -40,6 +40,12 @@ const Map<String, String> viVn = <String, String>{
   'add_source_confirm_body':
       'Thư mục sẽ được liệt kê làm nguồn trên màn hình chính.',
   'action_add': 'Thêm',
+  'job_rate_mode': 'Điều khiển bitrate',
+  'job_rate_auto': 'Mặc định của bộ mã hóa',
+  'job_rate_quality': 'Chất lượng cố định (q)',
+  'job_rate_bitrate': 'Bitrate mục tiêu',
+  'job_rate_cbr': 'Bitrate không đổi (CBR)',
+  'job_rate_required': 'Hãy nhập bitrate mục tiêu trước',
   'option_unset': 'Mặc định',
   'option_edit': 'Nhập giá trị thủ công',
   'job_section_input': 'Đầu vào',

@@ -40,6 +40,12 @@ const Map<String, String> esEs = <String, String>{
   'add_source_confirm_body':
       'La carpeta aparecerá como fuente en la pantalla de inicio.',
   'action_add': 'Añadir',
+  'job_rate_mode': 'Control de tasa',
+  'job_rate_auto': 'Predeterminado del codificador',
+  'job_rate_quality': 'Calidad constante (q)',
+  'job_rate_bitrate': 'Tasa de bits objetivo',
+  'job_rate_cbr': 'Tasa de bits constante (CBR)',
+  'job_rate_required': 'Introduce primero una tasa de bits objetivo',
   'option_unset': 'Predeterminado',
   'option_edit': 'Introducir un valor manualmente',
   'job_section_input': 'Entrada',

@@ -42,6 +42,12 @@ const Map<String, String> frFr = <String, String>{
   'add_source_confirm_body':
       'Le dossier sera ajouté comme source sur l’écran d’accueil.',
   'action_add': 'Ajouter',
+  'job_rate_mode': 'Contrôle du débit',
+  'job_rate_auto': 'Valeur par défaut de l’encodeur',
+  'job_rate_quality': 'Qualité constante (q)',
+  'job_rate_bitrate': 'Débit cible',
+  'job_rate_cbr': 'Débit constant (CBR)',
+  'job_rate_required': 'Indiquez d’abord un débit cible',
   'option_unset': 'Par défaut',
   'option_edit': 'Saisir une valeur manuellement',
   'job_section_input': 'Entrée',
