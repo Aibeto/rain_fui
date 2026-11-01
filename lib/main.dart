@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'app.dart';
+import 'src/ffmpeg/android_paths.dart';
 import 'src/media/capabilities.dart';
 import 'i18n/i18n.dart';
 import 'services/font_license_service.dart';
@@ -54,7 +55,11 @@ Future<void> main() async {
   // build brings libx264, libaom or the hardware encoders; the bundled one is
   // native-only. Whatever the answer, the form only offers what can run.
   try {
-    MediaCapabilities.useAvailability(await EncoderAvailability.load());
+    MediaCapabilities.useAvailability(
+      await EncoderAvailability.load(
+        androidNativeLibraryDir: await AndroidPaths.nativeLibraryDir(),
+      ),
+    );
   } catch (error, stackTrace) {
     FlutterError.reportError(
       FlutterErrorDetails(

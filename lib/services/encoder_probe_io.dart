@@ -25,8 +25,16 @@ Set<String> parseEncoderNames(String output) {
   return names;
 }
 
-Future<EncoderAvailability> probeEncoderAvailability() async {
-  final FfmpegLocator locator = FfmpegLocator();
+Future<EncoderAvailability> probeEncoderAvailability({
+  String? androidNativeLibraryDir,
+}) async {
+  // On Android the binary lives in the app's native library directory, which
+  // only the platform side can report; without it every candidate misses and
+  // the app would fall back to the bundled list even when the build carries
+  // MediaCodec encoders.
+  final FfmpegLocator locator = FfmpegLocator(
+    androidNativeLibraryDir: androidNativeLibraryDir,
+  );
   for (final FfmpegLocation location in locator.candidates()) {
     try {
       final ProcessResult result = await Process.run(

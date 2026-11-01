@@ -4,5 +4,6 @@ library;
 
 import 'encoder_availability.dart';
 
-Future<EncoderAvailability> probeEncoderAvailability() async =>
-    EncoderAvailability.baseline;
+Future<EncoderAvailability> probeEncoderAvailability({
+  String? androidNativeLibraryDir,
+}) async => EncoderAvailability.baseline;

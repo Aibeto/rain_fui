@@ -32,5 +32,11 @@ class EncoderAvailability {
   bool allows(CodecSpec spec) => names.contains(spec.encoder);
 
   /// Asks the resolved FFmpeg, falling back to [baseline].
-  static Future<EncoderAvailability> load() => probe.probeEncoderAvailability();
+  ///
+  /// [androidNativeLibraryDir] comes from the platform side; the probe itself
+  /// stays free of Flutter imports so it can also run under a plain Dart VM.
+  static Future<EncoderAvailability> load({String? androidNativeLibraryDir}) =>
+      probe.probeEncoderAvailability(
+        androidNativeLibraryDir: androidNativeLibraryDir,
+      );
 }

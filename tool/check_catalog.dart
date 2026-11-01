@@ -84,6 +84,44 @@ void main() {
   check(offersVideo('av1_nvenc'), 'distribution offers av1_nvenc');
   check(offersAudio('libopus'), 'distribution offers libopus');
 
+  // Platform back ends live in the table even though no Linux probe can run
+  // them: a Windows or Android build has to find them there.
+  final Set<String> platform = <String>{
+    ...full,
+    'h264_mf',
+    'hevc_mf',
+    'aac_mf',
+    'h264_mediacodec',
+    'hevc_mediacodec',
+    'h264_videotoolbox',
+    'libfdk_aac',
+    'h264_d3d12va',
+  };
+  MediaCapabilities.useAvailability(
+    EncoderAvailability(names: platform, probed: true),
+  );
+  check(offersVideo('h264_mf'), 'MediaFoundation encoders are in the table');
+  check(offersVideo('h264_mediacodec'), 'MediaCodec encoders are in the table');
+  check(
+    offersVideo('h264_videotoolbox'),
+    'VideoToolbox encoders are in the table',
+  );
+  check(offersAudio('libfdk_aac'), 'libfdk_aac is in the table');
+  final CodecSpec mf = MediaCapabilities.videoCodecs.firstWhere(
+    (CodecSpec c) => c.encoder == 'h264_mf',
+  );
+  check(codecIdOf(mf) == 'h264', 'h264_mf reports codec h264');
+  check(
+    containerNames(MediaKind.video, mf.id).contains('mp4'),
+    'mp4 accepts h264_mf',
+  );
+
+  // Every encoder FFmpeg knows must be reachable once the probe reports it,
+  // otherwise the picker would silently drop it.
+  MediaCapabilities.useAvailability(
+    EncoderAvailability(names: full, probed: true),
+  );
+
   // 3. Codec ids, not encoder names, decide container compatibility.
   final CodecSpec libx264 = MediaCapabilities.videoCodecs.firstWhere(
     (CodecSpec c) => c.encoder == 'libx264',
