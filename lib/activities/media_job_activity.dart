@@ -25,6 +25,7 @@ import '../src/media/encode_request.dart';
 import '../src/media/media_kind.dart';
 import '../src/media/option_spec.dart';
 import '../theme/app_theme.dart';
+import '../theme/metrics.dart';
 
 /// Encode settings for one picked file.
 class MediaJobActivity extends StatefulWidget {
@@ -379,14 +380,19 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
             ),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsetsDirectional.fromSTEB(20, 4, 20, 24),
+                padding: const EdgeInsetsDirectional.fromSTEB(
+                  AppMetrics.gutter,
+                  8,
+                  AppMetrics.gutter,
+                  24,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
                     _FileCard(file: widget.file, kind: _kind),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppMetrics.sectionGap),
                     _sectionTitle(context, I18nKey.jobSectionCodecs),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppMetrics.sectionTitleGap),
                     _CodecSelectors(
                       kind: _kind,
                       video: _video,
@@ -407,9 +413,9 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
                           : p.dirname(_outputPath()!),
                       onChanged: () => setState(() {}),
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: AppMetrics.sectionGap),
                     _sectionTitle(context, I18nKey.jobSectionInput),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppMetrics.sectionTitleGap),
                     _DecoderRows(
                       kind: _kind,
                       videoDecoder: _videoDecoder,
@@ -419,9 +425,9 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
                       onAudio: (String? value) =>
                           setState(() => _audioDecoder = value),
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: AppMetrics.sectionGap),
                     _sectionTitle(context, I18nKey.jobSectionBasic),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppMetrics.sectionTitleGap),
                     if (_showsRateMode) ...<Widget>[
                       _RateModeRow(
                         mode: _videoRateMode,
@@ -446,7 +452,7 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
                       controllerFor: _controllerFor,
                       onChanged: _onOptionChanged,
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: AppMetrics.rowGap + 6),
                     _AdvancedExpander(
                       open: _advancedOpen,
                       count: advanced.length,
@@ -459,9 +465,9 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
                         onChanged: _onOptionChanged,
                       ),
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: AppMetrics.sectionGap),
                     _sectionTitle(context, I18nKey.jobSectionCustom),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppMetrics.sectionTitleGap),
                     TextBox(
                       controller: _customArgs,
                       placeholder: l10n(I18nKey.jobCustomHint),
@@ -551,7 +557,12 @@ class _Header extends StatelessWidget {
     final ResourceDictionary resources = theme.resources;
     return Container(
       height: 56,
-      padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 12, 0),
+      padding: const EdgeInsetsDirectional.fromSTEB(
+        AppMetrics.gutter,
+        0,
+        AppMetrics.gutter,
+        0,
+      ),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(color: resources.controlStrokeColorDefault),
@@ -601,7 +612,9 @@ class _FileCard extends StatelessWidget {
         border: Border.all(color: resources.cardStrokeColorDefault),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        // The icon is a single line; centring it against the name and the file
+        // name underneath keeps it from floating above the first line.
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           Icon(
             switch (kind) {
@@ -674,6 +687,19 @@ class _CodecSelectors extends StatelessWidget {
         ? MediaCapabilities.audioCodecs
         : MediaCapabilities.audioCodecsFor(container!);
 
+    // One width for the three pickers: measuring each row on its own left the
+    // fields starting at three different x.
+    final double width = _comboWidth(context, <String>[
+      if (kind != MediaKind.video) l10n(I18nKey.jobNoVideo),
+      if (kind != MediaKind.audio) ...videos.map((CodecSpec c) => c.name),
+      if (kind != MediaKind.image) l10n(I18nKey.jobNoAudio),
+      if (kind != MediaKind.image) ...audios.map((CodecSpec c) => c.name),
+      l10n(I18nKey.jobNoContainer),
+      ...MediaCapabilities.containers.map(
+        (ContainerSpec c) => '${c.name} (.${c.extension})',
+      ),
+    ]);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
@@ -686,6 +712,7 @@ class _CodecSelectors extends StatelessWidget {
             onChanged: onVideo,
             allowNone: kind != MediaKind.video,
             noneLabel: l10n(I18nKey.jobNoVideo),
+            width: width,
           ),
         if (kind != MediaKind.image)
           _PickerRow<CodecSpec>(
@@ -696,6 +723,7 @@ class _CodecSelectors extends StatelessWidget {
             onChanged: onAudio,
             allowNone: true,
             noneLabel: l10n(I18nKey.jobNoAudio),
+            width: width,
           ),
         _PickerRow<ContainerSpec>(
           label: l10n(I18nKey.jobLabelContainer),
@@ -705,6 +733,7 @@ class _CodecSelectors extends StatelessWidget {
           onChanged: onContainer,
           allowNone: false,
           noneLabel: l10n(I18nKey.jobNoContainer),
+          width: width,
         ),
       ],
     );
@@ -841,6 +870,7 @@ class _PickerRow<T> extends StatelessWidget {
     required this.onChanged,
     required this.allowNone,
     required this.noneLabel,
+    this.width,
   });
 
   final String label;
@@ -851,13 +881,19 @@ class _PickerRow<T> extends StatelessWidget {
   final bool allowNone;
   final String noneLabel;
 
+  /// Width to use instead of measuring this row on its own; the codec rows
+  /// pass one shared width so the three dropdowns start at the same x.
+  final double? width;
+
   @override
   Widget build(BuildContext context) {
     final FluentThemeData theme = FluentTheme.of(context);
-    final double width = _comboWidth(context, <String>[
-      if (allowNone) noneLabel,
-      for (final T item in items) labelOf(item),
-    ]);
+    final double width =
+        this.width ??
+        _comboWidth(context, <String>[
+          if (allowNone) noneLabel,
+          for (final T item in items) labelOf(item),
+        ]);
     return Padding(
       padding: const EdgeInsetsDirectional.only(bottom: 8),
       child: Row(
@@ -929,6 +965,13 @@ class _DecoderRows extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool wantsVideo = kind != MediaKind.audio;
     final bool wantsAudio = kind != MediaKind.image;
+    final AppL10n l10n = context.l10n;
+    // Both decoder rows share one width, sized by the wider of the two lists.
+    final double width = _comboWidth(context, <String>[
+      l10n(I18nKey.jobDecoderAuto),
+      if (wantsVideo) ...kVideoDecoders,
+      if (wantsAudio) ...kAudioDecoders,
+    ], max: 200);
     return Column(
       children: <Widget>[
         if (wantsVideo)
@@ -937,6 +980,7 @@ class _DecoderRows extends StatelessWidget {
             value: videoDecoder,
             options: kVideoDecoders,
             onChanged: onVideo,
+            width: width,
           ),
         if (wantsVideo && wantsAudio) const SizedBox(height: 8),
         if (wantsAudio)
@@ -945,6 +989,7 @@ class _DecoderRows extends StatelessWidget {
             value: audioDecoder,
             options: kAudioDecoders,
             onChanged: onAudio,
+            width: width,
           ),
       ],
     );
@@ -957,21 +1002,19 @@ class _DecoderRow extends StatelessWidget {
     required this.value,
     required this.options,
     required this.onChanged,
+    required this.width,
   });
 
   final String labelKey;
   final String? value;
   final List<String> options;
   final ValueChanged<String?> onChanged;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
     final FluentThemeData theme = FluentTheme.of(context);
     final AppL10n l10n = context.l10n;
-    final double width = _comboWidth(context, <String>[
-      l10n(I18nKey.jobDecoderAuto),
-      ...options,
-    ], max: 200);
     return Row(
       children: <Widget>[
         Expanded(child: Text(l10n(labelKey), style: theme.typography.body)),
@@ -1034,7 +1077,7 @@ class _OutputField extends StatelessWidget {
     final Widget field = Row(
       children: <Widget>[
         SizedBox(
-          width: 132,
+          width: AppMetrics.fieldWidth,
           child: Text(
             l10n(I18nKey.jobLabelOutputName),
             style: theme.typography.body,
@@ -1045,21 +1088,21 @@ class _OutputField extends StatelessWidget {
             controller: controller,
             onChanged: (_) => onChanged(),
             style: AppTheme.mono(theme.typography.body, l10n.locale),
+            // The extension lives inside the box, so the field ends where the
+            // dropdowns above it end instead of stopping short of them.
+            suffix: suffix.isEmpty
+                ? null
+                : Text(
+                    suffix,
+                    style: AppTheme.mono(
+                      theme.typography.body?.copyWith(
+                        color: theme.resources.textFillColorSecondary,
+                      ),
+                      l10n.locale,
+                    ),
+                  ),
           ),
         ),
-        if (suffix.isNotEmpty)
-          Padding(
-            padding: const EdgeInsetsDirectional.only(start: 6),
-            child: Text(
-              suffix,
-              style: AppTheme.mono(
-                theme.typography.body?.copyWith(
-                  color: theme.resources.textFillColorSecondary,
-                ),
-                l10n.locale,
-              ),
-            ),
-          ),
       ],
     );
     final String? folder = directory;
@@ -1071,7 +1114,10 @@ class _OutputField extends StatelessWidget {
       children: <Widget>[
         field,
         Padding(
-          padding: const EdgeInsetsDirectional.only(start: 132, top: 6),
+          padding: const EdgeInsetsDirectional.only(
+            start: AppMetrics.fieldWidth,
+            top: 6,
+          ),
           child: Row(
             children: <Widget>[
               Icon(
@@ -1136,13 +1182,57 @@ class _OptionGrid extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           if (compact.isNotEmpty)
-            Wrap(
-              spacing: 16,
-              runSpacing: 8,
-              children: <Widget>[
-                for (final OptionSpec spec in compact)
-                  SizedBox(width: 300, child: _OptionField(spec: spec)),
-              ],
+            LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                // Share the width evenly instead of wrapping fixed 300 px
+                // cells, so the input at the end of a cell lines up with the
+                // input of the cell below it.
+                final int columns = math.max(
+                  1,
+                  ((constraints.maxWidth + AppMetrics.columnGap) /
+                          (AppMetrics.minCellWidth + AppMetrics.columnGap))
+                      .floor(),
+                );
+                final double cellWidth =
+                    (constraints.maxWidth -
+                        AppMetrics.columnGap * (columns - 1)) /
+                    columns;
+                final List<Widget> rows = <Widget>[];
+                for (int start = 0; start < compact.length; start += columns) {
+                  final List<OptionSpec> slice = compact.sublist(
+                    start,
+                    math.min(start + columns, compact.length),
+                  );
+                  if (rows.isNotEmpty) {
+                    rows.add(const SizedBox(height: 10));
+                  }
+                  rows.add(
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        for (
+                          int index = 0;
+                          index < columns;
+                          index++
+                        ) ...<Widget>[
+                          if (index > 0)
+                            const SizedBox(width: AppMetrics.columnGap),
+                          SizedBox(
+                            width: cellWidth,
+                            child: index < slice.length
+                                ? _OptionField(spec: slice[index])
+                                : const SizedBox.shrink(),
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: rows,
+                );
+              },
             ),
           for (final OptionSpec spec in ranged)
             Padding(
@@ -1230,7 +1320,7 @@ class _OptionField extends StatelessWidget {
   double _trailingWidth(BuildContext context) {
     final OptionSpec option = spec;
     if (option is! ChoiceOption) {
-      return 132;
+      return AppMetrics.fieldWidth;
     }
     return _comboWidth(context, <String>[
       if (option.allowEmpty) context.l10n(I18nKey.optionUnset),
@@ -1397,39 +1487,43 @@ class _RangeFieldState extends State<_RangeField> {
               ),
             ),
             const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsetsDirectional.symmetric(
-                horizontal: 8,
-                vertical: 2,
+            // A fixed minimum keeps the value chips of two rows on the same
+            // x even when one reads "default" and the next reads "31".
+            ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 56),
+              child: Container(
+                padding: const EdgeInsetsDirectional.symmetric(
+                  horizontal: 8,
+                  vertical: 3,
+                ),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: resources.controlFillColorDefault,
+                  border: Border.all(
+                    color: resources.controlStrokeColorDefault,
+                  ),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(current ?? l10n(I18nKey.optionUnset), style: mono),
               ),
-              decoration: BoxDecoration(
-                color: resources.controlFillColorDefault,
-                border: Border.all(color: resources.controlStrokeColorDefault),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(current ?? l10n(I18nKey.optionUnset), style: mono),
             ),
-            const SizedBox(width: 4),
-            Tooltip(
-              message: l10n(I18nKey.optionEdit),
-              child: IconButton(
-                icon: const Icon(FluentIcons.edit_24_regular, size: 10),
-                onPressed: _editing ? null : () => _startEditing(current),
-              ),
+            const SizedBox(width: 6),
+            _MiniIconButton(
+              icon: FluentIcons.edit_24_regular,
+              tooltip: l10n(I18nKey.optionEdit),
+              onPressed: _editing ? null : () => _startEditing(current),
             ),
-            Tooltip(
-              message: l10n(I18nKey.optionUnset),
-              child: IconButton(
-                icon: const Icon(FluentIcons.dismiss_24_regular, size: 10),
-                onPressed: current == null && !_editing
-                    ? null
-                    : () {
-                        host.onChanged(widget.spec, null);
-                        if (_editing) {
-                          setState(() => _editing = false);
-                        }
-                      },
-              ),
+            _MiniIconButton(
+              icon: FluentIcons.dismiss_24_regular,
+              tooltip: l10n(I18nKey.optionUnset),
+              onPressed: current == null && !_editing
+                  ? null
+                  : () {
+                      host.onChanged(widget.spec, null);
+                      if (_editing) {
+                        setState(() => _editing = false);
+                      }
+                    },
             ),
           ],
         ),
@@ -1449,9 +1543,13 @@ class _RangeFieldState extends State<_RangeField> {
                   onSubmitted: (String _) => _commit(),
                 ),
               ),
-              IconButton(
-                icon: const Icon(FluentIcons.checkmark_24_regular, size: 10),
-                onPressed: _commit,
+              Padding(
+                padding: const EdgeInsetsDirectional.only(start: 6),
+                child: _MiniIconButton(
+                  icon: FluentIcons.checkmark_24_regular,
+                  tooltip: l10n(I18nKey.optionEdit),
+                  onPressed: _commit,
+                ),
               ),
             ],
           )
@@ -1472,6 +1570,56 @@ class _RangeFieldState extends State<_RangeField> {
                 host.onChanged(widget.spec, _format(value)),
           ),
       ],
+    );
+  }
+}
+
+/// A 24 px square icon button.
+///
+/// The stock `IconButton` reserves 40 px around a 10 px glyph, which made the
+/// header row of every ranged option taller than the label it sits next to and
+/// pushed the value chip off centre. This keeps the hit target and the row
+/// height in step with the text.
+class _MiniIconButton extends StatelessWidget {
+  const _MiniIconButton({
+    required this.icon,
+    required this.tooltip,
+    this.onPressed,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final FluentThemeData theme = FluentTheme.of(context);
+    final ResourceDictionary resources = theme.resources;
+    final bool enabled = onPressed != null;
+    return Tooltip(
+      message: tooltip,
+      child: HoverButton(
+        onPressed: onPressed,
+        builder: (BuildContext context, Set<WidgetState> states) {
+          return Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: enabled && states.contains(WidgetState.hovered)
+                  ? resources.subtleFillColorSecondary
+                  : null,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Icon(
+              icon,
+              size: 12,
+              color: enabled
+                  ? resources.textFillColorSecondary
+                  : resources.textFillColorDisabled,
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -1527,7 +1675,7 @@ class _AdvancedExpander extends StatelessWidget {
           builder: (BuildContext context, Set<WidgetState> states) {
             return Container(
               height: 36,
-              padding: const EdgeInsetsDirectional.fromSTEB(8, 0, 8, 0),
+              padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 8, 0),
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
@@ -1591,7 +1739,9 @@ class _ActionBar extends StatelessWidget {
     final AppL10n l10n = context.l10n;
     return Container(
       height: 56,
-      padding: const EdgeInsetsDirectional.symmetric(horizontal: 16),
+      padding: const EdgeInsetsDirectional.symmetric(
+        horizontal: AppMetrics.gutter,
+      ),
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
         border: Border(

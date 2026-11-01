@@ -5,6 +5,7 @@ import '../i18n/i18n.dart';
 import '../i18n/i18n_keys.dart';
 import '../services/job_queue.dart';
 import '../theme/app_theme.dart';
+import '../theme/metrics.dart';
 
 /// Terminal output of one encode job.
 ///
@@ -100,9 +101,9 @@ class _JobLogActivityState extends State<JobLogActivity> {
                     child: SingleChildScrollView(
                       controller: _scroll,
                       padding: const EdgeInsetsDirectional.fromSTEB(
-                        16,
+                        AppMetrics.gutter,
                         12,
-                        16,
+                        AppMetrics.gutter,
                         24,
                       ),
                       child: SelectableText(lines.join('\n'), style: mono),
@@ -138,7 +139,7 @@ class _Header extends StatelessWidget {
     final AppL10n l10n = context.l10n;
     return Container(
       height: 52,
-      padding: const EdgeInsetsDirectional.fromSTEB(4, 0, 16, 0),
+      padding: const EdgeInsetsDirectional.fromSTEB(8, 0, AppMetrics.gutter, 0),
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
         border: Border(

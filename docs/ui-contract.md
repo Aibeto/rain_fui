@@ -28,6 +28,7 @@ lib/
 ├── main.dart                       entrypoint: bootstrap + runApp        [lead]
 ├── app.dart                        FluentApp, themes, locale, i18n scope [lead]
 ├── theme/app_theme.dart            FluentThemeData + font fallback       [lead]
+├── theme/metrics.dart              gutter / section rhythm shared by pages [lead]
 ├── models/source_selection.dart    data carried from pickers/drop → dialog [lead]
 ├── src/media/                      codec + container capability table    [lead]
 │   ├── media_kind.dart             extension → video/audio/image

@@ -9,6 +9,7 @@ import '../i18n/i18n.dart';
 import '../i18n/i18n_keys.dart';
 import '../services/job_queue.dart';
 import '../services/platform_support.dart';
+import '../theme/metrics.dart';
 
 /// Main region of the home screen.
 ///
@@ -27,7 +28,12 @@ class HomeContent extends StatelessWidget {
     return ColoredBox(
       color: theme.scaffoldBackgroundColor,
       child: Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(24, 20, 24, 16),
+        padding: const EdgeInsetsDirectional.fromSTEB(
+          AppMetrics.gutter,
+          20,
+          AppMetrics.gutter,
+          16,
+        ),
         child: ListenableBuilder(
           listenable: JobQueue.instance,
           builder: (BuildContext context, Widget? child) {
