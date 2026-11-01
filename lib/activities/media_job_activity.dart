@@ -1193,13 +1193,21 @@ class _RangeFieldState extends State<_RangeField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        // The flag and the value controls share the first line; the readable
-        // parameter name sits below it, because translated names are long
-        // enough to push the controls off a narrow window.
+        // Readable name first, the raw flag underneath it, and the value
+        // controls on the right of the name line.
         Row(
           children: <Widget>[
-            Text(widget.spec.flag, style: mono, maxLines: 1),
-            const Spacer(),
+            Expanded(
+              child: Text(
+                widget.spec.labelKey == null
+                    ? widget.spec.flag
+                    : l10n(widget.spec.labelKey!),
+                style: theme.typography.bodyStrong,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 12),
             Container(
               padding: const EdgeInsetsDirectional.symmetric(
                 horizontal: 8,
@@ -1236,17 +1244,11 @@ class _RangeFieldState extends State<_RangeField> {
             ),
           ],
         ),
-        Padding(
-          padding: const EdgeInsetsDirectional.only(top: 2, bottom: 2),
-          child: Text(
-            widget.spec.labelKey == null
-                ? widget.spec.flag
-                : l10n(widget.spec.labelKey!),
-            style: theme.typography.bodyStrong,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+        if (widget.spec.labelKey != null)
+          Padding(
+            padding: const EdgeInsetsDirectional.only(top: 2, bottom: 2),
+            child: Text(widget.spec.flag, style: mono, maxLines: 1),
           ),
-        ),
         if (_editing)
           Row(
             children: <Widget>[
