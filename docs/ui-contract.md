@@ -55,12 +55,13 @@ lib/
 ├── activities/
 │   ├── home_activity.dart          app shell + drop target               [lead]
 │   ├── media_job_activity.dart     single-file encode form               [lead]
+│   ├── job_log_activity.dart       terminal output of one job             [lead]
 │   └── language_activity.dart      English-only locale list              [lead]
 └── widgets/
     ├── top_bar.dart                AppTopBar                              [lead]
     ├── bottom_bar.dart             AppBottomBar                           [lead]
     ├── home_sidebar.dart           HomeSidebar                            [lead]
-    ├── home_content.dart           HomeContent (empty state / source list) [lead]
+    ├── home_content.dart           HomeContent + JobRow (tap opens the log) [lead]
     ├── drop_surface.dart           DropTarget wrapper + drop overlay      [lead]
     ├── add_source_dialog.dart      the "+" ContentDialog                  [dialogs]
     ├── selection_result_dialog.dart  shared result ContentDialog          [dialogs]
