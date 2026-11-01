@@ -20,6 +20,8 @@ abstract final class MediaCapabilities {
   static EncoderAvailability _availability = EncoderAvailability.baseline;
   static List<CodecSpec>? _videoCache;
   static List<CodecSpec>? _audioCache;
+  static Set<String>? _videoCodecIdCache;
+  static Set<String>? _audioCodecIdCache;
 
   /// What the FFmpeg binary in use can run.
   static EncoderAvailability get availability => _availability;
@@ -29,9 +31,17 @@ abstract final class MediaCapabilities {
     _availability = availability ?? EncoderAvailability.baseline;
     _videoCache = null;
     _audioCache = null;
+    _videoCodecIdCache = null;
+    _audioCodecIdCache = null;
   }
 
   /// Every video encoder the form offers, in display order.
+  static Set<String> get _availableVideoCodecIds =>
+      _videoCodecIdCache ??= videoCodecs.map(codecIdOf).toSet();
+
+  static Set<String> get _availableAudioCodecIds =>
+      _audioCodecIdCache ??= audioCodecs.map(codecIdOf).toSet();
+
   static List<CodecSpec> get videoCodecs => _videoCache ??= kVideoCodecs
       .where(_availability.allows)
       .toList(growable: false);
@@ -117,20 +127,29 @@ abstract final class MediaCapabilities {
           // The container has to be able to carry what the source holds. A
           // video-only muxer cannot take an audio file, and a pure audio
           // container silently drops the picture.
+          // With no codec chosen yet, a container only makes sense when this
+          // build can fill it at all: an MP3 page without an MP3 encoder would
+          // render a picker with nothing in it.
+          final bool hasVideo =
+              videoCodecId != null ||
+              container.videoCodecs.any(_availableVideoCodecIds.contains);
+          final bool hasAudio =
+              audioCodecId != null ||
+              container.audioCodecs.any(_availableAudioCodecIds.contains);
           switch (kind) {
             case MediaKind.video:
               // A still-image muxer would quietly write a single frame.
-              if (container.videoCodecs.isEmpty ||
+              if (!hasVideo ||
                   _imageContainerExtensions.contains(container.extension)) {
                 return false;
               }
             case MediaKind.image:
-              if (container.videoCodecs.isEmpty ||
+              if (!hasVideo ||
                   !_imageContainerExtensions.contains(container.extension)) {
                 return false;
               }
             case MediaKind.audio:
-              if (container.audioCodecs.isEmpty) {
+              if (!hasAudio) {
                 return false;
               }
             case MediaKind.unknown:
