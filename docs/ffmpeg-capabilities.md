@@ -608,7 +608,9 @@ ADPCM / DPCM 编码器：
 
 4. **`-pix_fmt` 必须先过滤**。`mpeg4`/`flv`/`wmv2`/`h263` 只吃 `yuv420p`，`mpeg2video` 多一个
    `yuv422p`，prores 只吃 10-bit 4:2:2/4:4:4，`ffv1`/`jpeg2000` 几乎全吃。GUI 应把
-   `-pix_fmt` 做成"该编码器允许值"的下拉框而不是自由文本；给错值会在 `avcodec_open2` 阶段失败。
+   `-pix_fmt` 做成"该编码器允许值"的下拉框而不是自由文本。注意 CLI 的行为比想象中温和：
+   名字存在但不被该编码器接受时，ffmpeg 会打印 `Incompatible pixel format ... auto-selecting`
+   并自行替换，只有根本不存在的名字才会中止；所以"能跑通"不代表参数生效，下拉必须按编码器过滤。
 
 5. **实验性编码器要显式提示**。`opus` 与 `vorbis` 带 `AV_CODEC_CAP_EXPERIMENTAL`，不加
    `-strict -2` 一律打不开。GUI 要么自动附加该参数，要么在卡片上标注"实验性"。
@@ -631,3 +633,27 @@ ADPCM / DPCM 编码器：
 10. **zlib 相关编码器要运行时判定**。`png`/`apng`/`flashsv`/`flashsv2`/`pdv`/`zmbv`/`zlib`/`exr`
     在不同目标上可能被编译掉（见第 1 节）。GUI 应在启动时用
     `avcodec_find_encoder_by_name("png") == NULL` 探测一次，而不是把"总是可用"写死。
+
+## 8. 界面表的实测校验（2026-11-01）
+
+上面几节是从源码读出来的结论，界面用的 `lib/src/media/capabilities_data.dart` 另外做过一轮实测，
+依据是本机构建出来的 `build/ffmpeg/dist/linux-x64/ffmpeg`（n9.0.2），不是文档推演。
+
+- **编码器清单**：158 个条目逐个跑 `-h encoder=<name>`，比对 `Supported pixel formats` 与
+  `Supported sample formats`。修正 26 个写错的格式名（`s16be`、`dblbe`、`monowhite` 这类是
+  描述式写法，真发下去会中止），补齐 36 个原本留空的列表；六个编码器名改回真名：
+  `msmpeg4v3 → msmpeg4`、`roq → roqvideo`、`ra_144 → real_144`、`adpcm_g722 → g722`、
+  `adpcm_g726 → g726`、`adpcm_g726le → g726le`。这些名字在 `-encoders` 里查不到时，命令行
+  靠回退能跑，但 FFI 与 CI 会失败。
+- **容器白名单**：27 个容器 × 158 个编码器逐对做最小编码（视频一帧、音频 0.2 秒），成功才收录，
+  共 519 组正向 + 623 组反向。原先从本文第 4 节抄来的白名单有 43.9% 会被 muxer 拒绝，
+  mp4 尤其严重（35 个视频编码器里只有 7 个真能写）。`dv` 需要单独用 720×576、25 帧测，
+  `mxf`/`dv` 的音频要带一路视频才成立。
+- **参数**：`-b:v`/`-b:a`/`-maxrate`/`-bufsize` 的单位是 bit/s，界面按 kbps 输入，渲染时补 `k`；
+  `-application`、`-frame_duration`、`-mv4` 在本构建不存在；`mpeg4` 没有 `-profile:v` 的名称
+  映射表，文本值会直接中止命令；`prores` 的 `-profile:v`/`-bits_per_mb` 属于 `prores_ks`；
+  `ffv1` 的 `-coder` 接受 `rice` 而不是 `golomb`；`utvideo` 的 `-pred` 没有 `gradient`；
+  `aac` 的 `-aac_coder` 只剩 `twoloop`/`fast`；实验性编码器 `ljpeg`/`dca`/`mlp`/`truehd`/`opus`/`vorbis`
+  默认带 `-strict -2`。
+- **仍未覆盖**：每个编码器的专属 AVOption 只挑了常用几项，`-crf`/`-preset`/`-tune` 在本构建
+  完全不存在，其余参数走"自定义参数"输入框。
