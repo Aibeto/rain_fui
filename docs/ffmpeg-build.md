@@ -283,7 +283,7 @@ Builds verified on this machine (FFmpeg 9.0.2 source, `FFMPEG_EXTERNAL_LIBS=1`,
 | android-arm64-v8a | `dist/android-arm64-v8a/libffmpeg_exe.so` | 38 008 656 B | libx264/libx265/libvpx/libsvtav1/libopus/libvorbis/libmp3lame/libwebp + 11 MediaCodec |
 | android-armeabi-v7a | `dist/android-armeabi-v7a/libffmpeg_exe.so` | 32 753 584 B | same software set (libvpx without NEON) + MediaCodec |
 | android-x86_64 | `dist/android-x86_64/libffmpeg_exe.so` | 48 433 744 B | same software set + MediaCodec |
-| windows-x64 | `dist/windows-x64/ffmpeg.exe` | 53 011 470 B | libx264/libx265/libvpx/libsvtav1/libopus/libvorbis/libmp3lame/libwebp |
+| windows-x64 | `dist/windows-x64/ffmpeg.exe` | 53 296 654 B | libx264/libx265/libvpx/libsvtav1/libopus/libvorbis/libmp3lame/libwebp |
 | web | `dist/web/ffmpeg.wasm` | 32 901 039 B | libx264/libx265/libvpx/libaom/libsvtav1/libopus/libvorbis/libmp3lame/libwebp + zlib (wasm) |
 
 The wasm target links its own copies of most of the same libraries. Emscripten needs a
