@@ -71,44 +71,48 @@ class _JobLogActivityState extends State<JobLogActivity> {
 
     return ColoredBox(
       color: theme.scaffoldBackgroundColor,
-      child: Column(
-        children: <Widget>[
-          _Header(
-            title: l10n(I18nKey.jobLogTitle),
-            subtitle: widget.job.displayName,
-            autoScroll: _autoScroll,
-            onAutoScroll: (bool value) => setState(() => _autoScroll = value),
-          ),
-          Expanded(
-            child: ListenableBuilder(
-              listenable: widget.job,
-              builder: (BuildContext context, Widget? _) {
-                final List<String> lines = widget.job.logLines;
-                if (lines.isEmpty) {
-                  return Center(
-                    child: Text(
-                      l10n(I18nKey.jobLogEmpty),
-                      style: theme.typography.caption,
+      // This page has no chrome of its own, so it has to inset itself for the
+      // status bar and the gesture area.
+      child: SafeArea(
+        child: Column(
+          children: <Widget>[
+            _Header(
+              title: l10n(I18nKey.jobLogTitle),
+              subtitle: widget.job.displayName,
+              autoScroll: _autoScroll,
+              onAutoScroll: (bool value) => setState(() => _autoScroll = value),
+            ),
+            Expanded(
+              child: ListenableBuilder(
+                listenable: widget.job,
+                builder: (BuildContext context, Widget? _) {
+                  final List<String> lines = widget.job.logLines;
+                  if (lines.isEmpty) {
+                    return Center(
+                      child: Text(
+                        l10n(I18nKey.jobLogEmpty),
+                        style: theme.typography.caption,
+                      ),
+                    );
+                  }
+                  return Scrollbar(
+                    controller: _scroll,
+                    child: SingleChildScrollView(
+                      controller: _scroll,
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                        16,
+                        12,
+                        16,
+                        24,
+                      ),
+                      child: SelectableText(lines.join('\n'), style: mono),
                     ),
                   );
-                }
-                return Scrollbar(
-                  controller: _scroll,
-                  child: SingleChildScrollView(
-                    controller: _scroll,
-                    padding: const EdgeInsetsDirectional.fromSTEB(
-                      16,
-                      12,
-                      16,
-                      24,
-                    ),
-                    child: SelectableText(lines.join('\n'), style: mono),
-                  ),
-                );
-              },
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
