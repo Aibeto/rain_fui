@@ -1,12 +1,13 @@
 import 'package:fluent_ui/fluent_ui.dart' hide FluentIcons;
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 
+import '../activities/media_job_activity.dart';
 import '../i18n/i18n.dart';
 import '../i18n/i18n_keys.dart';
 import '../models/source_selection.dart';
+import '../theme/app_theme.dart';
 import 'add_source_dialog.dart';
 import 'selection_result_dialog.dart';
-import '../activities/media_job_activity.dart';
 
 /// Height of the chrome bars, in logical pixels.
 const double _barHeight = 48;
@@ -48,7 +49,7 @@ class AppBottomBar extends StatelessWidget {
       height: _barHeight,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
+        color: AppTheme.chromeFor(theme.brightness),
         border: Border(
           top: BorderSide(color: resources.controlStrokeColorDefault),
         ),

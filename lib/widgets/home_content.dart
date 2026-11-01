@@ -439,13 +439,13 @@ class _Card extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ResourceDictionary resources = FluentTheme.of(context).resources;
+    final FluentThemeData theme = FluentTheme.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: resources.cardBackgroundFillColorDefault,
+        color: AppTheme.cardFor(theme.brightness),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: borderColor ?? resources.cardStrokeColorDefault,
+          color: borderColor ?? AppTheme.borderFor(theme.brightness),
         ),
       ),
       padding: padding,

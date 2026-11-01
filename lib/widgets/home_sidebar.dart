@@ -3,6 +3,7 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 
 import '../i18n/i18n.dart';
 import '../i18n/i18n_keys.dart';
+import '../theme/app_theme.dart';
 
 /// Preferred width of the sidebar in logical pixels.
 ///
@@ -47,8 +48,8 @@ class HomeSidebar extends StatelessWidget {
       height: double.infinity,
       decoration: BoxDecoration(
         color: floating
-            ? resources.solidBackgroundFillColorTertiary
-            : resources.solidBackgroundFillColorSecondary,
+            ? AppTheme.cardFor(theme.brightness)
+            : AppTheme.chromeFor(theme.brightness),
         border: BorderDirectional(
           end: BorderSide(color: resources.controlStrokeColorDefault),
           start: floating

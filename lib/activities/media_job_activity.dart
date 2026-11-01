@@ -703,9 +703,9 @@ class _FileCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsetsDirectional.all(12),
       decoration: BoxDecoration(
-        color: resources.cardBackgroundFillColorDefault,
+        color: AppTheme.cardFor(theme.brightness),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: resources.cardStrokeColorDefault),
+        border: Border.all(color: AppTheme.borderFor(theme.brightness)),
       ),
       child: Row(
         // The icon is a single line; centring it against the name and the file
@@ -1774,7 +1774,6 @@ class _ActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final FluentThemeData theme = FluentTheme.of(context);
-    final ResourceDictionary resources = theme.resources;
     final AppL10n l10n = context.l10n;
     return Container(
       height: 56,
@@ -1782,9 +1781,9 @@ class _ActionBar extends StatelessWidget {
         horizontal: AppMetrics.gutter,
       ),
       decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
+        color: AppTheme.chromeFor(theme.brightness),
         border: Border(
-          top: BorderSide(color: resources.controlStrokeColorDefault),
+          top: BorderSide(color: AppTheme.borderFor(theme.brightness)),
         ),
       ),
       child: Row(

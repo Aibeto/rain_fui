@@ -5,6 +5,7 @@ import '../activities/language_activity.dart';
 import '../i18n/i18n.dart';
 import '../i18n/i18n_keys.dart';
 import '../services/theme_service.dart';
+import '../theme/app_theme.dart';
 
 /// Height of the chrome bars, in logical pixels.
 const double _barHeight = 48;
@@ -50,7 +51,7 @@ class AppTopBar extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsetsDirectional.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
+        color: AppTheme.chromeFor(theme.brightness),
         border: Border(
           bottom: BorderSide(color: resources.controlStrokeColorDefault),
         ),

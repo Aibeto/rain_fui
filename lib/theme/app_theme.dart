@@ -111,9 +111,39 @@ abstract final class AppTheme {
   static const Color lightSurface = Color(0xFFFFFFFF);
   static const Color darkSurface = Color(0xFF000000);
 
+  /// Bars and the docked sidebar. One step away from the page so the chrome
+  /// reads as a frame instead of dissolving into the content.
+  static const Color lightChrome = Color(0xFFF2F2F2);
+  static const Color darkChrome = Color(0xFF161616);
+
+  /// Cards and list rows: a raised step over the page in dark mode, plain white
+  /// with a hairline border in light mode where shadow would be heavier than
+  /// the Fluent look allows.
+  static const Color lightCard = Color(0xFFFFFFFF);
+  static const Color darkCard = Color(0xFF1C1C1C);
+
+  /// Recessed areas such as the terminal body and the empty-state well.
+  static const Color lightInset = Color(0xFFF7F7F7);
+  static const Color darkInset = Color(0xFF0D0D0D);
+
+  static const Color lightBorder = Color(0xFFE3E3E3);
+  static const Color darkBorder = Color(0xFF2E2E2E);
+
   /// Solid fill used by menus, combo-box popups and tooltips.
   static Color surfaceFor(Brightness brightness) =>
       brightness == Brightness.light ? lightSurface : darkSurface;
+
+  static Color chromeFor(Brightness brightness) =>
+      brightness == Brightness.light ? lightChrome : darkChrome;
+
+  static Color cardFor(Brightness brightness) =>
+      brightness == Brightness.light ? lightCard : darkCard;
+
+  static Color insetFor(Brightness brightness) =>
+      brightness == Brightness.light ? lightInset : darkInset;
+
+  static Color borderFor(Brightness brightness) =>
+      brightness == Brightness.light ? lightBorder : darkBorder;
 
   static FluentThemeData _theme(Brightness brightness, Locale locale) {
     final List<String> fallback = fallbackFor(locale);
@@ -124,7 +154,7 @@ abstract final class AppTheme {
       scaffoldBackgroundColor: surface,
       micaBackgroundColor: surface,
       menuColor: surface,
-      cardColor: surface,
+      cardColor: cardFor(brightness),
       typography: _withFallback(
         Typography.fromBrightness(brightness: brightness),
         fallback,

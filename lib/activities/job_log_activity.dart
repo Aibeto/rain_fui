@@ -85,32 +85,37 @@ class _JobLogActivityState extends State<JobLogActivity> {
               onAutoScroll: (bool value) => setState(() => _autoScroll = value),
             ),
             Expanded(
-              child: ListenableBuilder(
-                listenable: widget.job,
-                builder: (BuildContext context, Widget? _) {
-                  final List<String> lines = widget.job.logLines;
-                  if (lines.isEmpty) {
-                    return Center(
-                      child: Text(
-                        l10n(I18nKey.jobLogEmpty),
-                        style: theme.typography.caption,
+              // The terminal body is a recessed well so the log reads as output
+              // rather than as page content.
+              child: ColoredBox(
+                color: AppTheme.insetFor(theme.brightness),
+                child: ListenableBuilder(
+                  listenable: widget.job,
+                  builder: (BuildContext context, Widget? _) {
+                    final List<String> lines = widget.job.logLines;
+                    if (lines.isEmpty) {
+                      return Center(
+                        child: Text(
+                          l10n(I18nKey.jobLogEmpty),
+                          style: theme.typography.caption,
+                        ),
+                      );
+                    }
+                    return Scrollbar(
+                      controller: _scroll,
+                      child: SingleChildScrollView(
+                        controller: _scroll,
+                        padding: const EdgeInsetsDirectional.fromSTEB(
+                          AppMetrics.gutter,
+                          12,
+                          AppMetrics.gutter,
+                          24,
+                        ),
+                        child: SelectableText(lines.join('\n'), style: mono),
                       ),
                     );
-                  }
-                  return Scrollbar(
-                    controller: _scroll,
-                    child: SingleChildScrollView(
-                      controller: _scroll,
-                      padding: const EdgeInsetsDirectional.fromSTEB(
-                        AppMetrics.gutter,
-                        12,
-                        AppMetrics.gutter,
-                        24,
-                      ),
-                      child: SelectableText(lines.join('\n'), style: mono),
-                    ),
-                  );
-                },
+                  },
+                ),
               ),
             ),
           ],
@@ -142,9 +147,9 @@ class _Header extends StatelessWidget {
       height: 52,
       padding: const EdgeInsetsDirectional.fromSTEB(8, 0, AppMetrics.gutter, 0),
       decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
+        color: AppTheme.chromeFor(theme.brightness),
         border: Border(
-          bottom: BorderSide(color: resources.dividerStrokeColorDefault),
+          bottom: BorderSide(color: AppTheme.borderFor(theme.brightness)),
         ),
       ),
       child: Row(
