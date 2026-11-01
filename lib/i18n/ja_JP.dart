@@ -2,7 +2,6 @@
 const Map<String, String> jaJp = <String, String>{
   // Shell / brand.
   'app_title': 'Rain FUI',
-  'app_tagline': 'FFmpeg のための Fluent シェル',
 
   // Top bar.
   'top_bar_sidebar_toggle': 'サイドバーの表示を切り替え',
@@ -13,14 +12,14 @@ const Map<String, String> jaJp = <String, String>{
   'theme_system': 'システム',
 
   // Sidebar.
-  'sidebar_workspace': 'ワークスペース',
   'sidebar_home': 'ホーム',
 
   // Home content.
-  'home_title': 'ワークスペース',
   'home_empty_title': 'まだ何も追加されていません',
   'home_empty_body': '+ ボタンからファイルまたはフォルダーを選択するか、このウィンドウ内にドロップしてください。',
+  'home_empty_body_touch': '+ ボタンからファイルまたはフォルダーを選択してください。',
   'home_drop_hint': 'ドロップして追加',
+  'home_drop_hint_idle': 'ここにファイルやフォルダーをドラッグ',
   'home_phase_notice': 'プレビュー版：UI の骨組みのみで、メディア処理と FFmpeg はまだ接続されていません。',
   'home_sources_title': '追加済みのソース',
   'home_sources_empty': 'このセッションで追加したソースがここに表示されます。',
@@ -30,12 +29,15 @@ const Map<String, String> jaJp = <String, String>{
   'bottom_bar_add': 'ファイルまたはフォルダーを追加',
 
   // Add-source dialog.
-  'add_source_title': 'ワークスペースに追加',
+  'add_source_title': 'ソースを追加',
   'add_source_body': 'ファイルを 1 つ以上選ぶか、フォルダーを選んで中身を確認します。',
   'add_source_files': 'ファイルを選択',
   'add_source_files_hint': '複数選択できます。',
   'add_source_folder': 'フォルダーを選択',
   'add_source_folder_hint': 'フォルダーとその直下の項目を追加します。',
+  'add_source_confirm_title': 'このフォルダーを追加しますか？',
+  'add_source_confirm_body': 'フォルダーはホーム画面にソースとして表示されます。',
+  'action_add': '追加',
   'action_cancel': 'キャンセル',
   'action_close': '閉じる',
 

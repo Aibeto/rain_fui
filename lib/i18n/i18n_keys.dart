@@ -7,7 +7,6 @@
 abstract final class I18nKey {
   // Shell / brand.
   static const String appTitle = 'app_title';
-  static const String appTagline = 'app_tagline';
 
   // Top bar.
   static const String topBarSidebarToggle = 'top_bar_sidebar_toggle';
@@ -18,14 +17,14 @@ abstract final class I18nKey {
   static const String themeSystem = 'theme_system';
 
   // Sidebar.
-  static const String sidebarWorkspace = 'sidebar_workspace';
   static const String sidebarHome = 'sidebar_home';
 
   // Home content.
-  static const String homeTitle = 'home_title';
   static const String homeEmptyTitle = 'home_empty_title';
   static const String homeEmptyBody = 'home_empty_body';
+  static const String homeEmptyBodyTouch = 'home_empty_body_touch';
   static const String homeDropHint = 'home_drop_hint';
+  static const String homeDropHintIdle = 'home_drop_hint_idle';
   static const String homePhaseNotice = 'home_phase_notice';
   static const String homeSourcesTitle = 'home_sources_title';
   static const String homeSourcesEmpty = 'home_sources_empty';
@@ -41,6 +40,9 @@ abstract final class I18nKey {
   static const String addSourceFilesHint = 'add_source_files_hint';
   static const String addSourceFolder = 'add_source_folder';
   static const String addSourceFolderHint = 'add_source_folder_hint';
+  static const String addSourceConfirmTitle = 'add_source_confirm_title';
+  static const String addSourceConfirmBody = 'add_source_confirm_body';
+  static const String actionAdd = 'action_add';
   static const String actionCancel = 'action_cancel';
   static const String actionClose = 'action_close';
 
@@ -69,19 +71,18 @@ abstract final class I18nKey {
   /// Display order used by `LanguageActivity`; mirrors `kSupportedLanguageTags`.
   static const List<String> all = <String>[
     appTitle,
-    appTagline,
     topBarSidebarToggle,
     topBarLanguage,
     topBarTheme,
     themeLight,
     themeDark,
     themeSystem,
-    sidebarWorkspace,
     sidebarHome,
-    homeTitle,
     homeEmptyTitle,
     homeEmptyBody,
+    homeEmptyBodyTouch,
     homeDropHint,
+    homeDropHintIdle,
     homePhaseNotice,
     homeSourcesTitle,
     homeSourcesEmpty,
@@ -93,6 +94,9 @@ abstract final class I18nKey {
     addSourceFilesHint,
     addSourceFolder,
     addSourceFolderHint,
+    addSourceConfirmTitle,
+    addSourceConfirmBody,
+    actionAdd,
     actionCancel,
     actionClose,
     resultFilesTitle,

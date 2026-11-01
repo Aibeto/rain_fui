@@ -2,7 +2,6 @@
 const Map<String, String> ruRu = <String, String>{
   // Shell / brand.
   'app_title': 'Rain FUI',
-  'app_tagline': 'Оболочка Fluent для FFmpeg',
 
   // Top bar.
   'top_bar_sidebar_toggle': 'Показать или скрыть боковую панель',
@@ -13,14 +12,14 @@ const Map<String, String> ruRu = <String, String>{
   'theme_system': 'Системная',
 
   // Sidebar.
-  'sidebar_workspace': 'Рабочая область',
   'sidebar_home': 'Главная',
 
   // Home content.
-  'home_title': 'Рабочая область',
   'home_empty_title': 'Пока ничего не добавлено',
   'home_empty_body': 'Нажмите +, чтобы выбрать файлы или папку, либо перетащите их в любое место этого окна.',
+  'home_empty_body_touch': 'Нажмите +, чтобы выбрать файлы или папку.',
   'home_drop_hint': 'Отпустите, чтобы добавить',
+  'home_drop_hint_idle': 'Перетащите файлы или папку сюда',
   'home_phase_notice': 'Предварительная сборка: интерфейс уже собран, но работа с медиа и FFmpeg ещё не подключены.',
   'home_sources_title': 'Добавленные источники',
   'home_sources_empty': 'Источники, добавленные в этом сеансе, появятся здесь.',
@@ -30,12 +29,15 @@ const Map<String, String> ruRu = <String, String>{
   'bottom_bar_add': 'Добавить файлы или папки',
 
   // Add-source dialog.
-  'add_source_title': 'Добавить в рабочую область',
+  'add_source_title': 'Добавить источники',
   'add_source_body': 'Выберите один или несколько файлов либо папку, чтобы просмотреть её содержимое.',
   'add_source_files': 'Выбрать файлы',
   'add_source_files_hint': 'Можно выбрать несколько файлов.',
   'add_source_folder': 'Выбрать папку',
   'add_source_folder_hint': 'Добавляется папка и её элементы первого уровня.',
+  'add_source_confirm_title': 'Добавить эту папку?',
+  'add_source_confirm_body': 'Папка появится как источник на главном экране.',
+  'action_add': 'Добавить',
   'action_cancel': 'Отмена',
   'action_close': 'Закрыть',
 

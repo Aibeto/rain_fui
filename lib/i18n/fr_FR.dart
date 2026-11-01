@@ -2,7 +2,6 @@
 const Map<String, String> frFr = <String, String>{
   // Shell / brand.
   'app_title': 'Rain FUI',
-  'app_tagline': 'Une interface Fluent pour FFmpeg',
 
   // Top bar.
   'top_bar_sidebar_toggle': 'Afficher ou masquer la barre latérale',
@@ -13,14 +12,15 @@ const Map<String, String> frFr = <String, String>{
   'theme_system': 'Système',
 
   // Sidebar.
-  'sidebar_workspace': 'Espace de travail',
   'sidebar_home': 'Accueil',
 
   // Home content.
-  'home_title': 'Espace de travail',
   'home_empty_title': 'Aucun élément ajouté',
   'home_empty_body': 'Utilisez le bouton + pour choisir des fichiers ou un dossier, ou déposez-les n’importe où dans cette fenêtre.',
+  'home_empty_body_touch':
+      'Utilisez le bouton + pour choisir des fichiers ou un dossier.',
   'home_drop_hint': 'Relâchez pour ajouter',
+  'home_drop_hint_idle': 'Glissez des fichiers ou un dossier ici',
   'home_phase_notice': 'Version d’aperçu : l’interface est en place, mais le traitement des médias et FFmpeg ne sont pas encore connectés.',
   'home_sources_title': 'Sources ajoutées',
   'home_sources_empty':
@@ -31,13 +31,17 @@ const Map<String, String> frFr = <String, String>{
   'bottom_bar_add': 'Ajouter des fichiers ou des dossiers',
 
   // Add-source dialog.
-  'add_source_title': 'Ajouter à l’espace de travail',
+  'add_source_title': 'Ajouter des sources',
   'add_source_body': 'Choisissez un ou plusieurs fichiers, ou un dossier pour en voir le contenu.',
   'add_source_files': 'Choisir des fichiers',
   'add_source_files_hint': 'La sélection multiple est prise en charge.',
   'add_source_folder': 'Choisir un dossier',
   'add_source_folder_hint':
       'Ajoute le dossier et son contenu de premier niveau.',
+  'add_source_confirm_title': 'Ajouter ce dossier ?',
+  'add_source_confirm_body':
+      'Le dossier sera listé comme source sur l’écran d’accueil.',
+  'action_add': 'Ajouter',
   'action_cancel': 'Annuler',
   'action_close': 'Fermer',
 

@@ -2,7 +2,6 @@
 const Map<String, String> zhCn = <String, String>{
   // Shell / brand.
   'app_title': 'Rain FUI',
-  'app_tagline': '为 FFmpeg 打造的 Fluent 外壳',
 
   // Top bar.
   'top_bar_sidebar_toggle': '切换侧边栏',
@@ -13,14 +12,14 @@ const Map<String, String> zhCn = <String, String>{
   'theme_system': '跟随系统',
 
   // Sidebar.
-  'sidebar_workspace': '工作区',
   'sidebar_home': '主页',
 
   // Home content.
-  'home_title': '工作区',
   'home_empty_title': '尚未添加任何内容',
   'home_empty_body': '点击 + 按钮选择文件或文件夹，也可以把它们拖放到此窗口的任意位置。',
+  'home_empty_body_touch': '点击 + 按钮选择文件或文件夹。',
   'home_drop_hint': '松开即可添加',
+  'home_drop_hint_idle': '把文件或文件夹拖到这里',
   'home_phase_notice': '预览版本：界面骨架已就绪，媒体处理与 FFmpeg 尚未接入。',
   'home_sources_title': '已添加的来源',
   'home_sources_empty': '本次会话中添加的来源会显示在这里。',
@@ -30,12 +29,15 @@ const Map<String, String> zhCn = <String, String>{
   'bottom_bar_add': '添加文件或文件夹',
 
   // Add-source dialog.
-  'add_source_title': '添加到工作区',
+  'add_source_title': '添加来源',
   'add_source_body': '选择一个或多个文件，或选择一个文件夹以查看其内容。',
   'add_source_files': '选择文件',
   'add_source_files_hint': '支持多选。',
   'add_source_folder': '选择文件夹',
   'add_source_folder_hint': '会添加该文件夹及其第一层内容。',
+  'add_source_confirm_title': '添加此文件夹？',
+  'add_source_confirm_body': '该文件夹会作为来源显示在主页上。',
+  'action_add': '添加',
   'action_cancel': '取消',
   'action_close': '关闭',
 

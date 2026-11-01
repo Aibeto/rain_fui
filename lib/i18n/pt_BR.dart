@@ -2,7 +2,6 @@
 const Map<String, String> ptBr = <String, String>{
   // Shell / brand.
   'app_title': 'Rain FUI',
-  'app_tagline': 'Uma interface Fluent para o FFmpeg',
 
   // Top bar.
   'top_bar_sidebar_toggle': 'Mostrar ou ocultar a barra lateral',
@@ -13,14 +12,15 @@ const Map<String, String> ptBr = <String, String>{
   'theme_system': 'Sistema',
 
   // Sidebar.
-  'sidebar_workspace': 'Área de trabalho',
   'sidebar_home': 'Início',
 
   // Home content.
-  'home_title': 'Área de trabalho',
   'home_empty_title': 'Nada adicionado ainda',
   'home_empty_body': 'Use o botão + para selecionar arquivos ou uma pasta, ou arraste e solte em qualquer lugar desta janela.',
+  'home_empty_body_touch':
+      'Use o botão + para selecionar arquivos ou uma pasta.',
   'home_drop_hint': 'Solte para adicionar',
+  'home_drop_hint_idle': 'Arraste arquivos ou uma pasta para cá',
   'home_phase_notice': 'Versão de prévia: a interface já está pronta, mas o processamento de mídia e o FFmpeg ainda não estão conectados.',
   'home_sources_title': 'Fontes adicionadas',
   'home_sources_empty': 'As fontes adicionadas nesta sessão aparecem aqui.',
@@ -30,7 +30,7 @@ const Map<String, String> ptBr = <String, String>{
   'bottom_bar_add': 'Adicionar arquivos ou pastas',
 
   // Add-source dialog.
-  'add_source_title': 'Adicionar à área de trabalho',
+  'add_source_title': 'Adicionar fontes',
   'add_source_body':
       'Selecione um ou mais arquivos, ou uma pasta para ver o conteúdo.',
   'add_source_files': 'Selecionar arquivos',
@@ -38,6 +38,10 @@ const Map<String, String> ptBr = <String, String>{
   'add_source_folder': 'Selecionar pasta',
   'add_source_folder_hint':
       'Adiciona a pasta e seu conteúdo de primeiro nível.',
+  'add_source_confirm_title': 'Adicionar esta pasta?',
+  'add_source_confirm_body':
+      'A pasta será listada como origem na tela inicial.',
+  'action_add': 'Adicionar',
   'action_cancel': 'Cancelar',
   'action_close': 'Fechar',
 

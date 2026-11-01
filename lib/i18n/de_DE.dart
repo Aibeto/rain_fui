@@ -2,7 +2,6 @@
 const Map<String, String> deDe = <String, String>{
   // Shell / brand.
   'app_title': 'Rain FUI',
-  'app_tagline': 'Eine Fluent-Oberfläche für FFmpeg',
 
   // Top bar.
   'top_bar_sidebar_toggle': 'Seitenleiste ein- oder ausblenden',
@@ -13,14 +12,15 @@ const Map<String, String> deDe = <String, String>{
   'theme_system': 'System',
 
   // Sidebar.
-  'sidebar_workspace': 'Arbeitsbereich',
   'sidebar_home': 'Start',
 
   // Home content.
-  'home_title': 'Arbeitsbereich',
   'home_empty_title': 'Noch nichts hinzugefügt',
   'home_empty_body': 'Wählen Sie über die Schaltfläche + Dateien oder einen Ordner aus, oder ziehen Sie sie an eine beliebige Stelle in diesem Fenster.',
+  'home_empty_body_touch':
+      'Wählen Sie über die Schaltfläche + Dateien oder einen Ordner aus.',
   'home_drop_hint': 'Zum Hinzufügen loslassen',
+  'home_drop_hint_idle': 'Dateien oder Ordner hierher ziehen',
   'home_phase_notice': 'Vorschauversion: Die Benutzeroberfläche steht, Medienverarbeitung und FFmpeg sind noch nicht angebunden.',
   'home_sources_title': 'Hinzugefügte Quellen',
   'home_sources_empty':
@@ -31,13 +31,17 @@ const Map<String, String> deDe = <String, String>{
   'bottom_bar_add': 'Dateien oder Ordner hinzufügen',
 
   // Add-source dialog.
-  'add_source_title': 'Zum Arbeitsbereich hinzufügen',
+  'add_source_title': 'Quellen hinzufügen',
   'add_source_body': 'Wählen Sie eine oder mehrere Dateien aus oder einen Ordner, um dessen Inhalt anzuzeigen.',
   'add_source_files': 'Dateien auswählen',
   'add_source_files_hint': 'Mehrfachauswahl ist möglich.',
   'add_source_folder': 'Ordner auswählen',
   'add_source_folder_hint':
       'Fügt den Ordner samt Inhalt der ersten Ebene hinzu.',
+  'add_source_confirm_title': 'Diesen Ordner hinzufügen?',
+  'add_source_confirm_body':
+      'Der Ordner wird auf der Startseite als Quelle aufgeführt.',
+  'action_add': 'Hinzufügen',
   'action_cancel': 'Abbrechen',
   'action_close': 'Schließen',
 

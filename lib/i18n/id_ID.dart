@@ -2,7 +2,6 @@
 const Map<String, String> idId = <String, String>{
   // Shell / brand.
   'app_title': 'Rain FUI',
-  'app_tagline': 'Antarmuka Fluent untuk FFmpeg',
 
   // Top bar.
   'top_bar_sidebar_toggle': 'Tampilkan/sembunyikan bilah samping',
@@ -13,14 +12,14 @@ const Map<String, String> idId = <String, String>{
   'theme_system': 'Sistem',
 
   // Sidebar.
-  'sidebar_workspace': 'Ruang kerja',
   'sidebar_home': 'Beranda',
 
   // Home content.
-  'home_title': 'Ruang kerja',
   'home_empty_title': 'Belum ada yang ditambahkan',
   'home_empty_body': 'Gunakan tombol + untuk memilih berkas atau folder, atau seret lalu lepas ke mana saja di jendela ini.',
+  'home_empty_body_touch': 'Gunakan tombol + untuk memilih berkas atau folder.',
   'home_drop_hint': 'Lepaskan untuk menambahkan',
+  'home_drop_hint_idle': 'Seret berkas atau folder ke sini',
   'home_phase_notice': 'Versi pratinjau: kerangka antarmuka sudah siap, penanganan media dan FFmpeg belum tersambung.',
   'home_sources_title': 'Sumber yang ditambahkan',
   'home_sources_empty':
@@ -31,13 +30,17 @@ const Map<String, String> idId = <String, String>{
   'bottom_bar_add': 'Tambahkan berkas atau folder',
 
   // Add-source dialog.
-  'add_source_title': 'Tambahkan ke ruang kerja',
+  'add_source_title': 'Tambahkan sumber',
   'add_source_body': 'Pilih satu atau beberapa berkas, atau pilih folder untuk melihat isinya.',
   'add_source_files': 'Pilih berkas',
   'add_source_files_hint': 'Pemilihan beberapa berkas sekaligus didukung.',
   'add_source_folder': 'Pilih folder',
   'add_source_folder_hint':
       'Menambahkan folder beserta isi tingkat pertamanya.',
+  'add_source_confirm_title': 'Tambahkan folder ini?',
+  'add_source_confirm_body':
+      'Folder akan dicantumkan sebagai sumber di layar utama.',
+  'action_add': 'Tambahkan',
   'action_cancel': 'Batal',
   'action_close': 'Tutup',
 

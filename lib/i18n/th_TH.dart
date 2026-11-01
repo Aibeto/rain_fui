@@ -2,7 +2,6 @@
 const Map<String, String> thTh = <String, String>{
   // Shell / brand.
   'app_title': 'Rain FUI',
-  'app_tagline': 'อินเทอร์เฟซแบบ Fluent สำหรับ FFmpeg',
 
   // Top bar.
   'top_bar_sidebar_toggle': 'เปิด/ปิดแถบด้านข้าง',
@@ -13,14 +12,14 @@ const Map<String, String> thTh = <String, String>{
   'theme_system': 'ตามระบบ',
 
   // Sidebar.
-  'sidebar_workspace': 'พื้นที่ทำงาน',
   'sidebar_home': 'หน้าแรก',
 
   // Home content.
-  'home_title': 'พื้นที่ทำงาน',
   'home_empty_title': 'ยังไม่มีรายการ',
   'home_empty_body': 'ใช้ปุ่ม + เพื่อเลือกไฟล์หรือโฟลเดอร์ หรือลากมาวางที่ใดก็ได้ในหน้าต่างนี้',
+  'home_empty_body_touch': 'ใช้ปุ่ม + เพื่อเลือกไฟล์หรือโฟลเดอร์',
   'home_drop_hint': 'ปล่อยเพื่อเพิ่ม',
+  'home_drop_hint_idle': 'ลากไฟล์หรือโฟลเดอร์มาที่นี่',
   'home_phase_notice': 'บิลด์ตัวอย่าง: โครงหน้าจอพร้อมแล้ว แต่การจัดการสื่อและ FFmpeg ยังไม่ได้เชื่อมต่อ',
   'home_sources_title': 'แหล่งข้อมูลที่เพิ่มแล้ว',
   'home_sources_empty': 'แหล่งข้อมูลที่คุณเพิ่มในเซสชันนี้จะแสดงที่นี่',
@@ -30,13 +29,16 @@ const Map<String, String> thTh = <String, String>{
   'bottom_bar_add': 'เพิ่มไฟล์หรือโฟลเดอร์',
 
   // Add-source dialog.
-  'add_source_title': 'เพิ่มลงในพื้นที่ทำงาน',
+  'add_source_title': 'เพิ่มแหล่งข้อมูล',
   'add_source_body':
       'เลือกไฟล์ตั้งแต่หนึ่งไฟล์ขึ้นไป หรือเลือกโฟลเดอร์เพื่อดูเนื้อหา',
   'add_source_files': 'เลือกไฟล์',
   'add_source_files_hint': 'เลือกได้หลายไฟล์พร้อมกัน',
   'add_source_folder': 'เลือกโฟลเดอร์',
   'add_source_folder_hint': 'เพิ่มโฟลเดอร์พร้อมรายการย่อยระดับแรก',
+  'add_source_confirm_title': 'เพิ่มโฟลเดอร์นี้หรือไม่',
+  'add_source_confirm_body': 'โฟลเดอร์จะแสดงเป็นแหล่งข้อมูลบนหน้าหลัก',
+  'action_add': 'เพิ่ม',
   'action_cancel': 'ยกเลิก',
   'action_close': 'ปิด',
 

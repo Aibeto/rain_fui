@@ -2,7 +2,6 @@
 const Map<String, String> plPl = <String, String>{
   // Shell / brand.
   'app_title': 'Rain FUI',
-  'app_tagline': 'Interfejs Fluent dla FFmpeg',
 
   // Top bar.
   'top_bar_sidebar_toggle': 'Pokaż lub ukryj panel boczny',
@@ -13,14 +12,14 @@ const Map<String, String> plPl = <String, String>{
   'theme_system': 'Systemowy',
 
   // Sidebar.
-  'sidebar_workspace': 'Obszar roboczy',
   'sidebar_home': 'Strona główna',
 
   // Home content.
-  'home_title': 'Obszar roboczy',
   'home_empty_title': 'Nic jeszcze nie dodano',
   'home_empty_body': 'Użyj przycisku +, aby wybrać pliki lub folder, albo przeciągnij je w dowolne miejsce tego okna.',
+  'home_empty_body_touch': 'Użyj przycisku +, aby wybrać pliki lub folder.',
   'home_drop_hint': 'Upuść, aby dodać',
+  'home_drop_hint_idle': 'Przeciągnij tutaj pliki lub folder',
   'home_phase_notice': 'Wersja zapoznawcza: szkielet interfejsu jest gotowy, ale obsługa multimediów i FFmpeg nie są jeszcze podłączone.',
   'home_sources_title': 'Dodane źródła',
   'home_sources_empty': 'Źródła dodane w tej sesji pojawią się tutaj.',
@@ -30,13 +29,17 @@ const Map<String, String> plPl = <String, String>{
   'bottom_bar_add': 'Dodaj pliki lub foldery',
 
   // Add-source dialog.
-  'add_source_title': 'Dodaj do obszaru roboczego',
+  'add_source_title': 'Dodaj źródła',
   'add_source_body': 'Wybierz jeden lub więcej plików albo folder, aby zobaczyć jego zawartość.',
   'add_source_files': 'Wybierz pliki',
   'add_source_files_hint': 'Możesz wybrać wiele plików.',
   'add_source_folder': 'Wybierz folder',
   'add_source_folder_hint':
       'Dodaje folder i jego zawartość pierwszego poziomu.',
+  'add_source_confirm_title': 'Dodać ten folder?',
+  'add_source_confirm_body':
+      'Folder zostanie dodany jako źródło na ekranie głównym.',
+  'action_add': 'Dodaj',
   'action_cancel': 'Anuluj',
   'action_close': 'Zamknij',
 

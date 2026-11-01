@@ -2,7 +2,6 @@
 const Map<String, String> viVn = <String, String>{
   // Shell / brand.
   'app_title': 'Rain FUI',
-  'app_tagline': 'Giao diện Fluent cho FFmpeg',
 
   // Top bar.
   'top_bar_sidebar_toggle': 'Ẩn/hiện thanh bên',
@@ -13,14 +12,14 @@ const Map<String, String> viVn = <String, String>{
   'theme_system': 'Hệ thống',
 
   // Sidebar.
-  'sidebar_workspace': 'Không gian làm việc',
   'sidebar_home': 'Trang chủ',
 
   // Home content.
-  'home_title': 'Không gian làm việc',
   'home_empty_title': 'Chưa thêm mục nào',
   'home_empty_body': 'Dùng nút + để chọn tệp hoặc thư mục, hoặc kéo thả chúng vào bất kỳ đâu trong cửa sổ này.',
+  'home_empty_body_touch': 'Dùng nút + để chọn tệp hoặc thư mục.',
   'home_drop_hint': 'Thả để thêm',
+  'home_drop_hint_idle': 'Kéo tệp hoặc thư mục vào đây',
   'home_phase_notice': 'Bản xem trước: khung giao diện đã có, phần xử lý đa phương tiện và FFmpeg chưa được kết nối.',
   'home_sources_title': 'Nguồn đã thêm',
   'home_sources_empty': 'Các nguồn bạn thêm trong phiên này sẽ hiện ở đây.',
@@ -30,13 +29,17 @@ const Map<String, String> viVn = <String, String>{
   'bottom_bar_add': 'Thêm tệp hoặc thư mục',
 
   // Add-source dialog.
-  'add_source_title': 'Thêm vào không gian làm việc',
+  'add_source_title': 'Thêm nguồn',
   'add_source_body':
       'Chọn một hoặc nhiều tệp, hoặc chọn một thư mục để xem nội dung.',
   'add_source_files': 'Chọn tệp',
   'add_source_files_hint': 'Có thể chọn nhiều tệp cùng lúc.',
   'add_source_folder': 'Chọn thư mục',
   'add_source_folder_hint': 'Thêm thư mục và các mục con trực tiếp bên trong.',
+  'add_source_confirm_title': 'Thêm thư mục này?',
+  'add_source_confirm_body':
+      'Thư mục sẽ được liệt kê làm nguồn trên màn hình chính.',
+  'action_add': 'Thêm',
   'action_cancel': 'Hủy',
   'action_close': 'Đóng',
 

@@ -2,7 +2,6 @@
 const Map<String, String> nlNl = <String, String>{
   // Shell / brand.
   'app_title': 'Rain FUI',
-  'app_tagline': 'Een Fluent-interface voor FFmpeg',
 
   // Top bar.
   'top_bar_sidebar_toggle': 'Zijbalk tonen of verbergen',
@@ -13,14 +12,15 @@ const Map<String, String> nlNl = <String, String>{
   'theme_system': 'Systeem',
 
   // Sidebar.
-  'sidebar_workspace': 'Werkruimte',
   'sidebar_home': 'Home',
 
   // Home content.
-  'home_title': 'Werkruimte',
   'home_empty_title': 'Nog niets toegevoegd',
   'home_empty_body': 'Gebruik de knop + om bestanden of een map te kiezen, of sleep ze ergens in dit venster.',
+  'home_empty_body_touch':
+      'Gebruik de knop + om bestanden of een map te kiezen.',
   'home_drop_hint': 'Laat los om toe te voegen',
+  'home_drop_hint_idle': 'Sleep hier bestanden of een map naartoe',
   'home_phase_notice': 'Previewversie: de interface staat, maar mediabewerking en FFmpeg zijn nog niet aangesloten.',
   'home_sources_title': 'Toegevoegde bronnen',
   'home_sources_empty':
@@ -31,7 +31,7 @@ const Map<String, String> nlNl = <String, String>{
   'bottom_bar_add': 'Bestanden of mappen toevoegen',
 
   // Add-source dialog.
-  'add_source_title': 'Toevoegen aan werkruimte',
+  'add_source_title': 'Bronnen toevoegen',
   'add_source_body':
       'Kies een of meer bestanden, of kies een map om de inhoud te bekijken.',
   'add_source_files': 'Bestanden kiezen',
@@ -39,6 +39,10 @@ const Map<String, String> nlNl = <String, String>{
   'add_source_folder': 'Map kiezen',
   'add_source_folder_hint':
       'Voegt de map en de inhoud op het eerste niveau toe.',
+  'add_source_confirm_title': 'Deze map toevoegen?',
+  'add_source_confirm_body':
+      'De map wordt als bron op het startscherm vermeld.',
+  'action_add': 'Toevoegen',
   'action_cancel': 'Annuleren',
   'action_close': 'Sluiten',
 

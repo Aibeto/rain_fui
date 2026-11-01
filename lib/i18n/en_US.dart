@@ -6,7 +6,6 @@
 const Map<String, String> enUs = <String, String>{
   // Shell / brand.
   'app_title': 'Rain FUI',
-  'app_tagline': 'A Fluent shell for FFmpeg',
 
   // Top bar.
   'top_bar_sidebar_toggle': 'Toggle sidebar',
@@ -17,14 +16,14 @@ const Map<String, String> enUs = <String, String>{
   'theme_system': 'System',
 
   // Sidebar.
-  'sidebar_workspace': 'Workspace',
   'sidebar_home': 'Home',
 
   // Home content.
-  'home_title': 'Workspace',
   'home_empty_title': 'Nothing added yet',
   'home_empty_body': 'Use the + button to pick files or a folder, or drop them anywhere in this window.',
+  'home_empty_body_touch': 'Use the + button to pick files or a folder.',
   'home_drop_hint': 'Release to add',
+  'home_drop_hint_idle': 'Drag files or folders here',
   'home_phase_notice': 'Preview build: the UI skeleton is in place, media handling and FFmpeg are not wired up yet.',
   'home_sources_title': 'Added sources',
   'home_sources_empty': 'Sources you add in this session show up here.',
@@ -34,13 +33,17 @@ const Map<String, String> enUs = <String, String>{
   'bottom_bar_add': 'Add files or folders',
 
   // Add-source dialog.
-  'add_source_title': 'Add to workspace',
+  'add_source_title': 'Add sources',
   'add_source_body':
       'Pick one or more files, or choose a folder to see its contents.',
   'add_source_files': 'Choose files',
   'add_source_files_hint': 'Multiple selection is supported.',
   'add_source_folder': 'Choose folder',
   'add_source_folder_hint': 'Adds the folder and its first-level children.',
+  'add_source_confirm_title': 'Add this folder?',
+  'add_source_confirm_body':
+      'The folder will be listed as a source on the home screen.',
+  'action_add': 'Add',
   'action_cancel': 'Cancel',
   'action_close': 'Close',
 

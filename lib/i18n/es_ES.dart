@@ -2,7 +2,6 @@
 const Map<String, String> esEs = <String, String>{
   // Shell / brand.
   'app_title': 'Rain FUI',
-  'app_tagline': 'Una interfaz Fluent para FFmpeg',
 
   // Top bar.
   'top_bar_sidebar_toggle': 'Mostrar u ocultar la barra lateral',
@@ -13,14 +12,14 @@ const Map<String, String> esEs = <String, String>{
   'theme_system': 'Sistema',
 
   // Sidebar.
-  'sidebar_workspace': 'Espacio de trabajo',
   'sidebar_home': 'Inicio',
 
   // Home content.
-  'home_title': 'Espacio de trabajo',
   'home_empty_title': 'Aún no hay nada añadido',
   'home_empty_body': 'Usa el botón + para elegir archivos o una carpeta, o suéltalos en cualquier parte de esta ventana.',
+  'home_empty_body_touch': 'Usa el botón + para elegir archivos o una carpeta.',
   'home_drop_hint': 'Suelta para añadir',
+  'home_drop_hint_idle': 'Arrastra archivos o una carpeta aquí',
   'home_phase_notice': 'Versión de vista previa: la interfaz ya está lista, pero el tratamiento multimedia y FFmpeg aún no están conectados.',
   'home_sources_title': 'Fuentes añadidas',
   'home_sources_empty': 'Las fuentes que añadas en esta sesión aparecen aquí.',
@@ -30,13 +29,17 @@ const Map<String, String> esEs = <String, String>{
   'bottom_bar_add': 'Añadir archivos o carpetas',
 
   // Add-source dialog.
-  'add_source_title': 'Añadir al espacio de trabajo',
+  'add_source_title': 'Añadir fuentes',
   'add_source_body':
       'Elige uno o varios archivos, o una carpeta para ver su contenido.',
   'add_source_files': 'Elegir archivos',
   'add_source_files_hint': 'Se admite la selección múltiple.',
   'add_source_folder': 'Elegir carpeta',
   'add_source_folder_hint': 'Añade la carpeta y su contenido de primer nivel.',
+  'add_source_confirm_title': '¿Añadir esta carpeta?',
+  'add_source_confirm_body':
+      'La carpeta aparecerá como origen en la pantalla de inicio.',
+  'action_add': 'Añadir',
   'action_cancel': 'Cancelar',
   'action_close': 'Cerrar',
 

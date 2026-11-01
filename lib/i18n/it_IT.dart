@@ -2,7 +2,6 @@
 const Map<String, String> itIt = <String, String>{
   // Shell / brand.
   'app_title': 'Rain FUI',
-  'app_tagline': 'Un’interfaccia Fluent per FFmpeg',
 
   // Top bar.
   'top_bar_sidebar_toggle': 'Mostra o nascondi la barra laterale',
@@ -13,14 +12,15 @@ const Map<String, String> itIt = <String, String>{
   'theme_system': 'Sistema',
 
   // Sidebar.
-  'sidebar_workspace': 'Spazio di lavoro',
   'sidebar_home': 'Home',
 
   // Home content.
-  'home_title': 'Spazio di lavoro',
   'home_empty_title': 'Ancora nessun elemento',
   'home_empty_body': 'Usa il pulsante + per scegliere file o una cartella, oppure trascinali in qualsiasi punto di questa finestra.',
+  'home_empty_body_touch':
+      'Usa il pulsante + per scegliere file o una cartella.',
   'home_drop_hint': 'Rilascia per aggiungere',
+  'home_drop_hint_idle': 'Trascina qui file o una cartella',
   'home_phase_notice': 'Versione di anteprima: l’interfaccia è pronta, ma la gestione dei contenuti multimediali e FFmpeg non sono ancora collegate.',
   'home_sources_title': 'Sorgenti aggiunte',
   'home_sources_empty':
@@ -31,7 +31,7 @@ const Map<String, String> itIt = <String, String>{
   'bottom_bar_add': 'Aggiungi file o cartelle',
 
   // Add-source dialog.
-  'add_source_title': 'Aggiungi allo spazio di lavoro',
+  'add_source_title': 'Aggiungi sorgenti',
   'add_source_body':
       'Scegli uno o più file oppure una cartella per vederne il contenuto.',
   'add_source_files': 'Scegli file',
@@ -39,6 +39,10 @@ const Map<String, String> itIt = <String, String>{
   'add_source_folder': 'Scegli cartella',
   'add_source_folder_hint':
       'Aggiunge la cartella e il suo contenuto di primo livello.',
+  'add_source_confirm_title': 'Aggiungere questa cartella?',
+  'add_source_confirm_body':
+      'La cartella sarà elencata come origine nella schermata iniziale.',
+  'action_add': 'Aggiungi',
   'action_cancel': 'Annulla',
   'action_close': 'Chiudi',
 

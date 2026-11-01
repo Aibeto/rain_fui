@@ -2,7 +2,6 @@
 const Map<String, String> ar = <String, String>{
   // Shell / brand.
   'app_title': 'Rain FUI',
-  'app_tagline': 'واجهة Fluent لـ FFmpeg',
 
   // Top bar.
   'top_bar_sidebar_toggle': 'إظهار الشريط الجانبي أو إخفاؤه',
@@ -13,15 +12,15 @@ const Map<String, String> ar = <String, String>{
   'theme_system': 'النظام',
 
   // Sidebar.
-  'sidebar_workspace': 'مساحة العمل',
   'sidebar_home': 'الرئيسية',
 
   // Home content.
-  'home_title': 'مساحة العمل',
   'home_empty_title': 'لم تتم إضافة أي شيء بعد',
   'home_empty_body':
       'استخدم زر + لاختيار ملفات أو مجلد، أو أسقطها في أي مكان من هذه النافذة.',
+  'home_empty_body_touch': 'استخدم زر + لاختيار ملفات أو مجلد.',
   'home_drop_hint': 'أفلت للإضافة',
+  'home_drop_hint_idle': 'اسحب الملفات أو المجلد إلى هنا',
   'home_phase_notice': 'نسخة معاينة: هيكل الواجهة جاهز، أما معالجة الوسائط وFFmpeg فلم تُوصَل بعد.',
   'home_sources_title': 'المصادر المضافة',
   'home_sources_empty': 'تظهر هنا المصادر التي تضيفها في هذه الجلسة.',
@@ -31,12 +30,15 @@ const Map<String, String> ar = <String, String>{
   'bottom_bar_add': 'إضافة ملفات أو مجلدات',
 
   // Add-source dialog.
-  'add_source_title': 'إضافة إلى مساحة العمل',
+  'add_source_title': 'إضافة مصادر',
   'add_source_body': 'اختر ملفًا واحدًا أو أكثر، أو اختر مجلدًا لعرض محتوياته.',
   'add_source_files': 'اختيار ملفات',
   'add_source_files_hint': 'يمكنك اختيار أكثر من ملف.',
   'add_source_folder': 'اختيار مجلد',
   'add_source_folder_hint': 'يضيف المجلد ومحتوياته من المستوى الأول.',
+  'add_source_confirm_title': 'إضافة هذا المجلد؟',
+  'add_source_confirm_body': 'سيظهر المجلد كمصدر في الشاشة الرئيسية.',
+  'action_add': 'إضافة',
   'action_cancel': 'إلغاء',
   'action_close': 'إغلاق',
 
