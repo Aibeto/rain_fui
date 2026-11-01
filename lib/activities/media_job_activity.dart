@@ -1456,6 +1456,8 @@ class _OptionField extends StatelessWidget {
       case final OptionSpec other:
         return TextBox(
           controller: host.controllerFor(other),
+          // Empty means the flag is left out, so the hint says so.
+          placeholder: context.l10n(I18nKey.optionUnset),
           onChanged: (String value) => host.onChanged(other, value),
         );
     }
@@ -1619,7 +1621,9 @@ class _RangeFieldState extends State<_RangeField> {
               Expanded(
                 child: TextBox(
                   controller: _controller,
+                  // Says both what an empty box means and what range is legal.
                   placeholder:
+                      '${l10n(I18nKey.optionUnset)} · '
                       '${_format(widget.min)} - ${_format(widget.max)}',
                   onSubmitted: (String _) => _commit(),
                 ),
