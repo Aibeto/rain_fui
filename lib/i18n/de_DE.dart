@@ -1,9 +1,9 @@
 /// German (Germany) — formal "Sie" register.
 const Map<String, String> deDe = <String, String>{
-  // Shell / brand.
+  // Hülle / Marke.
   'app_title': 'Rain FUI',
 
-  // Top bar.
+  // Obere Leiste.
   'top_bar_sidebar_toggle': 'Seitenleiste ein- oder ausblenden',
   'top_bar_language': 'Sprache ändern',
   'top_bar_theme': 'Design',
@@ -11,10 +11,10 @@ const Map<String, String> deDe = <String, String>{
   'theme_dark': 'Dunkel',
   'theme_system': 'System',
 
-  // Sidebar.
+  // Seitenleiste.
   'sidebar_home': 'Start',
 
-  // Home content.
+  // Startinhalt.
   'home_empty_title': 'Noch nichts hinzugefügt',
   'home_empty_body': 'Wählen Sie über die Schaltfläche + Dateien oder einen Ordner aus, oder ziehen Sie sie an eine beliebige Stelle in diesem Fenster.',
   'home_empty_body_touch':
@@ -26,11 +26,11 @@ const Map<String, String> deDe = <String, String>{
   'home_sources_empty':
       'Quellen, die Sie in dieser Sitzung hinzufügen, erscheinen hier.',
 
-  // Bottom bar.
+  // Untere Leiste.
   'bottom_bar_home': 'Start',
   'bottom_bar_add': 'Dateien oder Ordner hinzufügen',
 
-  // Add-source dialog.
+  // Dialog zum Hinzufügen von Quellen.
   'add_source_title': 'Quellen hinzufügen',
   'add_source_body': 'Wählen Sie eine oder mehrere Dateien aus oder einen Ordner, um dessen Inhalt anzuzeigen.',
   'add_source_files': 'Dateien auswählen',
@@ -45,7 +45,7 @@ const Map<String, String> deDe = <String, String>{
   'action_cancel': 'Abbrechen',
   'action_close': 'Schließen',
 
-  // Selection result dialog.
+  // Dialog mit dem Auswahlergebnis.
   'result_files_title': 'Ausgewählte Dateien',
   'result_folder_title': 'Ausgewählter Ordner',
   'result_drop_title': 'Abgelegte Elemente',
@@ -58,9 +58,101 @@ const Map<String, String> deDe = <String, String>{
   'result_web_paths_unavailable': 'Browser geben keine lokalen Dateipfade preis, daher werden nur Namen angezeigt.',
   'result_read_error': 'Der Ordnerinhalt konnte nicht gelesen werden.',
 
-  // Errors.
+  // Fehler.
   'error_picker_failed': 'Die Dateiauswahl konnte nicht geöffnet werden.',
   'error_folder_unsupported_web': 'Die Ordnerauswahl ist im Browser nicht verfügbar. Wählen Sie stattdessen Dateien aus oder ziehen Sie einen Ordner auf das Fenster.',
   'error_folder_unsupported_android': 'Diese Android-Version kann keine Ordnerauswahl öffnen. Wählen Sie stattdessen Dateien aus.',
   'error_drop_failed': 'Die abgelegten Elemente konnten nicht gelesen werden.',
+
+  // Kodierformular.
+  'job_page_title': 'Datei codieren',
+  'job_section_codecs': 'Codec und Container',
+  'job_section_basic': 'Grundeinstellungen',
+  'job_section_advanced': 'Weitere Optionen',
+  'job_section_custom': 'Eigene Argumente',
+  'job_custom_hint':
+      'Zusätzliche FFmpeg-Argumente, vor dem Ausgabepfad eingefügt',
+  'job_label_video_codec': 'Videocodec',
+  'job_label_audio_codec': 'Audiocodec',
+  'job_label_container': 'Container',
+  'job_label_output_name': 'Ausgabename',
+  'job_no_video': 'Kein Video',
+  'job_no_audio': 'Kein Audio',
+  'job_no_container': 'Kein Container',
+  'job_no_options': 'Für diese Auswahl gibt es keine weiteren Optionen.',
+  'job_cancel': 'Abbrechen',
+  'job_start': 'Starten',
+  'job_discard_title': 'Diese Einstellungen verwerfen?',
+  'job_discard_body': 'Es wurde noch nichts eingereiht; beim Schließen dieser Seite gehen alle Auswahlentscheidungen verloren.',
+  'job_discard_keep': 'Weiter bearbeiten',
+  'job_discard_confirm': 'Verwerfen',
+  'media_type_video': 'Video',
+  'media_type_audio': 'Audio',
+  'media_type_image': 'Bild',
+  'media_type_unknown': 'Unbekannter Dateityp',
+
+  // Aufgabenliste.
+  'jobs_title': 'Aufgaben',
+  'jobs_empty': 'Dateien, die Sie zu codieren beginnen, erscheinen hier.',
+  'job_state_queued': 'In Warteschlange',
+  'job_state_running': 'Codierung läuft',
+  'job_state_paused': 'Angehalten',
+  'job_state_completed': 'Fertig',
+  'job_state_failed': 'Fehlgeschlagen',
+  'job_state_cancelled': 'Abgebrochen',
+  'job_pause': 'Anhalten',
+  'job_resume': 'Fortsetzen',
+  'job_stop': 'Stoppen',
+  'job_remove': 'Entfernen',
+  'job_pause_unsupported':
+      'Dieses System kann eine laufende Codierung nicht anhalten.',
+  'job_confirm_stop_title': 'Diese Aufgabe stoppen?',
+  'job_confirm_stop_body': 'Die unfertige Ausgabedatei bleibt auf dem Datenträger. Eine gestoppte Aufgabe lässt sich nicht fortsetzen.',
+  'job_confirm_stop_confirm': 'Stoppen',
+  'job_progress_unknown': 'Läuft',
+
+  // Optionsbezeichnungen.
+  'opt_quality_scale': 'Qualitätsskala',
+  'opt_quality_scale_audio': 'Audioqualität',
+  'opt_bitrate_video': 'Videobitrate',
+  'opt_bitrate_audio': 'Audiobitrate',
+  'opt_quant_min': 'Kleinster Quantisierer',
+  'opt_quant_max': 'Größter Quantisierer',
+  'opt_max_rate': 'Spitzenbitrate',
+  'opt_buf_size': 'Bitratenpuffer',
+  'opt_gop_size': 'GOP-Größe',
+  'opt_b_frames': 'B-Frames',
+  'opt_pixel_format': 'Pixelformat',
+  'opt_threads': 'Threads',
+  'opt_profile': 'Profil',
+  'opt_level': 'Level',
+  'opt_codec_level': 'Codec-Level',
+  'opt_mb_decision': 'Makroblock-Entscheidung',
+  'opt_trellis': 'Trellis',
+  'opt_mv_four_motion': 'Vier Bewegungsvektoren',
+  'opt_huffman': 'Huffman-Optimierung',
+  'opt_compression_level': 'Komprimierungsstufe',
+  'opt_prediction': 'Vorhersagemodus',
+  'opt_coder': 'Coder',
+  'opt_slices': 'Slices',
+  'opt_slice_crc': 'Slice-Prüfsummen',
+  'opt_vendor': 'Hersteller-Tag',
+  'opt_bits_per_mb': 'Bits pro Makroblock',
+  'opt_cutoff': 'Grenzfrequenz',
+  'opt_sample_rate': 'Abtastrate',
+  'opt_channels': 'Kanäle',
+  'opt_dial_norm': 'Dialogpegel',
+  'opt_dolby_surround': 'Dolby-Surround-Modus',
+  'opt_application': 'Anwendungsmodus',
+  'opt_frame_duration': 'Bilddauer',
+  'opt_mov_flags': 'MP4-Flags',
+  'opt_mov_fast_start': 'Index an den Anfang',
+  'opt_mov_fragmented': 'Ausgabe fragmentieren',
+  'opt_mov_metadata_tags': 'Metadaten-Tags kopieren',
+  'opt_cluster_time': 'Cluster-Dauer',
+  'opt_cluster_size': 'Clustergröße',
+  'opt_mpegts_flags': 'MPEG-TS-Flags',
+  'opt_flv_flags': 'FLV-Flags',
+  'opt_gif_loop': 'Anzahl der Schleifen',
+  'opt_page_duration': 'Seitendauer',
 };

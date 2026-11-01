@@ -1,9 +1,9 @@
 /// French (France).
 const Map<String, String> frFr = <String, String>{
-  // Shell / brand.
+  // Coque / marque.
   'app_title': 'Rain FUI',
 
-  // Top bar.
+  // Barre supérieure.
   'top_bar_sidebar_toggle': 'Afficher ou masquer la barre latérale',
   'top_bar_language': 'Changer de langue',
   'top_bar_theme': 'Thème',
@@ -11,26 +11,26 @@ const Map<String, String> frFr = <String, String>{
   'theme_dark': 'Sombre',
   'theme_system': 'Système',
 
-  // Sidebar.
+  // Barre latérale.
   'sidebar_home': 'Accueil',
 
-  // Home content.
+  // Contenu d’accueil.
   'home_empty_title': 'Aucun élément ajouté',
   'home_empty_body': 'Utilisez le bouton + pour choisir des fichiers ou un dossier, ou déposez-les n’importe où dans cette fenêtre.',
   'home_empty_body_touch':
       'Utilisez le bouton + pour choisir des fichiers ou un dossier.',
   'home_drop_hint': 'Relâchez pour ajouter',
-  'home_drop_hint_idle': 'Glissez des fichiers ou un dossier ici',
+  'home_drop_hint_idle': 'Déposez des fichiers ou des dossiers ici',
   'home_phase_notice': 'Version d’aperçu : l’interface est en place, mais le traitement des médias et FFmpeg ne sont pas encore connectés.',
   'home_sources_title': 'Sources ajoutées',
   'home_sources_empty':
       'Les sources ajoutées pendant cette session apparaissent ici.',
 
-  // Bottom bar.
+  // Barre inférieure.
   'bottom_bar_home': 'Accueil',
   'bottom_bar_add': 'Ajouter des fichiers ou des dossiers',
 
-  // Add-source dialog.
+  // Boîte d’ajout de sources.
   'add_source_title': 'Ajouter des sources',
   'add_source_body': 'Choisissez un ou plusieurs fichiers, ou un dossier pour en voir le contenu.',
   'add_source_files': 'Choisir des fichiers',
@@ -40,12 +40,12 @@ const Map<String, String> frFr = <String, String>{
       'Ajoute le dossier et son contenu de premier niveau.',
   'add_source_confirm_title': 'Ajouter ce dossier ?',
   'add_source_confirm_body':
-      'Le dossier sera listé comme source sur l’écran d’accueil.',
+      'Le dossier sera ajouté comme source sur l’écran d’accueil.',
   'action_add': 'Ajouter',
   'action_cancel': 'Annuler',
   'action_close': 'Fermer',
 
-  // Selection result dialog.
+  // Boîte de résultat de sélection.
   'result_files_title': 'Fichiers sélectionnés',
   'result_folder_title': 'Dossier sélectionné',
   'result_drop_title': 'Éléments déposés',
@@ -58,9 +58,101 @@ const Map<String, String> frFr = <String, String>{
   'result_web_paths_unavailable': 'Les navigateurs ne communiquent pas les chemins locaux, seuls les noms sont affichés.',
   'result_read_error': 'Impossible de lire le contenu du dossier.',
 
-  // Errors.
+  // Erreurs.
   'error_picker_failed': 'Impossible d’ouvrir le sélecteur de fichiers.',
   'error_folder_unsupported_web': 'La sélection de dossier n’est pas disponible dans un navigateur. Choisissez plutôt des fichiers, ou déposez un dossier sur la fenêtre.',
   'error_folder_unsupported_android': 'Cette version d’Android ne permet pas d’ouvrir un sélecteur de dossier. Choisissez plutôt des fichiers.',
   'error_drop_failed': 'Impossible de lire les éléments déposés.',
+
+  // Formulaire d’encodage.
+  'job_page_title': 'Encoder un fichier',
+  'job_section_codecs': 'Codec et conteneur',
+  'job_section_basic': 'Réglages de base',
+  'job_section_advanced': 'Options avancées',
+  'job_section_custom': 'Arguments personnalisés',
+  'job_custom_hint':
+      'Arguments FFmpeg supplémentaires, insérés avant le chemin de sortie',
+  'job_label_video_codec': 'Codec vidéo',
+  'job_label_audio_codec': 'Codec audio',
+  'job_label_container': 'Conteneur',
+  'job_label_output_name': 'Nom de sortie',
+  'job_no_video': 'Aucune vidéo',
+  'job_no_audio': 'Aucun audio',
+  'job_no_container': 'Aucun conteneur',
+  'job_no_options': 'Aucune option supplémentaire pour cette sélection.',
+  'job_cancel': 'Annuler',
+  'job_start': 'Démarrer',
+  'job_discard_title': 'Abandonner ces réglages ?',
+  'job_discard_body': 'Rien n’a encore été mis en file d’attente : fermer cette page abandonne tous les choix qu’elle contient.',
+  'job_discard_keep': 'Continuer la modification',
+  'job_discard_confirm': 'Abandonner',
+  'media_type_video': 'Vidéo',
+  'media_type_audio': 'Audio',
+  'media_type_image': 'Image',
+  'media_type_unknown': 'Type de fichier inconnu',
+
+  // Liste des tâches.
+  'jobs_title': 'Tâches',
+  'jobs_empty': 'Les fichiers que vous mettez en encodage apparaissent ici.',
+  'job_state_queued': 'En attente',
+  'job_state_running': 'Encodage',
+  'job_state_paused': 'En pause',
+  'job_state_completed': 'Terminé',
+  'job_state_failed': 'Échoué',
+  'job_state_cancelled': 'Annulé',
+  'job_pause': 'Pause',
+  'job_resume': 'Reprendre',
+  'job_stop': 'Arrêter',
+  'job_remove': 'Supprimer',
+  'job_pause_unsupported':
+      'Ce système ne permet pas de mettre en pause un encodage en cours.',
+  'job_confirm_stop_title': 'Arrêter cette tâche ?',
+  'job_confirm_stop_body': 'Le fichier de sortie inachevé reste sur le disque. Une tâche arrêtée ne peut pas être reprise.',
+  'job_confirm_stop_confirm': 'Arrêter',
+  'job_progress_unknown': 'En cours',
+
+  // Libellés d’options.
+  'opt_quality_scale': 'Échelle de qualité',
+  'opt_quality_scale_audio': 'Qualité audio',
+  'opt_bitrate_video': 'Débit vidéo',
+  'opt_bitrate_audio': 'Débit audio',
+  'opt_quant_min': 'Quantificateur minimal',
+  'opt_quant_max': 'Quantificateur maximal',
+  'opt_max_rate': 'Débit de pointe',
+  'opt_buf_size': 'Tampon de débit',
+  'opt_gop_size': 'Taille du GOP',
+  'opt_b_frames': 'Images B',
+  'opt_pixel_format': 'Format de pixel',
+  'opt_threads': 'Threads',
+  'opt_profile': 'Profil',
+  'opt_level': 'Niveau',
+  'opt_codec_level': 'Niveau du codec',
+  'opt_mb_decision': 'Décision par macrobloc',
+  'opt_trellis': 'Trellis',
+  'opt_mv_four_motion': 'Quatre vecteurs de mouvement',
+  'opt_huffman': 'Optimisation de Huffman',
+  'opt_compression_level': 'Niveau de compression',
+  'opt_prediction': 'Mode de prédiction',
+  'opt_coder': 'Codeur',
+  'opt_slices': 'Tranches',
+  'opt_slice_crc': 'Sommes de contrôle des tranches',
+  'opt_vendor': 'Étiquette du fournisseur',
+  'opt_bits_per_mb': 'Bits par macrobloc',
+  'opt_cutoff': 'Fréquence de coupure',
+  'opt_sample_rate': 'Fréquence d’échantillonnage',
+  'opt_channels': 'Canaux',
+  'opt_dial_norm': 'Niveau de dialogue',
+  'opt_dolby_surround': 'Mode Dolby Surround',
+  'opt_application': 'Mode d’application',
+  'opt_frame_duration': 'Durée d’une image',
+  'opt_mov_flags': 'Indicateurs MP4',
+  'opt_mov_fast_start': 'Placer l’index en tête',
+  'opt_mov_fragmented': 'Fragmenter la sortie',
+  'opt_mov_metadata_tags': 'Copier les métadonnées',
+  'opt_cluster_time': 'Durée d’un cluster',
+  'opt_cluster_size': 'Taille d’un cluster',
+  'opt_mpegts_flags': 'Indicateurs MPEG-TS',
+  'opt_flv_flags': 'Indicateurs FLV',
+  'opt_gif_loop': 'Nombre de boucles',
+  'opt_page_duration': 'Durée d’une page',
 };

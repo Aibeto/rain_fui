@@ -1,9 +1,9 @@
 /// Italian (Italy).
 const Map<String, String> itIt = <String, String>{
-  // Shell / brand.
+  // Interfaccia / marchio.
   'app_title': 'Rain FUI',
 
-  // Top bar.
+  // Barra superiore.
   'top_bar_sidebar_toggle': 'Mostra o nascondi la barra laterale',
   'top_bar_language': 'Cambia lingua',
   'top_bar_theme': 'Tema',
@@ -11,26 +11,26 @@ const Map<String, String> itIt = <String, String>{
   'theme_dark': 'Scuro',
   'theme_system': 'Sistema',
 
-  // Sidebar.
+  // Barra laterale.
   'sidebar_home': 'Home',
 
-  // Home content.
+  // Contenuto iniziale.
   'home_empty_title': 'Ancora nessun elemento',
   'home_empty_body': 'Usa il pulsante + per scegliere file o una cartella, oppure trascinali in qualsiasi punto di questa finestra.',
   'home_empty_body_touch':
       'Usa il pulsante + per scegliere file o una cartella.',
   'home_drop_hint': 'Rilascia per aggiungere',
-  'home_drop_hint_idle': 'Trascina qui file o una cartella',
+  'home_drop_hint_idle': 'Trascina qui file o cartelle',
   'home_phase_notice': 'Versione di anteprima: l’interfaccia è pronta, ma la gestione dei contenuti multimediali e FFmpeg non sono ancora collegate.',
   'home_sources_title': 'Sorgenti aggiunte',
   'home_sources_empty':
       'Le sorgenti aggiunte in questa sessione compaiono qui.',
 
-  // Bottom bar.
+  // Barra inferiore.
   'bottom_bar_home': 'Home',
   'bottom_bar_add': 'Aggiungi file o cartelle',
 
-  // Add-source dialog.
+  // Finestra di aggiunta sorgenti.
   'add_source_title': 'Aggiungi sorgenti',
   'add_source_body':
       'Scegli uno o più file oppure una cartella per vederne il contenuto.',
@@ -41,12 +41,12 @@ const Map<String, String> itIt = <String, String>{
       'Aggiunge la cartella e il suo contenuto di primo livello.',
   'add_source_confirm_title': 'Aggiungere questa cartella?',
   'add_source_confirm_body':
-      'La cartella sarà elencata come origine nella schermata iniziale.',
+      'La cartella comparirà come sorgente nella schermata iniziale.',
   'action_add': 'Aggiungi',
   'action_cancel': 'Annulla',
   'action_close': 'Chiudi',
 
-  // Selection result dialog.
+  // Finestra del risultato della selezione.
   'result_files_title': 'File selezionati',
   'result_folder_title': 'Cartella selezionata',
   'result_drop_title': 'Elementi trascinati',
@@ -60,9 +60,101 @@ const Map<String, String> itIt = <String, String>{
   'result_read_error':
       'Non è stato possibile leggere il contenuto della cartella.',
 
-  // Errors.
+  // Errori.
   'error_picker_failed': 'Non è stato possibile aprire il selettore di file.',
   'error_folder_unsupported_web': 'La selezione delle cartelle non è disponibile nel browser. Scegli dei file oppure trascina una cartella sulla finestra.',
   'error_folder_unsupported_android': 'Questa versione di Android non può aprire un selettore di cartelle. Scegli dei file.',
   'error_drop_failed': 'Non è stato possibile leggere gli elementi trascinati.',
+
+  // Modulo di codifica.
+  'job_page_title': 'Codifica file',
+  'job_section_codecs': 'Codec e contenitore',
+  'job_section_basic': 'Impostazioni di base',
+  'job_section_advanced': 'Altre opzioni',
+  'job_section_custom': 'Argomenti personalizzati',
+  'job_custom_hint':
+      'Argomenti FFmpeg aggiuntivi, inseriti prima del percorso di output',
+  'job_label_video_codec': 'Codec video',
+  'job_label_audio_codec': 'Codec audio',
+  'job_label_container': 'Contenitore',
+  'job_label_output_name': 'Nome del file di output',
+  'job_no_video': 'Nessun video',
+  'job_no_audio': 'Nessun audio',
+  'job_no_container': 'Nessun contenitore',
+  'job_no_options': 'Questa selezione non ha opzioni aggiuntive.',
+  'job_cancel': 'Annulla',
+  'job_start': 'Avvia',
+  'job_discard_title': 'Scartare queste impostazioni?',
+  'job_discard_body': 'Non è ancora stato messo nulla in coda: chiudendo questa pagina si perdono tutte le scelte fatte.',
+  'job_discard_keep': 'Continua a modificare',
+  'job_discard_confirm': 'Scarta',
+  'media_type_video': 'Video',
+  'media_type_audio': 'Audio',
+  'media_type_image': 'Immagine',
+  'media_type_unknown': 'Tipo di file sconosciuto',
+
+  // Elenco attività.
+  'jobs_title': 'Attività',
+  'jobs_empty': 'I file che avvii alla codifica compaiono qui.',
+  'job_state_queued': 'In coda',
+  'job_state_running': 'Codifica in corso',
+  'job_state_paused': 'In pausa',
+  'job_state_completed': 'Completato',
+  'job_state_failed': 'Non riuscito',
+  'job_state_cancelled': 'Annullato',
+  'job_pause': 'Sospendi',
+  'job_resume': 'Riprendi',
+  'job_stop': 'Interrompi',
+  'job_remove': 'Rimuovi',
+  'job_pause_unsupported':
+      'Questo sistema non può sospendere una codifica in corso.',
+  'job_confirm_stop_title': 'Interrompere questa attività?',
+  'job_confirm_stop_body': 'Il file di output incompleto resta sul disco. Un’attività interrotta non può essere ripresa.',
+  'job_confirm_stop_confirm': 'Interrompi',
+  'job_progress_unknown': 'In corso',
+
+  // Etichette delle opzioni.
+  'opt_quality_scale': 'Scala di qualità',
+  'opt_quality_scale_audio': 'Qualità audio',
+  'opt_bitrate_video': 'Bitrate video',
+  'opt_bitrate_audio': 'Bitrate audio',
+  'opt_quant_min': 'Quantizzatore minimo',
+  'opt_quant_max': 'Quantizzatore massimo',
+  'opt_max_rate': 'Bitrate di picco',
+  'opt_buf_size': 'Buffer del bitrate',
+  'opt_gop_size': 'Dimensione GOP',
+  'opt_b_frames': 'Frame B',
+  'opt_pixel_format': 'Formato pixel',
+  'opt_threads': 'Thread',
+  'opt_profile': 'Profilo',
+  'opt_level': 'Livello',
+  'opt_codec_level': 'Livello codec',
+  'opt_mb_decision': 'Decisione per macroblocco',
+  'opt_trellis': 'Trellis',
+  'opt_mv_four_motion': 'Quattro vettori di movimento',
+  'opt_huffman': 'Ottimizzazione di Huffman',
+  'opt_compression_level': 'Livello di compressione',
+  'opt_prediction': 'Modalità di previsione',
+  'opt_coder': 'Coder',
+  'opt_slices': 'Slice',
+  'opt_slice_crc': 'Checksum delle slice',
+  'opt_vendor': 'Tag del produttore',
+  'opt_bits_per_mb': 'Bit per macroblocco',
+  'opt_cutoff': 'Frequenza di taglio',
+  'opt_sample_rate': 'Frequenza di campionamento',
+  'opt_channels': 'Canali',
+  'opt_dial_norm': 'Livello del dialogo',
+  'opt_dolby_surround': 'Modalità Dolby Surround',
+  'opt_application': 'Modalità applicativa',
+  'opt_frame_duration': 'Durata del frame',
+  'opt_mov_flags': 'Flag MP4',
+  'opt_mov_fast_start': 'Indice all’inizio',
+  'opt_mov_fragmented': 'Frammenta l’output',
+  'opt_mov_metadata_tags': 'Copia i tag dei metadati',
+  'opt_cluster_time': 'Durata del cluster',
+  'opt_cluster_size': 'Dimensione del cluster',
+  'opt_mpegts_flags': 'Flag MPEG-TS',
+  'opt_flv_flags': 'Flag FLV',
+  'opt_gif_loop': 'Numero di cicli',
+  'opt_page_duration': 'Durata della pagina',
 };

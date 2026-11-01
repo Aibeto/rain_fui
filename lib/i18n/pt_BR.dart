@@ -1,9 +1,9 @@
 /// Brazilian Portuguese (Brazil) — "arquivo", "pasta", "selecionar".
 const Map<String, String> ptBr = <String, String>{
-  // Shell / brand.
+  // Interface / marca.
   'app_title': 'Rain FUI',
 
-  // Top bar.
+  // Barra superior.
   'top_bar_sidebar_toggle': 'Mostrar ou ocultar a barra lateral',
   'top_bar_language': 'Alterar idioma',
   'top_bar_theme': 'Tema',
@@ -11,25 +11,25 @@ const Map<String, String> ptBr = <String, String>{
   'theme_dark': 'Escuro',
   'theme_system': 'Sistema',
 
-  // Sidebar.
+  // Barra lateral.
   'sidebar_home': 'Início',
 
-  // Home content.
+  // Conteúdo inicial.
   'home_empty_title': 'Nada adicionado ainda',
   'home_empty_body': 'Use o botão + para selecionar arquivos ou uma pasta, ou arraste e solte em qualquer lugar desta janela.',
   'home_empty_body_touch':
       'Use o botão + para selecionar arquivos ou uma pasta.',
   'home_drop_hint': 'Solte para adicionar',
-  'home_drop_hint_idle': 'Arraste arquivos ou uma pasta para cá',
+  'home_drop_hint_idle': 'Arraste arquivos ou pastas para cá',
   'home_phase_notice': 'Versão de prévia: a interface já está pronta, mas o processamento de mídia e o FFmpeg ainda não estão conectados.',
   'home_sources_title': 'Fontes adicionadas',
   'home_sources_empty': 'As fontes adicionadas nesta sessão aparecem aqui.',
 
-  // Bottom bar.
+  // Barra inferior.
   'bottom_bar_home': 'Início',
   'bottom_bar_add': 'Adicionar arquivos ou pastas',
 
-  // Add-source dialog.
+  // Diálogo de adicionar fontes.
   'add_source_title': 'Adicionar fontes',
   'add_source_body':
       'Selecione um ou mais arquivos, ou uma pasta para ver o conteúdo.',
@@ -39,13 +39,12 @@ const Map<String, String> ptBr = <String, String>{
   'add_source_folder_hint':
       'Adiciona a pasta e seu conteúdo de primeiro nível.',
   'add_source_confirm_title': 'Adicionar esta pasta?',
-  'add_source_confirm_body':
-      'A pasta será listada como origem na tela inicial.',
+  'add_source_confirm_body': 'A pasta será listada como fonte na tela inicial.',
   'action_add': 'Adicionar',
   'action_cancel': 'Cancelar',
   'action_close': 'Fechar',
 
-  // Selection result dialog.
+  // Diálogo de resultado da seleção.
   'result_files_title': 'Arquivos selecionados',
   'result_folder_title': 'Pasta selecionada',
   'result_drop_title': 'Itens arrastados',
@@ -58,9 +57,101 @@ const Map<String, String> ptBr = <String, String>{
   'result_web_paths_unavailable': 'Os navegadores não expõem caminhos locais, então apenas os nomes são exibidos.',
   'result_read_error': 'Não foi possível ler o conteúdo da pasta.',
 
-  // Errors.
+  // Erros.
   'error_picker_failed': 'Não foi possível abrir o seletor de arquivos.',
   'error_folder_unsupported_web': 'A seleção de pastas não está disponível no navegador. Selecione arquivos ou arraste uma pasta para a janela.',
   'error_folder_unsupported_android': 'Esta versão do Android não pode abrir um seletor de pastas. Selecione arquivos.',
   'error_drop_failed': 'Não foi possível ler os itens arrastados.',
+
+  // Formulário de codificação.
+  'job_page_title': 'Codificar arquivo',
+  'job_section_codecs': 'Codec e contêiner',
+  'job_section_basic': 'Configurações básicas',
+  'job_section_advanced': 'Mais opções',
+  'job_section_custom': 'Argumentos personalizados',
+  'job_custom_hint':
+      'Argumentos extras do FFmpeg, inseridos antes do caminho de saída',
+  'job_label_video_codec': 'Codec de vídeo',
+  'job_label_audio_codec': 'Codec de áudio',
+  'job_label_container': 'Contêiner',
+  'job_label_output_name': 'Nome do arquivo de saída',
+  'job_no_video': 'Sem vídeo',
+  'job_no_audio': 'Sem áudio',
+  'job_no_container': 'Sem contêiner',
+  'job_no_options': 'Esta seleção não tem opções extras.',
+  'job_cancel': 'Cancelar',
+  'job_start': 'Iniciar',
+  'job_discard_title': 'Descartar estas configurações?',
+  'job_discard_body': 'Nada foi colocado na fila ainda, então fechar esta página descarta todas as escolhas feitas.',
+  'job_discard_keep': 'Continuar editando',
+  'job_discard_confirm': 'Descartar',
+  'media_type_video': 'Vídeo',
+  'media_type_audio': 'Áudio',
+  'media_type_image': 'Imagem',
+  'media_type_unknown': 'Tipo de arquivo desconhecido',
+
+  // Lista de tarefas.
+  'jobs_title': 'Tarefas',
+  'jobs_empty': 'Os arquivos que você começar a codificar aparecem aqui.',
+  'job_state_queued': 'Na fila',
+  'job_state_running': 'Codificando',
+  'job_state_paused': 'Pausado',
+  'job_state_completed': 'Concluído',
+  'job_state_failed': 'Falhou',
+  'job_state_cancelled': 'Cancelado',
+  'job_pause': 'Pausar',
+  'job_resume': 'Retomar',
+  'job_stop': 'Parar',
+  'job_remove': 'Remover',
+  'job_pause_unsupported':
+      'Este sistema não consegue pausar uma codificação em andamento.',
+  'job_confirm_stop_title': 'Parar esta tarefa?',
+  'job_confirm_stop_body': 'O arquivo de saída inacabado permanece no disco. Uma tarefa interrompida não pode ser retomada.',
+  'job_confirm_stop_confirm': 'Parar',
+  'job_progress_unknown': 'Em andamento',
+
+  // Rótulos das opções.
+  'opt_quality_scale': 'Escala de qualidade',
+  'opt_quality_scale_audio': 'Qualidade do áudio',
+  'opt_bitrate_video': 'Taxa de bits do vídeo',
+  'opt_bitrate_audio': 'Taxa de bits do áudio',
+  'opt_quant_min': 'Quantizador mínimo',
+  'opt_quant_max': 'Quantizador máximo',
+  'opt_max_rate': 'Taxa de bits de pico',
+  'opt_buf_size': 'Buffer de taxa',
+  'opt_gop_size': 'Tamanho do GOP',
+  'opt_b_frames': 'Quadros B',
+  'opt_pixel_format': 'Formato de pixel',
+  'opt_threads': 'Threads',
+  'opt_profile': 'Perfil',
+  'opt_level': 'Nível',
+  'opt_codec_level': 'Nível do codec',
+  'opt_mb_decision': 'Decisão por macrobloco',
+  'opt_trellis': 'Trellis',
+  'opt_mv_four_motion': 'Quatro vetores de movimento',
+  'opt_huffman': 'Otimização de Huffman',
+  'opt_compression_level': 'Nível de compressão',
+  'opt_prediction': 'Modo de predição',
+  'opt_coder': 'Coder',
+  'opt_slices': 'Slices',
+  'opt_slice_crc': 'Somas de verificação das slices',
+  'opt_vendor': 'Tag do fabricante',
+  'opt_bits_per_mb': 'Bits por macrobloco',
+  'opt_cutoff': 'Frequência de corte',
+  'opt_sample_rate': 'Taxa de amostragem',
+  'opt_channels': 'Canais',
+  'opt_dial_norm': 'Nível de diálogo',
+  'opt_dolby_surround': 'Modo Dolby Surround',
+  'opt_application': 'Modo de aplicação',
+  'opt_frame_duration': 'Duração do quadro',
+  'opt_mov_flags': 'Flags MP4',
+  'opt_mov_fast_start': 'Índice no início',
+  'opt_mov_fragmented': 'Fragmentar a saída',
+  'opt_mov_metadata_tags': 'Copiar tags de metadados',
+  'opt_cluster_time': 'Duração do cluster',
+  'opt_cluster_size': 'Tamanho do cluster',
+  'opt_mpegts_flags': 'Flags MPEG-TS',
+  'opt_flv_flags': 'Flags FLV',
+  'opt_gif_loop': 'Número de repetições',
+  'opt_page_duration': 'Duração da página',
 };
