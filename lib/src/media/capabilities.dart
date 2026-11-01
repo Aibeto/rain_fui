@@ -79,8 +79,21 @@ abstract final class MediaCapabilities {
   }) {
     return kContainers
         .where((ContainerSpec container) {
-          if (kind == MediaKind.audio && !container.audioOnly) {
-            return false;
+          // The container has to be able to carry what the source holds. A
+          // video-only muxer cannot take an audio file, and a pure audio
+          // container silently drops the picture.
+          switch (kind) {
+            case MediaKind.video:
+            case MediaKind.image:
+              if (container.videoCodecs.isEmpty) {
+                return false;
+              }
+            case MediaKind.audio:
+              if (container.audioCodecs.isEmpty) {
+                return false;
+              }
+            case MediaKind.unknown:
+              break;
           }
           if (videoCodecId != null && !container.acceptsVideo(videoCodecId)) {
             return false;

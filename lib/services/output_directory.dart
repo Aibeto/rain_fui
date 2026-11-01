@@ -6,7 +6,8 @@
 library;
 
 import 'output_directory_stub.dart'
-    if (dart.library.io) 'output_directory_io.dart' as impl;
+    if (dart.library.io) 'output_directory_io.dart'
+    as impl;
 
 /// Resolves and creates the output directory.
 abstract final class OutputDirectory {

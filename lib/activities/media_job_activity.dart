@@ -158,6 +158,18 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
     setState(() {
       _video = codec;
       _values.removeWhere((String flag, _) => _isVideoFlag(flag));
+      // The new encoder may not fit the current container; move to the first
+      // container that can hold it instead of leaving an impossible pair.
+      if (_container != null &&
+          codec != null &&
+          !_container!.acceptsVideo(codec.id)) {
+        final List<ContainerSpec> allowed = MediaCapabilities.containersFor(
+          kind: _kind,
+          videoCodecId: codec.id,
+          audioCodecId: _audio?.id,
+        );
+        _container = allowed.isEmpty ? null : allowed.first;
+      }
     });
   }
 
@@ -165,6 +177,16 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
     setState(() {
       _audio = codec;
       _values.removeWhere((String flag, _) => _isAudioFlag(flag));
+      if (_container != null &&
+          codec != null &&
+          !_container!.acceptsAudio(codec.id)) {
+        final List<ContainerSpec> allowed = MediaCapabilities.containersFor(
+          kind: _kind,
+          videoCodecId: _video?.id,
+          audioCodecId: codec.id,
+        );
+        _container = allowed.isEmpty ? null : allowed.first;
+      }
     });
   }
 
@@ -377,7 +399,14 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
                 ),
               ),
             ),
-            _ActionBar(onCancel: _cancel, onStart: _start),
+            _ActionBar(
+              onCancel: _cancel,
+              onStart: _start,
+              canStart:
+                  _container != null &&
+                  (_kind != MediaKind.video || _video != null) &&
+                  (_kind != MediaKind.audio || _audio != null),
+            ),
           ],
         ),
       ),
@@ -1125,10 +1154,17 @@ class _AdvancedExpander extends StatelessWidget {
 }
 
 class _ActionBar extends StatelessWidget {
-  const _ActionBar({required this.onCancel, required this.onStart});
+  const _ActionBar({
+    required this.onCancel,
+    required this.onStart,
+    required this.canStart,
+  });
 
   final VoidCallback onCancel;
-  final VoidCallback onStart;
+  final VoidCallback? onStart;
+
+  /// False while the current codec pair has no container to go into.
+  final bool canStart;
 
   @override
   Widget build(BuildContext context) {
@@ -1148,7 +1184,10 @@ class _ActionBar extends StatelessWidget {
         children: <Widget>[
           Button(onPressed: onCancel, child: Text(l10n(I18nKey.jobCancel))),
           const Spacer(),
-          FilledButton(onPressed: onStart, child: Text(l10n(I18nKey.jobStart))),
+          FilledButton(
+            onPressed: canStart ? onStart : null,
+            child: Text(l10n(I18nKey.jobStart)),
+          ),
         ],
       ),
     );
