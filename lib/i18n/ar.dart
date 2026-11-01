@@ -40,6 +40,10 @@ const Map<String, String> ar = <String, String>{
   'add_source_confirm_body': 'سيظهر المجلد كمصدر في الشاشة الرئيسية.',
   'action_add': 'إضافة',
   'option_unset': 'غير محدد',
+  'job_section_input': 'الإدخال',
+  'job_label_video_decoder': 'فاك ترميز الفيديو',
+  'job_label_audio_decoder': 'فاك ترميز الصوت',
+  'job_decoder_auto': 'تلقائي (كشف)',
   'action_cancel': 'إلغاء',
   'action_close': 'إغلاق',
 

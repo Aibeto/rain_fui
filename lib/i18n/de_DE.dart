@@ -43,6 +43,10 @@ const Map<String, String> deDe = <String, String>{
       'Der Ordner wird auf der Startseite als Quelle aufgeführt.',
   'action_add': 'Hinzufügen',
   'option_unset': 'Nicht gesetzt',
+  'job_section_input': 'Eingabe',
+  'job_label_video_decoder': 'Videodecoder',
+  'job_label_audio_decoder': 'Audiodecoder',
+  'job_decoder_auto': 'Automatisch (erkennen)',
   'action_cancel': 'Abbrechen',
   'action_close': 'Schließen',
 

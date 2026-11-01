@@ -45,6 +45,10 @@ const Map<String, String> enUs = <String, String>{
       'The folder will be listed as a source on the home screen.',
   'action_add': 'Add',
   'option_unset': 'Not set',
+  'job_section_input': 'Input',
+  'job_label_video_decoder': 'Video decoder',
+  'job_label_audio_decoder': 'Audio decoder',
+  'job_decoder_auto': 'Auto (detect)',
   'action_cancel': 'Cancel',
   'action_close': 'Close',
 

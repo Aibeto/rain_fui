@@ -44,6 +44,10 @@ const Map<String, String> itIt = <String, String>{
       'La cartella comparirà come sorgente nella schermata iniziale.',
   'action_add': 'Aggiungi',
   'option_unset': 'Non impostato',
+  'job_section_input': 'Ingresso',
+  'job_label_video_decoder': 'Decodificatore video',
+  'job_label_audio_decoder': 'Decodificatore audio',
+  'job_decoder_auto': 'Automatico (rileva)',
   'action_cancel': 'Annulla',
   'action_close': 'Chiudi',
 

@@ -41,6 +41,10 @@ const Map<String, String> esEs = <String, String>{
       'La carpeta aparecerá como fuente en la pantalla de inicio.',
   'action_add': 'Añadir',
   'option_unset': 'Sin definir',
+  'job_section_input': 'Entrada',
+  'job_label_video_decoder': 'Decodificador de vídeo',
+  'job_label_audio_decoder': 'Decodificador de audio',
+  'job_decoder_auto': 'Automático (detectar)',
   'action_cancel': 'Cancelar',
   'action_close': 'Cerrar',
 

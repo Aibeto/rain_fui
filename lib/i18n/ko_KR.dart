@@ -39,6 +39,10 @@ const Map<String, String> koKr = <String, String>{
   'add_source_confirm_body': '폴더가 홈 화면에 소스로 표시됩니다.',
   'action_add': '추가',
   'option_unset': '설정 안 함',
+  'job_section_input': '입력',
+  'job_label_video_decoder': '비디오 디코더',
+  'job_label_audio_decoder': '오디오 디코더',
+  'job_decoder_auto': '자동(감지)',
   'action_cancel': '취소',
   'action_close': '닫기',
 

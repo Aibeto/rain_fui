@@ -44,6 +44,10 @@ const Map<String, String> nlNl = <String, String>{
       'De map wordt als bron op het startscherm vermeld.',
   'action_add': 'Toevoegen',
   'option_unset': 'Niet ingesteld',
+  'job_section_input': 'Invoer',
+  'job_label_video_decoder': 'Videodecoder',
+  'job_label_audio_decoder': 'Audiodecoder',
+  'job_decoder_auto': 'Automatisch (detecteren)',
   'action_cancel': 'Annuleren',
   'action_close': 'Sluiten',
 

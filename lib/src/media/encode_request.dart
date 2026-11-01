@@ -16,6 +16,8 @@ class EncodeRequest {
     required this.container,
     required this.videoCodec,
     required this.audioCodec,
+    this.videoDecoder,
+    this.audioDecoder,
     this.optionValues = const <String, String>{},
     this.customArgs = '',
   });
@@ -40,6 +42,12 @@ class EncodeRequest {
 
   /// Selected audio encoder, or null for "no audio stream".
   final CodecSpec? audioCodec;
+
+  /// Forced input video decoder, or null to let FFmpeg detect it.
+  final String? videoDecoder;
+
+  /// Forced input audio decoder, or null to let FFmpeg detect it.
+  final String? audioDecoder;
 
   /// Option flag to raw value, as edited in the form.
   final Map<String, String> optionValues;
@@ -129,6 +137,15 @@ List<String> splitCommandLine(String input) {
 List<String> buildEncodeArgs(EncodeRequest request) {
   // Banner, stdin and progress flags are injected by FfmpegCommand itself.
   final List<String> args = <String>['-y'];
+  // Input-side options must come before `-i` to affect the decoder.
+  final String? videoDecoder = request.videoDecoder;
+  if (videoDecoder != null && videoDecoder.isNotEmpty) {
+    args.addAll(<String>['-c:v', videoDecoder]);
+  }
+  final String? audioDecoder = request.audioDecoder;
+  if (audioDecoder != null && audioDecoder.isNotEmpty) {
+    args.addAll(<String>['-c:a', audioDecoder]);
+  }
   final String? inputPath = request.inputPath;
   if (inputPath != null && inputPath.isNotEmpty) {
     args.addAll(<String>['-i', inputPath]);

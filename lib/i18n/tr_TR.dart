@@ -40,6 +40,10 @@ const Map<String, String> trTr = <String, String>{
   'add_source_confirm_body': 'Klasör ana ekranda kaynak olarak listelenir.',
   'action_add': 'Ekle',
   'option_unset': 'Ayarlanmadı',
+  'job_section_input': 'Giriş',
+  'job_label_video_decoder': 'Video çözücü',
+  'job_label_audio_decoder': 'Ses çözücü',
+  'job_decoder_auto': 'Otomatik (algıla)',
   'action_cancel': 'İptal',
   'action_close': 'Kapat',
 

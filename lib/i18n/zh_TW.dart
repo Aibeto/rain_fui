@@ -39,6 +39,10 @@ const Map<String, String> zhTw = <String, String>{
   'add_source_confirm_body': '該資料夾會作為來源顯示在首頁上。',
   'action_add': '新增',
   'option_unset': '不設定',
+  'job_section_input': '輸入',
+  'job_label_video_decoder': '視訊解碼器',
+  'job_label_audio_decoder': '音訊解碼器',
+  'job_decoder_auto': '自動（識別）',
   'action_cancel': '取消',
   'action_close': '關閉',
 

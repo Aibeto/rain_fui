@@ -39,6 +39,10 @@ const Map<String, String> zhCn = <String, String>{
   'add_source_confirm_body': '该文件夹会作为来源显示在主页上。',
   'action_add': '添加',
   'option_unset': '不设置',
+  'job_section_input': '输入',
+  'job_label_video_decoder': '视频解码器',
+  'job_label_audio_decoder': '音频解码器',
+  'job_decoder_auto': '自动（识别）',
   'action_cancel': '取消',
   'action_close': '关闭',
 

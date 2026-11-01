@@ -39,6 +39,10 @@ const Map<String, String> jaJp = <String, String>{
   'add_source_confirm_body': 'フォルダーはホーム画面にソースとして表示されます。',
   'action_add': '追加',
   'option_unset': '未設定',
+  'job_section_input': '入力',
+  'job_label_video_decoder': '映像デコーダー',
+  'job_label_audio_decoder': '音声デコーダー',
+  'job_decoder_auto': '自動（判別）',
   'action_cancel': 'キャンセル',
   'action_close': '閉じる',
 

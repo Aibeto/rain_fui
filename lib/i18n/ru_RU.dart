@@ -39,6 +39,10 @@ const Map<String, String> ruRu = <String, String>{
   'add_source_confirm_body': 'Папка появится как источник на главном экране.',
   'action_add': 'Добавить',
   'option_unset': 'Не задано',
+  'job_section_input': 'Вход',
+  'job_label_video_decoder': 'Видеодекодер',
+  'job_label_audio_decoder': 'Аудиодекодер',
+  'job_decoder_auto': 'Автоматически (определить)',
   'action_cancel': 'Отмена',
   'action_close': 'Закрыть',
 

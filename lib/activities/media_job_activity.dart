@@ -16,6 +16,7 @@ import '../models/source_selection.dart';
 import '../services/job_queue.dart';
 import '../services/output_directory.dart';
 import '../src/media/capabilities.dart';
+import '../src/media/capabilities_data.dart';
 import '../src/media/codec_spec.dart';
 import '../src/media/container_spec.dart';
 import '../src/media/encode_request.dart';
@@ -51,6 +52,8 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
   CodecSpec? _audio;
   ContainerSpec? _container;
   String? _outputDir;
+  String? _videoDecoder;
+  String? _audioDecoder;
   final Map<String, String> _values = <String, String>{};
   bool _advancedOpen = false;
 
@@ -227,6 +230,8 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
       container: _container!,
       videoCodec: _video,
       audioCodec: _audio,
+      videoDecoder: _kind == MediaKind.audio ? null : _videoDecoder,
+      audioDecoder: _kind == MediaKind.image ? null : _audioDecoder,
       optionValues: Map<String, String>.of(_values),
       customArgs: _customArgs.text,
     );
@@ -324,6 +329,18 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
                           ? null
                           : p.dirname(_outputPath()!),
                       onChanged: () => setState(() {}),
+                    ),
+                    const SizedBox(height: 18),
+                    _sectionTitle(context, I18nKey.jobSectionInput),
+                    const SizedBox(height: 8),
+                    _DecoderRows(
+                      kind: _kind,
+                      videoDecoder: _videoDecoder,
+                      audioDecoder: _audioDecoder,
+                      onVideo: (String? value) =>
+                          setState(() => _videoDecoder = value),
+                      onAudio: (String? value) =>
+                          setState(() => _audioDecoder = value),
                     ),
                     const SizedBox(height: 18),
                     _sectionTitle(context, I18nKey.jobSectionBasic),
@@ -623,6 +640,100 @@ class _PickerRow<T> extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Optional input decoders; leaving them on auto is the normal case.
+class _DecoderRows extends StatelessWidget {
+  const _DecoderRows({
+    required this.kind,
+    required this.videoDecoder,
+    required this.audioDecoder,
+    required this.onVideo,
+    required this.onAudio,
+  });
+
+  final MediaKind kind;
+  final String? videoDecoder;
+  final String? audioDecoder;
+  final ValueChanged<String?> onVideo;
+  final ValueChanged<String?> onAudio;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool wantsVideo = kind != MediaKind.audio;
+    final bool wantsAudio = kind != MediaKind.image;
+    return Column(
+      children: <Widget>[
+        if (wantsVideo)
+          _DecoderRow(
+            labelKey: I18nKey.jobLabelVideoDecoder,
+            value: videoDecoder,
+            options: kVideoDecoders,
+            onChanged: onVideo,
+          ),
+        if (wantsVideo && wantsAudio) const SizedBox(height: 8),
+        if (wantsAudio)
+          _DecoderRow(
+            labelKey: I18nKey.jobLabelAudioDecoder,
+            value: audioDecoder,
+            options: kAudioDecoders,
+            onChanged: onAudio,
+          ),
+      ],
+    );
+  }
+}
+
+class _DecoderRow extends StatelessWidget {
+  const _DecoderRow({
+    required this.labelKey,
+    required this.value,
+    required this.options,
+    required this.onChanged,
+  });
+
+  final String labelKey;
+  final String? value;
+  final List<String> options;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final FluentThemeData theme = FluentTheme.of(context);
+    final AppL10n l10n = context.l10n;
+    return Row(
+      children: <Widget>[
+        SizedBox(
+          width: 132,
+          child: Text(l10n(labelKey), style: theme.typography.body),
+        ),
+        SizedBox(
+          width: 220,
+          child: ComboBox<String?>(
+            isExpanded: true,
+            popupColor: theme.menuColor,
+            value: value,
+            placeholder: Text(l10n(I18nKey.jobDecoderAuto)),
+            items: <ComboBoxItem<String?>>[
+              ComboBoxItem<String?>(
+                value: null,
+                child: Text(l10n(I18nKey.jobDecoderAuto)),
+              ),
+              for (final String name in options)
+                ComboBoxItem<String?>(
+                  value: name,
+                  child: Text(
+                    name,
+                    style: AppTheme.mono(theme.typography.body, l10n.locale),
+                  ),
+                ),
+            ],
+            onChanged: onChanged,
+          ),
+        ),
+      ],
     );
   }
 }

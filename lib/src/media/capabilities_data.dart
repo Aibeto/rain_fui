@@ -1212,3 +1212,50 @@ final List<ContainerSpec> kContainers = <ContainerSpec>[
     audioOnly: true,
   ),
 ];
+
+/// Video decoders worth naming explicitly in the input section.
+///
+/// Forcing a decoder matters when the container lies (a `.mp4` holding MPEG-2)
+/// or when the automatic pick lands on an unsupported one. `auto` leaves the
+/// choice to FFmpeg, which is right for almost every file.
+const List<String> kVideoDecoders = <String>[
+  'h264',
+  'hevc',
+  'av1',
+  'vp8',
+  'vp9',
+  'mpeg4',
+  'mpeg2video',
+  'mpeg1video',
+  'vc1',
+  'wmv3',
+  'h263',
+  'flv',
+  'rv40',
+  'theora',
+  'mjpeg',
+  'png',
+  'gif',
+  'prores',
+  'dnxhd',
+  'dvvideo',
+  'rawvideo',
+];
+
+/// Audio decoders, same reasoning as [kVideoDecoders].
+const List<String> kAudioDecoders = <String>[
+  'aac',
+  'mp3',
+  'ac3',
+  'eac3',
+  'dca',
+  'flac',
+  'alac',
+  'opus',
+  'vorbis',
+  'truehd',
+  'wmav2',
+  'amrnb',
+  'pcm_s16le',
+  'pcm_s24le',
+];

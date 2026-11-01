@@ -42,6 +42,10 @@ const Map<String, String> ptBr = <String, String>{
   'add_source_confirm_body': 'A pasta será listada como fonte na tela inicial.',
   'action_add': 'Adicionar',
   'option_unset': 'Não definido',
+  'job_section_input': 'Entrada',
+  'job_label_video_decoder': 'Decodificador de vídeo',
+  'job_label_audio_decoder': 'Decodificador de áudio',
+  'job_decoder_auto': 'Automático (detectar)',
   'action_cancel': 'Cancelar',
   'action_close': 'Fechar',
 

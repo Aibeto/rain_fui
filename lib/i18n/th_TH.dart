@@ -40,6 +40,10 @@ const Map<String, String> thTh = <String, String>{
   'add_source_confirm_body': 'โฟลเดอร์จะแสดงเป็นแหล่งข้อมูลบนหน้าหลัก',
   'action_add': 'เพิ่ม',
   'option_unset': 'ไม่ตั้งค่า',
+  'job_section_input': 'อินพุต',
+  'job_label_video_decoder': 'ตัวถอดรหัสวิดีโอ',
+  'job_label_audio_decoder': 'ตัวถอดรหัสเสียง',
+  'job_decoder_auto': 'อัตโนมัติ (ตรวจจับ)',
   'action_cancel': 'ยกเลิก',
   'action_close': 'ปิด',
 

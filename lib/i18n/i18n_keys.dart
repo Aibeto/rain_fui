@@ -44,6 +44,11 @@ abstract final class I18nKey {
   static const String addSourceConfirmBody = 'add_source_confirm_body';
   static const String actionAdd = 'action_add';
 
+  static const String jobSectionInput = 'job_section_input';
+  static const String jobLabelVideoDecoder = 'job_label_video_decoder';
+  static const String jobLabelAudioDecoder = 'job_label_audio_decoder';
+  static const String jobDecoderAuto = 'job_decoder_auto';
+
   /// Shown as the empty entry of an option that may be left unset.
   static const String optionUnset = 'option_unset';
 
@@ -192,6 +197,10 @@ abstract final class I18nKey {
     addSourceConfirmBody,
     actionAdd,
     optionUnset,
+    jobSectionInput,
+    jobLabelVideoDecoder,
+    jobLabelAudioDecoder,
+    jobDecoderAuto,
     actionCancel,
     actionClose,
     resultFilesTitle,
