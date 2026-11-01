@@ -270,7 +270,7 @@ Builds verified on this machine (FFmpeg 9.0.2 source, `FFMPEG_EXTERNAL_LIBS=1`,
 
 | target | artifact | size | software encoders |
 |---|---|---|---|
-| linux-x64 | `dist/linux-x64/ffmpeg` | 32 676 024 B | libx264/libx265/libvpx/libaom/libsvtav1/libopus/libvorbis/libmp3lame/libwebp + nvenc/qsv/vaapi |
+| linux-x64 | `dist/linux-x64/ffmpeg` | 33 077 664 B | libx264/libx265/libvpx/libaom/libsvtav1/libopus/libvorbis/libmp3lame/libwebp + nvenc/qsv/vaapi |
 | android-arm64-v8a | `dist/android-arm64-v8a/libffmpeg_exe.so` | 27 059 816 B | libx264/libvpx/libopus/libvorbis/libmp3lame/libwebp + 11 MediaCodec |
 | android-armeabi-v7a | `dist/android-armeabi-v7a/libffmpeg_exe.so` | 24 465 472 B | same software set (libvpx without NEON) + MediaCodec |
 | android-x86_64 | `dist/android-x86_64/libffmpeg_exe.so` | 33 390 824 B | same software set + MediaCodec |
