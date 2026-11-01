@@ -384,7 +384,7 @@ class JobRow extends StatelessWidget {
     if (total == null) {
       return position;
     }
-    return '$position · ${_format(total)}';
+    return '$position / ${_format(total)}';
   }
 
   static String _format(Duration duration) {
