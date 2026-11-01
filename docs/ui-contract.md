@@ -133,10 +133,13 @@ abstract final class FileSourceService {
 Future<ChildListing> listChildNames(String path, {int limit = 200});
 
 // lib/services/theme_service.dart
-class ThemeService { ThemeService({ThemeMode initial = ThemeMode.light});
+class ThemeService { ThemeService({ThemeMode initial = ThemeMode.system});
+  static const String prefKey = 'app_theme';
   static const List<ThemeMode> order;               // light, dark, system
   ValueListenable<ThemeMode> get mode; ThemeMode get value;
-  ThemeMode cycle(); String get labelKey;
+  ThemeMode cycle(); String get labelKey;           // cycle() also persists
+  static ThemeMode parse(String? stored);           // unknown → system
+  static Future<ThemeMode> loadStartupMode();
   static String labelKeyFor(ThemeMode mode); void dispose(); }
 class ThemeScope extends InheritedWidget { static ThemeService of(BuildContext); }
 
