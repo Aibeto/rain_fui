@@ -31,8 +31,19 @@ ffmpeg_deps_pkg_config_path() {
     printf '%s\n' "$prefix/lib/pkgconfig:$prefix/lib64/pkgconfig:$prefix/share/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
 }
 
+# Cross builds must not see the host's pkg-config: a host libopus would be
+# linked into an Android or Windows binary. For those targets only the
+# dependency prefix counts, and PKG_CONFIG_LIBDIR (not PATH) replaces the
+# sysroot search path.
 ffmpeg_have_pkg() {
-    pkg-config --exists "$1" 2>/dev/null
+    local pkg="$1" target_os="${2:-linux}" prefix="${3:-}"
+    if [ "$target_os" = "linux" ]; then
+        pkg-config --exists "$pkg" 2>/dev/null
+        return
+    fi
+    PKG_CONFIG_LIBDIR="$prefix/lib/pkgconfig:$prefix/lib64/pkgconfig" \
+    PKG_CONFIG_PATH="" \
+        pkg-config --exists "$pkg" 2>/dev/null
 }
 
 # One "--enable-*" per line for every optional feature that can be built here.
@@ -63,7 +74,7 @@ ffmpeg_external_flags() {
     do
         pkg="${pair%%:*}"
         flag="${pair##*:}"
-        if ffmpeg_have_pkg "$pkg"; then
+        if ffmpeg_have_pkg "$pkg" "$target_os" "$prefix"; then
             printf '%s\n' "$flag"
         fi
     done | awk '!seen[$0]++'
@@ -78,16 +89,17 @@ ffmpeg_external_flags() {
     # Hardware back ends. nvenc only needs headers at build time; the runtime
     # needs a driver, and without one the encoder fails at Start with FFmpeg's
     # own message.
-    if [ -f "$prefix/include/ffnvcodec/nvEncodeAPI.h" ] || ffmpeg_have_pkg ffnvcodec; then
+    if [ -f "$prefix/include/ffnvcodec/nvEncodeAPI.h" ] \
+       || ffmpeg_have_pkg ffnvcodec "$target_os" "$prefix"; then
         # --disable-autodetect turns ffnvcodec off, so it has to be named.
         printf '%s\n' --enable-ffnvcodec --enable-nvenc
     fi
-    if ffmpeg_have_pkg libva; then
+    if ffmpeg_have_pkg libva "$target_os" "$prefix"; then
         printf '%s\n' --enable-vaapi
     fi
-    if ffmpeg_have_pkg vpl; then
+    if ffmpeg_have_pkg vpl "$target_os" "$prefix"; then
         printf '%s\n' --enable-libvpl
-    elif ffmpeg_have_pkg libmfx; then
+    elif ffmpeg_have_pkg libmfx "$target_os" "$prefix"; then
         printf '%s\n' --enable-libmfx
     fi
     case "$target_os" in
