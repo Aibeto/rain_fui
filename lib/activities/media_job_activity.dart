@@ -1534,8 +1534,12 @@ class _RangeFieldState extends State<_RangeField> {
     final ResourceDictionary resources = theme.resources;
     final AppL10n l10n = context.l10n;
     final _FieldHost host = _FieldHost.of(context);
+    // What the user set, kept apart from what applies when they set nothing.
+    // The clear button reads the first; the chip reads both, because an
+    // app-provided preset is shown as a number instead of the word "default".
+    final String? explicit = host.valueOf[widget.spec.flag];
     final String? current =
-        host.valueOf[widget.spec.flag] ?? widget.spec.initialValue;
+        explicit ?? (widget.spec.appPreset ? widget.spec.defaultValue : null);
     // When the flag is off, the thumb still has to sit on the value the
     // encoder would use, otherwise the row reads as "somewhere in the middle".
     final double fallback =
@@ -1599,7 +1603,9 @@ class _RangeFieldState extends State<_RangeField> {
             MiniIconButton(
               icon: FluentIcons.dismiss_24_regular,
               tooltip: l10n(I18nKey.optionUnset),
-              onPressed: current == null && !_editing
+              // Grey as soon as no explicit value is left, even when a preset
+              // still applies, otherwise "restore default" looks pressed.
+              onPressed: explicit == null && !_editing
                   ? null
                   : () {
                       host.onChanged(widget.spec, null);

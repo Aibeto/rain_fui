@@ -165,7 +165,7 @@ const Map<String, String> enUs = <String, String>{
   'opt_dolby_surround': 'Dolby Surround mode',
   'opt_application': 'Application mode',
   'opt_frame_duration': 'Frame duration',
-  'opt_mov_flags': 'MP4 flags',
+  'opt_mov_flags': 'MP4/MOV muxer flags',
   'opt_mov_fast_start': 'Put the index first',
   'opt_mov_fragmented': 'Fragment the output',
   'opt_mov_metadata_tags': 'Copy metadata tags',

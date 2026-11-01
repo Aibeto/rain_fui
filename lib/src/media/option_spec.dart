@@ -12,6 +12,7 @@ sealed class OptionSpec {
     this.labelKey,
     this.defaultValue,
     this.advanced = false,
+    this.appPreset = false,
     this.exclusiveGroup,
   });
 
@@ -27,6 +28,13 @@ sealed class OptionSpec {
 
   /// Advanced options live behind the "more options" expander.
   final bool advanced;
+
+  /// True when [defaultValue] is this application's own choice rather than a
+  /// value the encoder documents for itself.
+  ///
+  /// The form then shows the number instead of the word "default", which is
+  /// what tells the user where the value comes from.
+  final bool appPreset;
 
   /// Flags sharing a non-null group are mutually exclusive, for example
   /// `-q:v` (constant quality) and `-b:v` (target bitrate).
@@ -61,6 +69,7 @@ class IntOption extends OptionSpec {
     required super.labelKey,
     super.defaultValue,
     super.advanced,
+    super.appPreset,
     super.exclusiveGroup,
     this.min,
     this.max,
@@ -98,6 +107,7 @@ class DecimalOption extends OptionSpec {
     required super.labelKey,
     super.defaultValue,
     super.advanced,
+    super.appPreset,
     super.exclusiveGroup,
     this.min,
     this.max,
