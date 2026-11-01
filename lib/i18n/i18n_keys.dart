@@ -68,6 +68,96 @@ abstract final class I18nKey {
       'error_folder_unsupported_android';
   static const String errorDropFailed = 'error_drop_failed';
 
+  // Encode form.
+  static const String jobPageTitle = 'job_page_title';
+  static const String jobSectionCodecs = 'job_section_codecs';
+  static const String jobSectionBasic = 'job_section_basic';
+  static const String jobSectionAdvanced = 'job_section_advanced';
+  static const String jobSectionCustom = 'job_section_custom';
+  static const String jobCustomHint = 'job_custom_hint';
+  static const String jobLabelVideoCodec = 'job_label_video_codec';
+  static const String jobLabelAudioCodec = 'job_label_audio_codec';
+  static const String jobLabelContainer = 'job_label_container';
+  static const String jobLabelOutputName = 'job_label_output_name';
+  static const String jobNoVideo = 'job_no_video';
+  static const String jobNoAudio = 'job_no_audio';
+  static const String jobNoContainer = 'job_no_container';
+  static const String jobNoOptions = 'job_no_options';
+  static const String jobCancel = 'job_cancel';
+  static const String jobStart = 'job_start';
+  static const String jobDiscardTitle = 'job_discard_title';
+  static const String jobDiscardBody = 'job_discard_body';
+  static const String jobDiscardKeep = 'job_discard_keep';
+  static const String jobDiscardConfirm = 'job_discard_confirm';
+  static const String mediaTypeVideo = 'media_type_video';
+  static const String mediaTypeAudio = 'media_type_audio';
+  static const String mediaTypeImage = 'media_type_image';
+  static const String mediaTypeUnknown = 'media_type_unknown';
+
+  // Job list.
+  static const String jobsTitle = 'jobs_title';
+  static const String jobsEmpty = 'jobs_empty';
+  static const String jobStateQueued = 'job_state_queued';
+  static const String jobStateRunning = 'job_state_running';
+  static const String jobStatePaused = 'job_state_paused';
+  static const String jobStateCompleted = 'job_state_completed';
+  static const String jobStateFailed = 'job_state_failed';
+  static const String jobStateCancelled = 'job_state_cancelled';
+  static const String jobPause = 'job_pause';
+  static const String jobResume = 'job_resume';
+  static const String jobStop = 'job_stop';
+  static const String jobRemove = 'job_remove';
+  static const String jobPauseUnsupported = 'job_pause_unsupported';
+  static const String jobConfirmStopTitle = 'job_confirm_stop_title';
+  static const String jobConfirmStopBody = 'job_confirm_stop_body';
+  static const String jobConfirmStopConfirm = 'job_confirm_stop_confirm';
+  static const String jobProgressUnknown = 'job_progress_unknown';
+
+  // Option labels.
+  static const String optQualityScale = 'opt_quality_scale';
+  static const String optQualityScaleAudio = 'opt_quality_scale_audio';
+  static const String optBitrateVideo = 'opt_bitrate_video';
+  static const String optBitrateAudio = 'opt_bitrate_audio';
+  static const String optQuantMin = 'opt_quant_min';
+  static const String optQuantMax = 'opt_quant_max';
+  static const String optMaxRate = 'opt_max_rate';
+  static const String optBufSize = 'opt_buf_size';
+  static const String optGopSize = 'opt_gop_size';
+  static const String optBFrames = 'opt_b_frames';
+  static const String optPixelFormat = 'opt_pixel_format';
+  static const String optThreads = 'opt_threads';
+  static const String optProfile = 'opt_profile';
+  static const String optLevel = 'opt_level';
+  static const String optCodecLevel = 'opt_codec_level';
+  static const String optMbDecision = 'opt_mb_decision';
+  static const String optTrellis = 'opt_trellis';
+  static const String optMvFourMotion = 'opt_mv_four_motion';
+  static const String optHuffman = 'opt_huffman';
+  static const String optCompressionLevel = 'opt_compression_level';
+  static const String optPrediction = 'opt_prediction';
+  static const String optCoder = 'opt_coder';
+  static const String optSlices = 'opt_slices';
+  static const String optSliceCrc = 'opt_slice_crc';
+  static const String optVendor = 'opt_vendor';
+  static const String optBitsPerMb = 'opt_bits_per_mb';
+  static const String optCutoff = 'opt_cutoff';
+  static const String optSampleRate = 'opt_sample_rate';
+  static const String optChannels = 'opt_channels';
+  static const String optDialNorm = 'opt_dial_norm';
+  static const String optDolbySurround = 'opt_dolby_surround';
+  static const String optApplication = 'opt_application';
+  static const String optFrameDuration = 'opt_frame_duration';
+  static const String optMovFlags = 'opt_mov_flags';
+  static const String optMovFastStart = 'opt_mov_fast_start';
+  static const String optMovFragmented = 'opt_mov_fragmented';
+  static const String optMovMetadataTags = 'opt_mov_metadata_tags';
+  static const String optClusterTime = 'opt_cluster_time';
+  static const String optClusterSize = 'opt_cluster_size';
+  static const String optMpegtsFlags = 'opt_mpegts_flags';
+  static const String optFlvFlags = 'opt_flv_flags';
+  static const String optGifLoop = 'opt_gif_loop';
+  static const String optPageDuration = 'opt_page_duration';
+
   /// Display order used by `LanguageActivity`; mirrors `kSupportedLanguageTags`.
   static const List<String> all = <String>[
     appTitle,
@@ -114,5 +204,89 @@ abstract final class I18nKey {
     errorFolderUnsupportedWeb,
     errorFolderUnsupportedAndroid,
     errorDropFailed,
+    jobPageTitle,
+    jobSectionCodecs,
+    jobSectionBasic,
+    jobSectionAdvanced,
+    jobSectionCustom,
+    jobCustomHint,
+    jobLabelVideoCodec,
+    jobLabelAudioCodec,
+    jobLabelContainer,
+    jobLabelOutputName,
+    jobNoVideo,
+    jobNoAudio,
+    jobNoContainer,
+    jobNoOptions,
+    jobCancel,
+    jobStart,
+    jobDiscardTitle,
+    jobDiscardBody,
+    jobDiscardKeep,
+    jobDiscardConfirm,
+    mediaTypeVideo,
+    mediaTypeAudio,
+    mediaTypeImage,
+    mediaTypeUnknown,
+    jobsTitle,
+    jobsEmpty,
+    jobStateQueued,
+    jobStateRunning,
+    jobStatePaused,
+    jobStateCompleted,
+    jobStateFailed,
+    jobStateCancelled,
+    jobPause,
+    jobResume,
+    jobStop,
+    jobRemove,
+    jobPauseUnsupported,
+    jobConfirmStopTitle,
+    jobConfirmStopBody,
+    jobConfirmStopConfirm,
+    jobProgressUnknown,
+    optQualityScale,
+    optQualityScaleAudio,
+    optBitrateVideo,
+    optBitrateAudio,
+    optQuantMin,
+    optQuantMax,
+    optMaxRate,
+    optBufSize,
+    optGopSize,
+    optBFrames,
+    optPixelFormat,
+    optThreads,
+    optProfile,
+    optLevel,
+    optCodecLevel,
+    optMbDecision,
+    optTrellis,
+    optMvFourMotion,
+    optHuffman,
+    optCompressionLevel,
+    optPrediction,
+    optCoder,
+    optSlices,
+    optSliceCrc,
+    optVendor,
+    optBitsPerMb,
+    optCutoff,
+    optSampleRate,
+    optChannels,
+    optDialNorm,
+    optDolbySurround,
+    optApplication,
+    optFrameDuration,
+    optMovFlags,
+    optMovFastStart,
+    optMovFragmented,
+    optMovMetadataTags,
+    optClusterTime,
+    optClusterSize,
+    optMpegtsFlags,
+    optFlvFlags,
+    optGifLoop,
+    optPageDuration,
   ];
 }
