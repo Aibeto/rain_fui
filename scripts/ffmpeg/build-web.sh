@@ -96,6 +96,43 @@ if [ "$CLEAN" = "1" ]; then
 fi
 
 # --- configure the static libraries -----------------------------------------
+# Optional third-party codecs: same flags as the native builds, but the
+# libraries have to be built for wasm first (build-deps.sh --target web-wasm).
+EXTRA_INC=""
+EXTRA_LIB=""
+EXTERNAL_ARGS=()
+EXTERNAL_LINK_LIBS=()
+if [ "${FFMPEG_EXTERNAL_LIBS:-0}" = "1" ]; then
+    FFMPEG_DEPS_TARGET="${FFMPEG_DEPS_TARGET:-web-wasm}"
+    export FFMPEG_DEPS_TARGET PKG_CONFIG_PATH PKG_CONFIG_LIBDIR
+    PKG_CONFIG_PATH="$(ffmpeg_deps_pkg_config_path "$(ffmpeg_deps_prefix)")"
+    PKG_CONFIG_LIBDIR="$PKG_CONFIG_PATH"
+    EXTRA_INC=" -I$(ffmpeg_deps_prefix)/include"
+    EXTRA_LIB=" -L$(ffmpeg_deps_prefix)/lib"
+    EXTERNAL_LINK_LIBS=()
+    for pkg in mp3lame opus vorbisenc vorbis vpx libwebp x264; do
+        if pkg-config --exists "$pkg" 2>/dev/null; then
+            # shellcheck disable=SC2207
+            EXTERNAL_LINK_LIBS+=( $(pkg-config --libs "$pkg") )
+        fi
+    done
+    for lib in webpmux webpdemux sharpyuv; do
+        if [ -f "$(ffmpeg_deps_prefix)/lib/lib$lib.a" ]; then
+            EXTERNAL_LINK_LIBS+=( "-l$lib" )
+        fi
+    done
+    # LAME ships no .pc file at all.
+    if [ -f "$(ffmpeg_deps_prefix)/lib/libmp3lame.a" ]; then
+        EXTERNAL_LINK_LIBS+=( -lmp3lame )
+    fi
+    while IFS= read -r flag; do
+        [ -n "$flag" ] && EXTERNAL_ARGS+=( "$flag" )
+    done < <(ffmpeg_external_flags web)
+    while IFS= read -r flag; do
+        [ -n "$flag" ] && EXTERNAL_ARGS+=( "$flag" )
+    done < <(ffmpeg_external_pkg_config_flags)
+fi
+
 args=( "${FFMPEG_BASE_FLAGS[@]}" )
 args+=(
     --prefix="$builddir/prefix"
@@ -117,10 +154,14 @@ args+=(
     --disable-w32threads
     --disable-os2threads
     --disable-stripping
-    --extra-cflags="-O3 -fPIC -pthread"
-    --extra-cxxflags="-O3 -fPIC -pthread"
-    --extra-ldflags="-pthread"
+    --extra-cflags="-O3 -fPIC -pthread$EXTRA_INC"
+    --extra-cxxflags="-O3 -fPIC -pthread$EXTRA_INC"
+    --extra-ldflags="-pthread$EXTRA_LIB"
 )
+if [ "${#EXTERNAL_ARGS[@]}" -gt 0 ]; then
+    args+=( "${EXTERNAL_ARGS[@]}" )
+    log "external libraries: $(ffmpeg_external_flags web | tr '\n' ' ')"
+fi
 
 lto_cfg="$(ffmpeg_lto_configure_flags emcc)"
 if [ -n "$lto_cfg" ]; then
@@ -183,6 +224,7 @@ link_flags=(
     -L"$builddir/libswresample" -L"$builddir/libswscale" -L"$builddir/libavutil"
     -lavdevice -lavfilter -lavformat -lavcodec -lswresample -lswscale -lavutil
     -Wl,--end-group
+    "${EXTERNAL_LINK_LIBS[@]}"
     -lm
 )
 if [ "${FFMPEG_LTO}" != "0" ]; then

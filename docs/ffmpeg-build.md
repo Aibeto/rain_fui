@@ -271,15 +271,21 @@ Builds verified on this machine (FFmpeg 9.0.2 source, `FFMPEG_EXTERNAL_LIBS=1`,
 | target | artifact | size | software encoders |
 |---|---|---|---|
 | linux-x64 | `dist/linux-x64/ffmpeg` | 33 077 664 B | libx264/libx265/libvpx/libaom/libsvtav1/libopus/libvorbis/libmp3lame/libwebp + nvenc/qsv/vaapi |
-| android-arm64-v8a | `dist/android-arm64-v8a/libffmpeg_exe.so` | 27 059 816 B | libx264/libvpx/libopus/libvorbis/libmp3lame/libwebp + 11 MediaCodec |
-| android-armeabi-v7a | `dist/android-armeabi-v7a/libffmpeg_exe.so` | 24 465 472 B | same software set (libvpx without NEON) + MediaCodec |
-| android-x86_64 | `dist/android-x86_64/libffmpeg_exe.so` | 33 390 824 B | same software set + MediaCodec |
-| windows-x64 | `dist/windows-x64/ffmpeg.exe` | 37 356 558 B | libx264/libvpx/libopus/libvorbis/libmp3lame/libwebp |
+| android-arm64-v8a | `dist/android-arm64-v8a/libffmpeg_exe.so` | 31 651 136 B | libx264/libx265/libvpx/libsvtav1/libopus/libvorbis/libmp3lame/libwebp + 11 MediaCodec |
+| android-armeabi-v7a | `dist/android-armeabi-v7a/libffmpeg_exe.so` | 28 531 088 B | same software set (libvpx without NEON) + MediaCodec |
+| android-x86_64 | `dist/android-x86_64/libffmpeg_exe.so` | 39 004 528 B | same software set + MediaCodec |
+| windows-x64 | `dist/windows-x64/ffmpeg.exe` | 43 837 454 B | libx264/libx265/libvpx/libsvtav1/libopus/libvorbis/libmp3lame/libwebp |
+| web | `dist/web/ffmpeg.wasm` | 22 131 982 B | libx264/libvpx/libopus/libvorbis/libmp3lame/libwebp (wasm) |
 
-The wasm target stays native-only: a wasm module cannot link these system
-libraries, so `build-web.sh` never passes `FFMPEG_EXTERNAL_LIBS`. Web still has
-every encoder FFmpeg implements itself (mpeg4, mpeg2, ffv1, flac, aac, native
-opus and vorbis, png, mjpeg …), just not libx264.
+The wasm target links its own copies of the same libraries. Emscripten needs a
+few extra fixes, all handled in the scripts: x264 is configured with
+`--disable-asm` and its generated `config.mak` loses the `-m64` that would pick
+wasm64, x264's `sched_getaffinity` probe is routed to its Android fallback, and
+the manual `emcc` link in `build-web.sh` appends `pkg-config --libs` for the
+enabled libraries plus `-lmp3lame`, `-lwebpmux` and `-lwebpdemux` because those
+archives carry no usable `.pc` entry. libaom is the one library not built here:
+`aomedia.googlesource.com` is unreachable from this network, so Linux takes it
+from the sysroot and the other platforms use SVT-AV1 for AV1.
 
 ## LTO and parallelism
 

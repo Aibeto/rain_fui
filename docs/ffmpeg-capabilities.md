@@ -660,7 +660,7 @@ ADPCM / DPCM 编码器：
 
 ## 9. 运行时探针与完整编码器表
 
-表里现在写的是 FFmpeg 能编出来的全部编码器，而界面上显示哪些，取决于启动时对实际二进制的探测：
+表里现在写的是 FFmpeg 能编出来的全部编码器，而界面上显示哪些，取决于启动时对实际二进制的探测。打包的二进制现在是完整构建，五个平台都带 libx264，四个平台还带 libx265 和 SVT-AV1，探测只是用来应对用户 PATH 上那个发行版 ffmpeg：
 
 `lib/services/encoder_availability.dart` 在 `main()` 里跑一次 `ffmpeg -encoders`，把结果交给 `MediaCapabilities`，下拉框只列真正存在的编码器。探测不到（web）时退回 `kBaselineEncoderNames`，也就是打包构建的清单，所以不会出现选了必然失败的项。
 
@@ -669,7 +669,7 @@ ADPCM / DPCM 编码器：
 * `encoders-system.json`、`encoders-bundled.json`：两个真实二进制各自报的编码器、codec id 与像素格式；
 * `containers-system.json`：48 个 muxer 对哪些 codec id 真的能写，靠一只 64×64 的单帧和 0.2 秒静音逐个试出来，dv 和 mxf 另用 720×576 与带视频流的组合手工量过。
 
-`tool/check_catalog.dart` 用原生构建和完整构建两种假设各查一遍，验证 mp4 收 H.264、WebM 不收、flac 不收 opus、原生构建不列 libx264 这些结论。
+`tool/check_catalog.dart` 用四种平台基线各查一遍：Android 的清单里有 `h264_mediacodec` 和 `libx264`、没有 Windows 的 `h264_mf`，Windows 没有 MediaCodec，Web 至少还有 `mpeg4`。另外验证 mp4 收 H.264、WebM 不收、flac 不收 opus。
 
 表里还包含本机跑不起来的编码器：MediaCodec、MediaFoundation、VideoToolbox、D3D12、Rockchip、OpenHarmony 这些平台后端，以及 libfdk_aac、libopenh264 这类没装的第三方库。它们的名字、类型和 codec id 写在 `tool/gen_capabilities.py` 的 `EXTRA_ENCODERS` 里，只有对应平台的探针报出来才会出现在下拉框。生成器会重新解析 `libavcodec/allcodecs.c`，只要有一个编码器符号既没被探针覆盖、也不在别名表或排除表里，就报错退出，避免又退回“只有 Linux 能看到的那部分”。目前是 256 个编码器（162 视频 / 94 音频）。
 

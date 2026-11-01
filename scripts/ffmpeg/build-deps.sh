@@ -123,6 +123,21 @@ case "$TARGET" in
             -DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres
         )
         ;;
+    web-wasm)
+        local_emcc="$(command -v emcc || true)"
+        if [ -z "$local_emcc" ]; then
+            die "emcc not found; source \$HOME/emsdk/emsdk_env.sh first"
+        fi
+        export CC=emcc CXX=em++ AR=emar RANLIB=emranlib NM=emnm
+        export CFLAGS="-O3 -fPIC -pthread"
+        export CXXFLAGS="$CFLAGS"
+        export LDFLAGS="-pthread"
+        export EM_CROSS=1
+        export HOST=x86_64-linux-gnu
+        CMAKE_TARGET_ARGS=(
+            -DCMAKE_TOOLCHAIN_FILE="$(dirname "$local_emcc")/cmake/Modules/Platform/Emscripten.cmake"
+        )
+        ;;
     linux-*)
         ;;
     *)
@@ -158,13 +173,28 @@ patch_pc_lm() {
     done
 }
 
+# Emscripten needs its cmake wrapper for the toolchain and its configure
+# wrapper so configure does not try to run the produced binaries.
+em_cmake() {
+    if [ "${EM_CROSS:-0}" = "1" ]; then
+        emcmake cmake "$@"
+    else
+        cmake "$@"
+    fi
+}
+
 # autotools writes its configuration into the source tree, so every target
 # builds in its own copy; otherwise an ARM configure leaks into the next ABI.
-srccopy() { # srccopy <name>
-    local name="$1"
+srccopy() { # srccopy <name> <tarball>
+    local name="$1" tarball="$2"
     local dst="$SRC/$name-$TARGET"
     if [ ! -d "$dst" ]; then
-        cp -a "$SRC/$name" "$dst"
+        # Extract fresh instead of copying a tree another target already
+        # compiled in: x264 keeps per-architecture objects in subdirectories
+        # that `make distclean` does not remove, and a wasm link then picks up
+        # x86-64 objects.
+        mkdir -p "$dst"
+        tar -xf "$SRC/$tarball" -C "$dst" --strip-components=1
     fi
     printf '%s' "$dst"
 }
@@ -172,7 +202,16 @@ srccopy() { # srccopy <name>
 cmake_build() { # cmake_build <source dir> <extra cmake args...>
     local source="$1"; shift
     local build="$source/build-$TARGET"
-    cmake -S "$source" -B "$build" -G Ninja \
+    local generator=(-G Ninja)
+    if [ "${EM_CROSS:-0}" = "1" ]; then
+        generator=(
+            -G Ninja
+            -DCMAKE_MAKE_PROGRAM="$(command -v ninja)"
+            -DCMAKE_C_COMPILER=emcc
+            -DCMAKE_CXX_COMPILER=em++
+        )
+    fi
+    em_cmake -S "$source" -B "$build" "${generator[@]}" \
         -DCMAKE_INSTALL_PREFIX="$PREFIX" \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
@@ -218,7 +257,7 @@ build_lame() {
     unpack lame-3.100.tar.gz lame-3.100
     log "build lame 3.100"
     local dir
-    dir="$(srccopy lame-3.100)"
+    dir="$(srccopy lame-3.100 lame-3.100.tar.gz)"
     ( cd "$dir" && make distclean >/dev/null 2>&1 || true
       ./configure \
         --prefix="$PREFIX" \
@@ -231,21 +270,61 @@ build_lame() {
 }
 
 build_svtav1() {
-    if pkg-config --exists SvtAv1Enc 2>/dev/null; then
+    if [ "$TARGET" = "linux-x64" ] && pkg-config --exists SvtAv1Enc 2>/dev/null; then
         log "SVT-AV1 from the sysroot ($(pkg-config --modversion SvtAv1Enc)); skipping"
         return 0
     fi
     fetch https://gitlab.com/AOMediaCodec/SVT-AV1/-/archive/v2.3.0/SVT-AV1-v2.3.0.tar.gz SVT-AV1-2.3.0.tar.gz
     unpack SVT-AV1-2.3.0.tar.gz SVT-AV1
     log "build SVT-AV1 2.3.0"
-    cmake -S "$SRC/SVT-AV1" -B "$SRC/SVT-AV1/build" -G Ninja \
-        -DCMAKE_INSTALL_PREFIX="$PREFIX" \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DBUILD_SHARED_LIBS=OFF \
-        -DBUILD_TESTING=OFF \
-        -DCOMPILE_C_ONLY=OFF >/dev/null
-    cmake --build "$SRC/SVT-AV1/build" -j "$JOBS" >/dev/null
-    cmake --install "$SRC/SVT-AV1/build" >/dev/null
+    local c_only=OFF
+    case "$TARGET" in
+        linux-*) c_only=OFF ;;
+        *) c_only=ON ;;
+    esac
+    cmake_build "$SRC/SVT-AV1" \
+        -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTING=OFF -DCOMPILE_C_ONLY=$c_only
+}
+
+build_x265() {
+    fetch https://bitbucket.org/multicoreware/x265_git/get/4.1.tar.gz x265-4.1.tar.gz
+    unpack x265-4.1.tar.gz x265
+    log "build x265 4.1"
+    # x265 4.1 still asks CMake for two pre-3.0 policies; CMake 4 refuses them.
+    sed -i -e 's/CMP0025 OLD/CMP0025 NEW/' -e 's/CMP0054 OLD/CMP0054 NEW/' \
+        "$SRC/x265/source/CMakeLists.txt"
+    # Assembly is off for cross builds: it needs the target's assembler and the
+    # NDK/mingw paths differ enough to be a project of its own.
+    local asm=OFF
+    case "$TARGET" in
+        linux-*) asm=ON ;;
+    esac
+    cmake_build "$SRC/x265/source" \
+        -DENABLE_CLI=OFF -DENABLE_SHARED=OFF -DENABLE_ASSEMBLY=$asm \
+        -DENABLE_TESTS=OFF -DENABLE_PIC=ON -DEXPORT_C_API=ON
+    # x265 does not always install a .pc file; FFmpeg's configure insists on
+    # one, so write the few lines it needs.
+    local pc="$PREFIX/lib/pkgconfig/x265.pc"
+    local cxxlib=stdc++
+    case "$TARGET" in
+        android-*) cxxlib=c++ ;;
+    esac
+    # x265's own x265.pc names an archive with -l:libunwind.a, which FFmpeg's
+    # static pkg-config mode turns into a broken -l-l: option; write a plain one.
+    if true; then
+        mkdir -p "$(dirname "$pc")"
+        cat > "$pc" <<EOF
+prefix=$PREFIX
+exec_prefix=\${prefix}
+libdir=\${exec_prefix}/lib
+includedir=\${prefix}/include
+Name: x265
+Description: H.265/HEVC video encoder
+Version: 4.1
+Libs: -L\${libdir} -lx265 -l$cxxlib -lm
+Cflags: -I\${includedir}
+EOF
+    fi
 }
 
 build_x264() {
@@ -256,17 +335,29 @@ build_x264() {
     case "$TARGET" in
         android-*) cross=(--cross-prefix="$ANDROID_TOOLCHAIN_PREFIX" --sysroot="$ANDROID_SYSROOT") ;;
         windows-*) : ;;
+        web-wasm) cross=(--host=x86_64-linux-gnu --disable-asm) ;;
         *) cross=(--host="$HOST") ;;
     esac
     local dir
-    dir="$(srccopy x264)"
+    dir="$(srccopy x264 x264-stable.tar.gz)"
+    # Emscripten has no sched_getaffinity; x264 already has a fallback for
+    # Android, so route wasm through the same branch.
+    if [ "${EM_CROSS:-0}" = "1" ]; then
+        sed -i 's/^#ifdef __ANDROID__$/#if defined(__ANDROID__) || defined(__EMSCRIPTEN__)/' \
+            "$dir/common/cpu.c"
+    fi
     ( cd "$dir" && make distclean >/dev/null 2>&1 || true
-      ./configure \
+      ${EM_CROSS:+emconfigure} ./configure \
         --prefix="$PREFIX" \
         --enable-static --enable-pic --disable-cli \
         ${HOST:+--host="$HOST"} \
         "${cross[@]}" \
         --extra-cflags="${CFLAGS:-}" >/dev/null
+      # x264 adds -m64 for x86_64 hosts; under emcc that means wasm64 and the
+      # archive then refuses to link against wasm32 objects.
+      if [ "${EM_CROSS:-0}" = "1" ]; then
+          sed -i -e 's/-m64//g' config.mak
+      fi
       make -j"$JOBS" >/dev/null
       make install >/dev/null )
 }
@@ -300,9 +391,10 @@ build_vorbis() {
     unpack libvorbis-1.3.7.tar.gz vorbis
     log "build libvorbis 1.3.7"
     local dir
-    dir="$(srccopy vorbis)"
+    dir="$(srccopy vorbis libvorbis-1.3.7.tar.gz)"
     ( cd "$dir" && make distclean >/dev/null 2>&1 || true
-      { [ -x ./configure ] || ./autogen.sh >/dev/null; } && ./configure \
+      { [ -x ./configure ] || ./autogen.sh >/dev/null; } && \
+      ${EM_CROSS:+emconfigure} ./configure \
         --prefix="$PREFIX" \
         --disable-shared --enable-static \
         --with-ogg="$PREFIX" \
@@ -324,13 +416,14 @@ build_vpx() {
         android-armeabi-v7a) vpx_target=generic-gnu ;;
         android-x86_64) vpx_target=x86_64-android-gcc ;;
         windows-x64) vpx_target=x86_64-win64-gcc ;;
+        web-wasm) vpx_target=generic-gnu ;;
         *) vpx_target=x86_64-linux-gcc ;;
     esac
     local vpx_extra=()
     local dir
-    dir="$(srccopy vpx)"
+    dir="$(srccopy vpx libvpx-1.15.0.tar.gz)"
     ( cd "$dir" && make distclean >/dev/null 2>&1 || true
-      ./configure \
+      ${EM_CROSS:+emconfigure} ./configure \
         --target="$vpx_target" \
         "${vpx_extra[@]}" \
         --prefix="$PREFIX" \
@@ -353,7 +446,7 @@ build_webp() {
         -DWEBP_BUILD_EXTRAS=OFF
 }
 
-for dep in nvcodec lame svtav1 x264 opus ogg vorbis vpx webp; do
+for dep in nvcodec lame svtav1 x264 opus ogg vorbis vpx webp x265; do
     want "$dep" || continue
     "build_$dep"
 done
