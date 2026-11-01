@@ -887,20 +887,43 @@ class _OptionGrid extends StatelessWidget {
         style: FluentTheme.of(context).typography.caption,
       );
     }
+    // Ranged numbers draw their own header plus a full-width slider, so they
+    // are stacked below the compact grid instead of sharing a 300 px cell.
+    final List<OptionSpec> ranged = specs.where(_isRanged).toList();
+    final List<OptionSpec> compact = specs
+        .where((OptionSpec s) => !_isRanged(s))
+        .toList();
     return _FieldHost(
       valueOf: valueOf,
       onChanged: onChanged,
       controllerFor: controllerFor,
-      child: Wrap(
-        spacing: 16,
-        runSpacing: 8,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          for (final OptionSpec spec in specs)
-            SizedBox(width: 300, child: _OptionField(spec: spec)),
+          if (compact.isNotEmpty)
+            Wrap(
+              spacing: 16,
+              runSpacing: 8,
+              children: <Widget>[
+                for (final OptionSpec spec in compact)
+                  SizedBox(width: 300, child: _OptionField(spec: spec)),
+              ],
+            ),
+          for (final OptionSpec spec in ranged)
+            Padding(
+              padding: const EdgeInsetsDirectional.only(top: 10),
+              child: _OptionField(spec: spec),
+            ),
         ],
       ),
     );
   }
+
+  static bool _isRanged(OptionSpec spec) => switch (spec) {
+    IntOption(min: != null, max: != null) => true,
+    DecimalOption(min: != null, max: != null) => true,
+    _ => false,
+  };
 }
 
 class _OptionField extends StatelessWidget {
@@ -910,6 +933,28 @@ class _OptionField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Ranged numbers get the wide layout: header line plus a full-width
+    // slider, so the range is readable instead of squeezed into 132 px.
+    switch (spec) {
+      case final IntOption number when number.min != null && number.max != null:
+        return _RangeField(
+          spec: number,
+          min: number.min!.toDouble(),
+          max: number.max!.toDouble(),
+          integral: true,
+        );
+      case final DecimalOption number
+          when number.min != null && number.max != null:
+        return _RangeField(
+          spec: number,
+          min: number.min!,
+          max: number.max!,
+          integral: false,
+        );
+      case final OptionSpec _:
+        break;
+    }
+
     final FluentThemeData theme = FluentTheme.of(context);
     final AppL10n l10n = context.l10n;
     return Row(
@@ -983,25 +1028,6 @@ class _OptionField extends StatelessWidget {
           ],
           onChanged: (String? value) => host.onChanged(choice, value),
         );
-      case final IntOption number when number.min != null && number.max != null:
-        return _numberSlider(
-          context,
-          host,
-          number,
-          number.min!.toDouble(),
-          number.max!.toDouble(),
-          true,
-        );
-      case final DecimalOption number
-          when number.min != null && number.max != null:
-        return _numberSlider(
-          context,
-          host,
-          number,
-          number.min!,
-          number.max!,
-          false,
-        );
       case final OptionSpec other:
         return TextBox(
           controller: host.controllerFor(other),
@@ -1009,60 +1035,179 @@ class _OptionField extends StatelessWidget {
         );
     }
   }
+}
 
-  /// Slider for options that declare a full range, such as `-q:v` (1..31).
-  ///
-  /// The value stays unset until the thumb is moved, so opening the page does
-  /// not silently start pinning a quality level, and the small dismiss button
-  /// puts it back into the unset state.
-  Widget _numberSlider(
-    BuildContext context,
-    _FieldHost host,
-    OptionSpec spec,
-    double min,
-    double max,
-    bool integral,
-  ) {
-    final AppL10n l10n = context.l10n;
+/// Numeric option that declares a range.
+///
+/// Header line holds the name, the flag, the current value and two buttons
+/// (manual input, clear). The slider below spans the full width. The value
+/// stays unset until the user moves the thumb or types a number.
+class _RangeField extends StatefulWidget {
+  const _RangeField({
+    required this.spec,
+    required this.min,
+    required this.max,
+    required this.integral,
+  });
+
+  final OptionSpec spec;
+  final double min;
+  final double max;
+  final bool integral;
+
+  @override
+  State<_RangeField> createState() => _RangeFieldState();
+}
+
+class _RangeFieldState extends State<_RangeField> {
+  bool _editing = false;
+  TextEditingController? _controller;
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  String _format(double value) =>
+      widget.integral ? value.round().toString() : value.toStringAsFixed(2);
+
+  void _startEditing(String? current) {
+    _controller ??= TextEditingController();
+    _controller!.text = current ?? '';
+    _controller!.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: _controller!.text.length,
+    );
+    setState(() => _editing = true);
+  }
+
+  void _commit() {
+    final _FieldHost host = _FieldHost.of(context);
+    final String raw = _controller?.text.trim() ?? '';
+    if (raw.isEmpty) {
+      host.onChanged(widget.spec, null);
+    } else {
+      final double? parsed = double.tryParse(raw);
+      if (parsed == null) {
+        // Keep the box open so the user can fix the number.
+        return;
+      }
+      host.onChanged(
+        widget.spec,
+        _format(parsed.clamp(widget.min, widget.max)),
+      );
+    }
+    setState(() => _editing = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final FluentThemeData theme = FluentTheme.of(context);
-    final String? current = host.valueOf[spec.flag] ?? spec.initialValue;
-    final double fallback = (min + max) / 2;
+    final ResourceDictionary resources = theme.resources;
+    final AppL10n l10n = context.l10n;
+    final _FieldHost host = _FieldHost.of(context);
+    final String? current =
+        host.valueOf[widget.spec.flag] ?? widget.spec.initialValue;
+    final double fallback = (widget.min + widget.max) / 2;
     final double shown =
-        double.tryParse(current ?? '')?.clamp(min, max) ?? fallback;
-    return Row(
+        double.tryParse(current ?? '')?.clamp(widget.min, widget.max) ??
+        fallback;
+    final TextStyle mono = AppTheme.mono(
+      theme.typography.caption?.copyWith(
+        color: resources.textFillColorSecondary,
+      ),
+      l10n.locale,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        Expanded(
-          child: Slider(
-            value: shown,
-            min: min,
-            max: max,
-            divisions: integral ? (max - min).round() : null,
-            label: current == null
-                ? l10n(I18nKey.optionUnset)
-                : (integral
-                      ? shown.round().toString()
-                      : shown.toStringAsFixed(2)),
-            onChanged: (double value) => host.onChanged(
-              spec,
-              integral ? value.round().toString() : value.toStringAsFixed(2),
+        Row(
+          children: <Widget>[
+            Flexible(
+              child: Text(
+                widget.spec.labelKey == null
+                    ? widget.spec.flag
+                    : l10n(widget.spec.labelKey!),
+                style: theme.typography.bodyStrong,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-          ),
+            const SizedBox(width: 8),
+            Text(widget.spec.flag, style: mono, maxLines: 1),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsetsDirectional.symmetric(
+                horizontal: 8,
+                vertical: 2,
+              ),
+              decoration: BoxDecoration(
+                color: resources.controlFillColorDefault,
+                border: Border.all(color: resources.controlStrokeColorDefault),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(current ?? l10n(I18nKey.optionUnset), style: mono),
+            ),
+            const SizedBox(width: 4),
+            Tooltip(
+              message: l10n(I18nKey.optionEdit),
+              child: IconButton(
+                icon: const Icon(FluentIcons.edit_24_regular, size: 10),
+                onPressed: _editing ? null : () => _startEditing(current),
+              ),
+            ),
+            Tooltip(
+              message: l10n(I18nKey.optionUnset),
+              child: IconButton(
+                icon: const Icon(FluentIcons.dismiss_24_regular, size: 10),
+                onPressed: current == null && !_editing
+                    ? null
+                    : () {
+                        host.onChanged(widget.spec, null);
+                        if (_editing) {
+                          setState(() => _editing = false);
+                        }
+                      },
+              ),
+            ),
+          ],
         ),
-        SizedBox(
-          width: 42,
-          child: current == null
-              ? Text(
-                  l10n(I18nKey.optionUnset),
-                  style: theme.typography.caption,
-                  maxLines: 1,
-                  textAlign: TextAlign.end,
-                  overflow: TextOverflow.ellipsis,
-                )
-              : IconButton(
-                  icon: const Icon(FluentIcons.dismiss_24_regular, size: 10),
-                  onPressed: () => host.onChanged(spec, null),
+        const SizedBox(height: 2),
+        if (_editing)
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: TextBox(
+                  controller: _controller,
+                  placeholder:
+                      '${_format(widget.min)} - ${_format(widget.max)}',
+                  onSubmitted: (String _) => _commit(),
                 ),
-        ),
+              ),
+              IconButton(
+                icon: const Icon(FluentIcons.checkmark_24_regular, size: 10),
+                onPressed: _commit,
+              ),
+            ],
+          )
+        else
+          Slider(
+            value: shown,
+            min: widget.min,
+            max: widget.max,
+            divisions: widget.integral
+                ? (widget.max - widget.min).round()
+                : null,
+            label:
+                current ??
+                (widget.integral
+                    ? shown.round().toString()
+                    : shown.toStringAsFixed(2)),
+            onChanged: (double value) =>
+                host.onChanged(widget.spec, _format(value)),
+          ),
       ],
     );
   }

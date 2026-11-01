@@ -51,6 +51,7 @@ class EncodeJob extends ChangeNotifier {
   Duration? _duration;
   String? _error;
   String _logTail = '';
+  final List<String> _logLines = <String>[];
   bool _canSuspend = true;
 
   /// Current lifecycle state.
@@ -70,6 +71,13 @@ class EncodeJob extends ChangeNotifier {
 
   /// Last progress/log lines, kept short for the row tooltip.
   String get logTail => _logTail;
+
+  /// Every non-empty line FFmpeg printed, oldest first. Capped so a long
+  /// encode cannot grow the heap without bound.
+  List<String> get logLines => List<String>.unmodifiable(_logLines);
+
+  /// How many lines [logLines] keeps.
+  static const int maxLogLines = 2000;
 
   /// False once the platform refused to suspend the process.
   bool get canSuspend => _canSuspend;
@@ -137,18 +145,24 @@ class EncodeJob extends ChangeNotifier {
   }
 
   void applyLogLine(String line) {
-    if (line.trim().isEmpty) {
+    final String text = line.trimRight();
+    if (text.trim().isEmpty) {
       return;
     }
+    _logLines.add(text);
+    if (_logLines.length > maxLogLines) {
+      _logLines.removeRange(0, _logLines.length - maxLogLines);
+    }
+    notifyListeners();
     if (_duration == null) {
-      final Duration? parsed = parseMediaDuration(line);
+      final Duration? parsed = parseMediaDuration(text);
       if (parsed != null && parsed > Duration.zero) {
         _duration = parsed;
         notifyListeners();
         return;
       }
     }
-    _logTail = line;
+    _logTail = text;
   }
 
   void _transit(JobState next) {
