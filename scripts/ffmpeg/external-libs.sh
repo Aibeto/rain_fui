@@ -104,6 +104,13 @@ ffmpeg_external_flags() {
         [ "$known" = "1" ] || printf '%s\n' "$flag"
     done | awk '!seen[$0]++'
 
+    # zlib is only linked when the target prefix has it: mingw and emscripten
+    # do not ship it, and without it png/apng/zmbv/exr/flashsv vanish.
+    if [ -f "$prefix/include/zlib.h" ] \
+       && { [ -f "$prefix/lib/libz.a" ] || [ -f "$prefix/lib64/libz.a" ]; }; then
+        printf '%s\n' --enable-zlib
+    fi
+
     # Hardware back ends. nvenc only needs headers at build time; the runtime
     # needs a driver, and without one the encoder fails at Start with FFmpeg's
     # own message.

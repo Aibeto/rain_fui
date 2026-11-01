@@ -102,15 +102,19 @@ EXTRA_INC=""
 EXTRA_LIB=""
 EXTERNAL_ARGS=()
 EXTERNAL_LINK_LIBS=()
+EXTRA_LDFLAGS_EXTRA=""
 if [ "${FFMPEG_EXTERNAL_LIBS:-0}" = "1" ]; then
     FFMPEG_DEPS_TARGET="${FFMPEG_DEPS_TARGET:-web-wasm}"
     export FFMPEG_DEPS_TARGET PKG_CONFIG_PATH PKG_CONFIG_LIBDIR
     PKG_CONFIG_PATH="$(ffmpeg_deps_pkg_config_path "$(ffmpeg_deps_prefix)")"
     PKG_CONFIG_LIBDIR="$PKG_CONFIG_PATH"
     EXTRA_INC=" -I$(ffmpeg_deps_prefix)/include"
+    # x265 is a C++ archive; emcc needs to know it should link the C++ runtime
+    # even though FFmpeg's configure probe compiles C.
+    EXTRA_LDFLAGS_EXTRA=" -sDEFAULT_TO_CXX"
     EXTRA_LIB=" -L$(ffmpeg_deps_prefix)/lib"
     EXTERNAL_LINK_LIBS=()
-    for pkg in mp3lame opus vorbisenc vorbis vpx libwebp x264 aom; do
+    for pkg in mp3lame opus vorbisenc vorbis vpx libwebp x264 x265 aom SvtAv1Enc zlib; do
         if pkg-config --exists "$pkg" 2>/dev/null; then
             # shellcheck disable=SC2207
             EXTERNAL_LINK_LIBS+=( $(pkg-config --libs "$pkg") )
@@ -121,6 +125,10 @@ if [ "${FFMPEG_EXTERNAL_LIBS:-0}" = "1" ]; then
             EXTERNAL_LINK_LIBS+=( "-l$lib" )
         fi
     done
+    if [ -f "$(ffmpeg_deps_prefix)/lib/libz.a" ] && \
+       ! pkg-config --exists zlib 2>/dev/null; then
+        EXTERNAL_LINK_LIBS+=( -lz )
+    fi
     # LAME ships no .pc file at all.
     if [ -f "$(ffmpeg_deps_prefix)/lib/libmp3lame.a" ]; then
         EXTERNAL_LINK_LIBS+=( -lmp3lame )
@@ -156,7 +164,7 @@ args+=(
     --disable-stripping
     --extra-cflags="-O3 -fPIC -pthread$EXTRA_INC"
     --extra-cxxflags="-O3 -fPIC -pthread$EXTRA_INC"
-    --extra-ldflags="-pthread$EXTRA_LIB"
+    --extra-ldflags="-pthread$EXTRA_LIB$EXTRA_LDFLAGS_EXTRA"
 )
 if [ "${#EXTERNAL_ARGS[@]}" -gt 0 ]; then
     args+=( "${EXTERNAL_ARGS[@]}" )
@@ -216,8 +224,11 @@ rm -f "${fftools_objs[@]/#/$builddir/}"
 ffmpeg_make "$builddir" "${fftools_objs[@]}"
 
 # --- link the CLI as a MODULARIZE'd WASM factory (contract §7) --------------
+# binaryen's wasm-opt cannot parse this module once x265 is linked, and emcc 6
+# has no --no-wasm-opt any more; -O0 skips the optimiser entirely.
+LINK_OPT="${WEB_LINK_OPT:--O3}"
 link_flags=(
-    -O3 -fPIC -pthread
+    "$LINK_OPT" -fPIC -pthread
     -I"$builddir" -I"$FFMPEG_SRC" -DHAVE_AV_CONFIG_H
     -Wl,--start-group
     -L"$builddir/libavdevice" -L"$builddir/libavfilter" -L"$builddir/libavformat" -L"$builddir/libavcodec"
@@ -255,6 +266,12 @@ link_flags+=(
     # when the runtime is actually torn down.
     -sEXIT_RUNTIME=1
     -sASSERTIONS=0
+    # x265 and SVT-AV1 bring C++ objects; the C++ runtime has to be linked even
+    # though FFmpeg itself is C.
+    -sDEFAULT_TO_CXX
+    # binaryen's wasm-opt dies on this module once the C++ libraries are in
+    # ("popping from empty stack"), so opt in for a larger, valid binary.
+    --no-wasm-opt
     -o "$distdir/ffmpeg.js"
 )
 

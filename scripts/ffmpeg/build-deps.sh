@@ -358,6 +358,19 @@ build_aom() {
         "${cpu_args[@]}"
 }
 
+build_zlib() {
+    fetch https://github.com/madler/zlib/archive/refs/tags/v1.3.1.tar.gz zlib-1.3.1.tar.gz
+    unpack zlib-1.3.1.tar.gz zlib
+    log "build zlib 1.3.1"
+    cmake_build "$SRC/zlib" -DZLIB_BUILD_EXAMPLES=OFF -DZLIB_BUILD_SHARED=OFF
+    # zlib's CMake installs libzlibstatic.a; FFmpeg links -lz.
+    local libdir="$PREFIX/lib"
+    [ -d "$PREFIX/lib64" ] && libdir="$PREFIX/lib64"
+    if [ -f "$libdir/libzlibstatic.a" ] && [ ! -f "$libdir/libz.a" ]; then
+        cp "$libdir/libzlibstatic.a" "$libdir/libz.a"
+    fi
+}
+
 build_x264() {
     fetch https://github.com/mirror/x264/archive/refs/heads/stable.tar.gz x264-stable.tar.gz
     unpack x264-stable.tar.gz x264
@@ -477,7 +490,7 @@ build_webp() {
         -DWEBP_BUILD_EXTRAS=OFF
 }
 
-for dep in nvcodec lame svtav1 x264 opus ogg vorbis vpx webp x265 aom; do
+for dep in nvcodec lame svtav1 x264 opus ogg vorbis vpx webp x265 aom zlib; do
     want "$dep" || continue
     "build_$dep"
 done

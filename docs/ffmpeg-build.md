@@ -218,6 +218,15 @@ what is actually installed and emits only flags whose dependency resolves:
 line names it explicitly; without it configure stops at
 `nvenc requested, but not all dependencies are satisfied: ffnvcodec`.
 
+zlib is built per target as well: mingw and emscripten do not ship it, and
+without it png, apng, zmbv, exr, flashsv, flashsv2, pdv and the matching
+decoders silently disappear from that platform's build.
+
+`python3 tool/check_parity.py` compares all five builds against the Linux one and
+reports encoder or decoder names that differ, ignoring hardware back ends and
+libraries the project does not build. It is the guard against a platform quietly
+losing codecs; the current run reports `parity ok`.
+
 Libraries the sysroot does not provide come from `scripts/ffmpeg/build-deps.sh`.
 It builds the same recipes for a desktop target and for the cross targets, so a
 platform is never stuck with fewer encoders just because its libraries happened
@@ -275,7 +284,7 @@ Builds verified on this machine (FFmpeg 9.0.2 source, `FFMPEG_EXTERNAL_LIBS=1`,
 | android-armeabi-v7a | `dist/android-armeabi-v7a/libffmpeg_exe.so` | 32 753 584 B | same software set (libvpx without NEON) + MediaCodec |
 | android-x86_64 | `dist/android-x86_64/libffmpeg_exe.so` | 48 433 744 B | same software set + MediaCodec |
 | windows-x64 | `dist/windows-x64/ffmpeg.exe` | 53 011 470 B | libx264/libx265/libvpx/libsvtav1/libopus/libvorbis/libmp3lame/libwebp |
-| web | `dist/web/ffmpeg.wasm` | 25 654 275 B | libx264/libvpx/libaom/libopus/libvorbis/libmp3lame/libwebp (wasm) |
+| web | `dist/web/ffmpeg.wasm` | 32 901 039 B | libx264/libx265/libvpx/libaom/libsvtav1/libopus/libvorbis/libmp3lame/libwebp + zlib (wasm) |
 
 The wasm target links its own copies of most of the same libraries. Emscripten needs a
 few extra fixes, all handled in the scripts: x264 is configured with
@@ -287,10 +296,11 @@ archives carry no usable `.pc` entry. libaom comes from the Debian source
 mirror because `aomedia.googlesource.com` is unreachable from this network; for
 wasm it is configured with `-DAOM_TARGET_CPU=generic`, and x265's CMake needs
 `EMSCRIPTEN` added to its "32-bit x86" branch or em++ rejects `-march=i686`.
-Web therefore carries H.264 (libx264), VP8/VP9, AV1 (libaom), Opus, Vorbis,
-MP3 and WebP, but no HEVC: x265's wasm archive links against Emscripten's C++
-runtime in a way FFmpeg's `emcc` probe cannot satisfy, so x265 stays out of the
-web build and only the native/mobile builds carry HEVC.
+Web therefore carries the same encoder set as the other targets, HEVC included.
+Linking x265 makes binaryen's `wasm-opt` fail with "popping from empty stack",
+and emcc 6 dropped `--no-wasm-opt`, so the web link runs with `-O0` (objects are
+still compiled `-O3`); the module is larger, and `WEB_LINK_OPT` overrides the
+link level if a future emsdk fixes the optimiser.
 
 ## LTO and parallelism
 
