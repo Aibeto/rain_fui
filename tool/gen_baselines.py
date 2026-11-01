@@ -32,7 +32,7 @@ TARGETS = {
 
 def encoder_names() -> list[str]:
     source = (ROOT / "lib/src/media/generated/encoder_facts.dart").read_text()
-    return sorted(set(re.findall(r"'([a-z0-9_]+)':", source)))
+    return sorted(set(re.findall(r"'([a-z0-9_.-]+)':", source)))
 
 
 def symbol(name: str) -> str:
