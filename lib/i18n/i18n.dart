@@ -249,6 +249,6 @@ class I18nScope extends InheritedWidget {
 }
 
 extension L10nContext on BuildContext {
-  /// `context.l10n(I18nKey.homeTitle)`
+  /// `context.l10n(I18nKey.homeEmptyTitle)`
   AppL10n get l10n => I18nScope.of(this);
 }

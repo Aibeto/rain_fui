@@ -39,6 +39,9 @@ lib/
 │   ├── theme_service.dart          ValueNotifier<ThemeMode> cycle        [lead]
 │   ├── font_license_service.dart   LicenseRegistry OFL registration      [lead]
 │   ├── file_source_service.dart    pickers, folder listing, drop mapping [lead]
+│   ├── platform_support.dart       supportsDropTarget (desktop + web only) [lead]
+│   ├── child_listing.dart          name list + truncation flag             [lead]
+│   └── directory_lister.dart       conditional dart:io / web stub          [lead]
 │   └── android_permission_service.dart  notification/all-files skeleton  [dialogs]
 ├── activities/
 │   ├── home_activity.dart          app shell + drop target               [lead]
@@ -184,7 +187,15 @@ class AppBottomBar extends StatelessWidget {
 }
 
 // lib/widgets/home_sidebar.dart                                        [lead]
-class HomeSidebar extends StatelessWidget { const HomeSidebar({super.key}); }
+const double kHomeSidebarWidth = 240;
+class HomeSidebar extends StatelessWidget {
+  const HomeSidebar({super.key, this.floating = false,
+    this.width = kHomeSidebarWidth});
+  /// Narrow-window variant: stands on the higher layer fill and overlays the
+  /// content region instead of squeezing it.
+  final bool floating;
+  final double width;
+}
 
 // lib/widgets/home_content.dart                                        [lead]
 class HomeContent extends StatelessWidget {
@@ -203,25 +214,38 @@ class DropSurface extends StatefulWidget {
 }
 ```
 
-The `+` flow is: `showAddSourceDialog` → `showSelectionResultDialog`. The drop
-flow is: `DropSurface` → `FileSourceService.selectionFromDrop` →
-`showSelectionResultDialog`, with `FileSourceException` going to
-`showMessageDialog`.
+The `+` flow is: `showAddSourceDialog` (picker, plus a confirm step for a
+folder) → `showSelectionResultDialog`. The drop flow is: `DropSurface` →
+`FileSourceService.selectionFromDrop` → `showSelectionResultDialog`, with
+`FileSourceException` going to `showMessageDialog`.
+
+## Layout behaviour
+
+- The sidebar starts collapsed. `HomeActivity` pushes the content region aside
+  only when the window is at least `kHomeSidebarWidth + 600` wide; below that it
+  overlays the content with a smoked scrim that dismisses it on tap.
+- Drop affordances (the static hint pill, the drag-hover overlay, the drop
+  wording of the empty state) exist only where dragging does:
+  `supportsDropTarget` = web, Windows, Linux, macOS. Touch platforms get their
+  own copy and never see a hint.
+- The home region has no page heading: the empty state or the source summary is
+  the first thing under the top bar.
 
 ## i18n keys (frozen)
 
-`app_title` `app_tagline` `top_bar_sidebar_toggle` `top_bar_language`
-`top_bar_theme` `theme_light` `theme_dark` `theme_system` `sidebar_home`
-`sidebar_workspace` `home_title` `home_empty_title` `home_empty_body`
-`home_drop_hint` `home_phase_notice` `home_sources_title` `home_sources_empty`
-`bottom_bar_home` `bottom_bar_add` `add_source_title` `add_source_body`
-`add_source_files` `add_source_files_hint` `add_source_folder`
-`add_source_folder_hint` `action_cancel` `action_close` `result_files_title`
-`result_folder_title` `result_drop_title` `result_nothing` `result_files_label`
-`result_folders_label` `result_children_label` `result_children_empty`
-`result_children_truncated` `result_web_paths_unavailable` `result_read_error`
-`error_picker_failed` `error_folder_unsupported_web`
-`error_folder_unsupported_android` `error_drop_failed`
+`app_title` `top_bar_sidebar_toggle` `top_bar_language` `top_bar_theme`
+`theme_light` `theme_dark` `theme_system` `sidebar_home` `home_empty_title`
+`home_empty_body` `home_empty_body_touch` `home_drop_hint` `home_drop_hint_idle`
+`home_phase_notice` `home_sources_title` `home_sources_empty` `bottom_bar_home`
+`bottom_bar_add` `add_source_title` `add_source_body` `add_source_files`
+`add_source_files_hint` `add_source_folder` `add_source_folder_hint`
+`add_source_confirm_title` `add_source_confirm_body` `action_add`
+`action_cancel` `action_close` `result_files_title` `result_folder_title`
+`result_drop_title` `result_nothing` `result_files_label` `result_folders_label`
+`result_children_label` `result_children_empty` `result_children_truncated`
+`result_web_paths_unavailable` `result_read_error` `error_picker_failed`
+`error_folder_unsupported_web` `error_folder_unsupported_android`
+`error_drop_failed`
 
 Sentences are written for a plain `Map<String, String>`: **no placeholder
 tokens**. Never concatenate translated fragments except with `' · '` or `': '`.

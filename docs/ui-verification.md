@@ -11,8 +11,8 @@ Analyzing rain_fui...
 No issues found!
 
 $ python3 tool/check_i18n.py
-… 19 × "42 keys  ok"
-i18n_keys.dart 42 constants covered by en_US
+… 19 × "44 keys  ok"
+i18n_keys.dart 44 constants covered by en_US
 All catalogs structurally sound.
 
 $ python3 tool/check_ui_rules.py
@@ -23,16 +23,30 @@ No findings: no blur, no Material/Cupertino icons, no stray literals.
 | --- | --- | --- |
 | 1 | No visible startup flash, straight to Home | `lib/main.dart` awaits the whole bootstrap before `runApp`; `lib/activities/startup_activity.dart` paints `SizedBox.shrink()` and replaces itself with `HomeActivity` in its first post-frame callback, so the startup route never shows a frame of its own and the back stack stays one entry deep. |
 | 2 | Persisted language wins, else supported system locale, else `en-US` | `LocaleService.resolveStartupLocale` (`lib/services/locale_service.dart:37`) tries the stored tag, then `supportedTagForLocale(systemLocale)`, then `kFallbackLocale`. A stored value that is not one of the 19 is treated as absent rather than forcing English. |
-| 3 | All copy outside `LanguageActivity` comes from i18n, missing keys fall back to `en-US` | `translate` (`lib/i18n/i18n.dart:203`) is primary map → `en_US` → the key itself. Every widget calls `context.l10n(I18nKey.…)`; `tool/check_ui_rules.py` fails on literal `Text('…')`, `tooltip:`, `label:` and `placeholder:` strings and on empty catalogs, and `tool/check_i18n.py` proves all 19 catalogs carry exactly the frozen 42 keys in the same order. |
+| 3 | All copy outside `LanguageActivity` comes from i18n, missing keys fall back to `en-US` | `translate` (`lib/i18n/i18n.dart:203`) is primary map → `en_US` → the key itself. Every widget calls `context.l10n(I18nKey.…)`; `tool/check_ui_rules.py` fails on literal `Text('…')`, `tooltip:`, `label:` and `placeholder:` strings and on empty catalogs, and `tool/check_i18n.py` proves all 19 catalogs carry exactly the frozen 44 keys in the same order. |
 | 4 | `LanguageActivity` rows are `code endonym` | `lib/activities/language_activity.dart:11` holds the 19 endonyms; the row renders `'$tag $endonym'` — one space, code first — in a bundled monospace face with the per-script fallback chain. |
-| 5 | Theme button cycles light → dark → system | `ThemeService.order` (`lib/services/theme_service.dart:17`) is `[light, dark, system]`; `cycle()` advances modulo the list, `ValueListenableBuilder` feeds `FluentApp.themeMode`, and the top-bar tooltip shows the mode label. |
+| 5 | Theme button cycles light → dark → system | `ThemeService.order` (`lib/services/theme_service.dart:16`) is `[light, dark, system]`; `cycle()` advances modulo the list, `ValueListenableBuilder` feeds `FluentApp.themeMode`, and the top-bar tooltip shows the mode label. |
 | 6 | Real bottom bar: left list, centre `+`, right placeholder | `AppBottomBar` (`lib/widgets/bottom_bar.dart:19`) is a full-width 48 px container with three `Expanded` slots; `HomeActivity` places it inside `SafeArea(top: false)` so it sits on the bottom inset, and the root `ColoredBox` extends the bar colour into the inset. |
 | 7 | `+` shows a dialog; file and folder pickers are native; one result dialog | `showAddSourceDialog` → `FileSourceService.pickFiles` / `pickFolder` (native `file_picker`) → `showSelectionResultDialog`. Picker failures and the unsupported cases surface through `showMessageDialog`. |
 | 8 | Manifest declares `POST_NOTIFICATIONS` and `MANAGE_EXTERNAL_STORAGE` | `android/app/src/main/AndroidManifest.xml:4-5`, with the runtime skeleton in `lib/services/android_permission_service.dart` over the `rain_fui/permissions` channel in `MainActivity.kt`. |
-| 9 | Drag and drop of files or folders yields paths/children | `DropSurface` (`lib/widgets/drop_surface.dart:15`) wraps the content region in a `DropTarget`; `FileSourceService.selectionFromDrop` maps `DropItemFile`/`DropItemDirectory` (including web items with no local path) and the result opens the same result dialog. The whole path is wrapped in `try`/`catch`. |
+| 9 | Drag and drop of files or folders yields paths/children | `DropSurface` (`lib/widgets/drop_surface.dart:19`) wraps the content region in a `DropTarget`; `FileSourceService.selectionFromDrop` maps `DropItemFile`/`DropItemDirectory` (including web items with no local path) and the result opens the same result dialog. The whole path is wrapped in `try`/`catch`. |
 | 10 | No blur anywhere | No `BackdropFilter`, `ImageFilter`, `Acrylic` or `BackdropGroup` in `lib/`, `android/`, `web/`, `windows/`, `linux/` or `macos/` — enforced by `tool/check_ui_rules.py`. The shell is hand-built instead of using Fluent's acrylic pane, and dialogs use the solid barrier colour of `showDialog`. |
 | 11 | Icons only from `fluentui_system_icons`, components from `fluent_ui` | Every widget imports `package:fluent_ui/fluent_ui.dart` with `hide FluentIcons` and the icon package separately; `tool/check_ui_rules.py` rejects `Icons.` and `CupertinoIcons`. No Material widget is used — there is not even a `Scaffold`. |
 | 12 | All 19 locales render without tofu; fonts OFL, bundled, registered | `pubspec.yaml` bundles Source Sans 3 (Latin + Cyrillic), Noto Sans SC/TC/JP/KR, Noto Sans Arabic, Noto Sans Thai and Source Code Pro; `AppTheme` applies `fontFamilyFallback` per script to all eight `Typography` styles; `FontLicenseService` registers the eight OFL texts from `assets/licenses/` with `LicenseRegistry`. No `google_fonts`, no runtime download. |
+
+## Round-2 follow-up (sidebar, drop hints, clean home, folder confirm)
+
+| Change | Where it is satisfied |
+| --- | --- |
+| Sidebar starts collapsed and only squeezes the content when the window can afford it | `_sidebarVisible = false` in `lib/activities/home_activity.dart`; `_pushSidebarBreakpoint = kHomeSidebarWidth + 600` (840 px) at `lib/activities/home_activity.dart:38` decides between `Row` (push) and `Stack` (float over the content with a smoked scrim that dismisses on tap). |
+| Drop-hint copy only on Windows / Linux / macOS / web | `supportsDropTarget` (`lib/services/platform_support.dart:11`). `HomeContent` switches `home_empty_body` ⇄ `home_empty_body_touch` and renders the hint pill only when it is true; `DropSurface` gates its hover overlay on the same flag. |
+| No "Workspace" / tagline text on the home screen | `app_tagline`, `sidebar_workspace` and `home_title` were removed from all 19 catalogs; `HomeContent` now starts at the empty state and `HomeSidebar` no longer draws a caption row. |
+| One confirmation step after picking a folder | `showAddSourceDialog` → `_confirmFolder` → `_FolderConfirmDialog` (title/body/path plus Cancel and Add). Files keep the single step, since the multi-select picker already ends with a confirm action. |
+
+Re-verified after the change: `dart analyze` → `No issues found!`,
+`tool/check_i18n.py` → 19 × "44 keys  ok" + "All catalogs structurally sound.",
+`tool/check_ui_rules.py` → `No findings: no blur, no Material/Cupertino icons, no
+stray literals.`
 
 ## Not covered here
 
