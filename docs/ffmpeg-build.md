@@ -110,11 +110,10 @@ build tree first. `bash -n` is enough to syntax-check them.
   | `armeabi-v7a` | older 32-bit ARM devices | slower, larger relative overhead; needed for `flutter build apk` defaults |
   | `x86_64` | Android emulators (and some Chromebooks) | fastest emulator ABI on x86 hosts |
 
-  CI deliberately builds only `arm64-v8a` by default: emulator-only x86_64 and
-  legacy v7a ABIs roughly triple the job time (each is a full LTO build) and
-  are not needed for release APKs targeting real devices. Build the other two
-  locally/on demand with `--abis armeabi-v7a,x86_64`; `flutter build apk` only
-  complains about a missing ABI when that ABI is actually requested.
+  CI builds all three ABIs, one parallel job per ABI (`build-android` matrix in
+  `.github/workflows/ci.yml`): the three cross-compiles are independent, so
+  splitting them shortens the wall clock to the slowest ABI instead of summing
+  them.
 
 `scripts/ffmpeg/build-windows.sh [--jobs N] [--clean] [--arch x86_64]`
 : detects its host. On MSYS2/Git-Bash it builds natively; on Linux it
@@ -355,7 +354,7 @@ the artifacts, and `install-to-app.sh` is the only step that writes into
 
 ```bash
 scripts/ffmpeg/build-linux.sh
-scripts/ffmpeg/build-android.sh --abis arm64-v8a
+scripts/ffmpeg/build-android.sh --abis arm64-v8a   # one CI leg per ABI
 scripts/ffmpeg/build-web.sh
 scripts/ffmpeg/install-to-app.sh linux android web
 ```

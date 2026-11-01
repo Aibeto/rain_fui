@@ -16,9 +16,9 @@ scripts/ffmpeg/build-<target>.sh   →   scripts/ffmpeg/install-to-app.sh <targe
 
 | 事件 | 条件 | 结果 |
 | --- | --- | --- |
-| `push` | 分支 `master` / `main` | analyze + test，4 平台构建，上传 artifact |
+| `push` | 分支 `master` / `main` | analyze + test，4 平台构建（Android 的 3 个 ABI 并行），上传 artifact |
 | `push` | tag `v*`（如 `v0.1.0`） | 同上 + `release` job 打 GitHub Release |
-| `pull_request` | 任意 PR | analyze + test，4 平台构建（不发 release） |
+| `pull_request` | 任意 PR | analyze + test，4 平台构建（Android 的 3 个 ABI 并行；不发 release） |
 | `workflow_dispatch` | 手动，任意分支 | 同 `push` |
 
 并发策略：
@@ -37,7 +37,7 @@ PR 上新提交会取消同一 PR 的旧运行；`master` / tag 的运行**不�
 
 | 平台 | 构建产物 | 状态 | 说明 |
 | --- | --- | --- | --- |
-| `android` | `rain_fui-android-arm64-v8a.apk` | ✅ 构建 | 只做 `arm64-v8a`（见 §8 限制） |
+| `android` | `rain_fui-android-<abi>.apk`（3 个 ABI） | ✅ 构建 | `arm64-v8a` / `armeabi-v7a` / `x86_64`，**各一个并行 job**（见 §5） |
 | `windows` | `rain_fui-windows-x64.zip` | ✅ 构建 | FFmpeg 在 MSYS2 MinGW64 里编 |
 | `linux` | `rain_fui-linux-x64.tar.gz` | ✅ 构建 | 静态 FFmpeg，Ubuntu 24.04 构建 |
 | `web` | `rain_fui-web.zip` | ✅ 构建 | Emscripten 版 `ffmpeg.wasm` |
@@ -64,7 +64,9 @@ Unrecognized named-value: 'matrix' in job if conditional
 因此改用等价实现，**跳过依然可见**：
 
 ```yaml
-build:                     # 矩阵：android / windows / linux / web
+build:                     # 矩阵：windows / linux / web
+  ...
+build-android:             # 矩阵：arm64-v8a / armeabi-v7a / x86_64（并行）
   ...
 build-unsupported:         # 矩阵：ios / macos，job 级 if 恒为假
   if: ${{ vars.BUILD_UNSUPPORTED_PLATFORMS == 'true' }}
@@ -106,11 +108,13 @@ build-unsupported:         # 矩阵：ios / macos，job 级 if 恒为假
 | artifact 名 | 文件 | 内容 |
 | --- | --- | --- |
 | `rain_fui-android-arm64-v8a` | `rain_fui-android-arm64-v8a.apk` + `…-ffmpeg-version.txt` | split APK（arm64-v8a） |
+| `rain_fui-android-armeabi-v7a` | `rain_fui-android-armeabi-v7a.apk` + `…-ffmpeg-version.txt` | split APK（armeabi-v7a） |
+| `rain_fui-android-x86_64` | `rain_fui-android-x86_64.apk` + `…-ffmpeg-version.txt` | split APK（x86_64，模拟器） |
 | `rain_fui-windows-x64` | `rain_fui-windows-x64.zip` | `rain_fui/` 目录：`rain_fui.exe` + DLL + `ffmpeg.exe` + `LICENSES/` + `FFMPEG-VERSION.txt` |
 | `rain_fui-linux-x64` | `rain_fui-linux-x64.tar.gz` | `rain_fui/` 目录：`rain_fui` + `lib/ffmpeg` + `LICENSES/` + `FFMPEG-VERSION.txt` |
 | `rain_fui-web` | `rain_fui-web.zip` | `rain_fui-web/`：`index.html` + `ffmpeg/ffmpeg.{js,wasm}` + `LICENSES/` |
 
-tag `v*` 时，`release` job 把上面 4 个包**原样**挂到 Release（不重新打包），并额外生成
+tag `v*` 时，`release` job 把上面这些包（4 个平台、6 个 artifact）**原样**挂到 Release（不重新打包），并额外生成
 `rain_fui-ffmpeg-licenses-<tag>.tar.gz`——契约 §2 要求分发二进制时同时分发
 `LICENSES/ffmpeg/` 的许可证原文。若 `LICENSES/ffmpeg/` 不存在，会输出 `::warning::`
 而不是让发布失败（APK 里塞不进许可证，只能以附加文件形式分发）。
@@ -131,7 +135,7 @@ checkout(fetch-depth:1, 无子模块) → flutter(stable) → cache pub → flut
 
 `flutter analyze` 默认 `--fatal-warnings`、不 `--fatal-infos`，即 warning 会红、info 不会。
 
-### `build (<platform>)`（矩阵，`needs: analyze-and-test`）
+### `build (<platform>)`（矩阵：windows / linux / web，`needs: analyze-and-test`）
 
 公共步骤：
 
@@ -155,22 +159,54 @@ checkout(fetch-depth:1, 无子模块) → flutter(stable) → cache pub → flut
 
 | 平台 | 工具链 |
 | --- | --- |
-| android | `actions/setup-java@v4`(temurin 17) + `android-actions/setup-android@v3` + `sdkmanager` 装 `ndk;28.2.13676358`、`cmake;3.22.1`；`ANDROID_NDK_HOME`/`ANDROID_NDK_ROOT`/`ANDROID_NDK` 写入 `$GITHUB_ENV`；`~/.gradle/caches`、`~/.gradle/wrapper` 缓存 |
 | windows | `msys2/setup-msys2@v2`（`msystem: MINGW64`，`mingw-w64-x86_64-gcc`、`nasm`、`pkgconf`、`make`、`git`）；FFmpeg 的两步用 `shell: msys2 {0}` 跑，Flutter 构建用默认 `pwsh` |
 | linux | apt: `build-essential nasm yasm pkg-config patch clang cmake ninja-build libgtk-3-dev liblzma-dev libstdc++-12-dev zip unzip file`；`flutter config --enable-linux-desktop` |
 | web | `mymindstorm/setup-emsdk@v14`（`version: 6.0.13`，`actions-cache-folder`），并打印 `emcc --version` |
+
+
+### `build-android`（矩阵：`arm64-v8a` / `armeabi-v7a` / `x86_64`，`needs: analyze-and-test`）
+
+三个 ABI 是**三个互不依赖的 job**，在 GitHub 上并行跑；名字形如
+`build (android-arm64-v8a)`、`build (android-armeabi-v7a)`、`build (android-x86_64)`。
+
+为什么拆开：每个 ABI 的 FFmpeg 交叉编译本来就独立（`build/ffmpeg/ffbuild/android-<abi>`、
+`build/ffmpeg/dist/android-<abi>`，缓存键里也带 abi），串在一个 job 里只能顺序跑，
+冷缓存墙钟≈45 min；拆开后≈最慢的那个 ABI（≈20 min）。代价是 3 份 SDK/NDK 安装时间，
+用 `fail-fast: false` 保证一个 ABI 红了另外两个仍然给出结论。
+
+步骤（没有 `if: matrix.platform == ...` 条件，全部无条件执行）：
+
+1. checkout（`submodules: recursive`）→ Flutter stable → pub 缓存 → `flutter pub get`
+2. `Resolve FFmpeg submodule revision`（缓存键的一部分）
+3. FFmpeg 构建缓存：key 里带 `android-${{ matrix.abi }}`，三个 leg 互不命中
+4. JDK 17（temurin）+ Android SDK + `sdkmanager --install "ndk;28.2.13676358" "cmake;3.22.1"`，
+   `ANDROID_NDK_HOME` / `ANDROID_NDK_ROOT` / `ANDROID_NDK` 写进 `$GITHUB_ENV`
+5. `~/.gradle/caches`、`~/.gradle/wrapper` 缓存
+6. `chmod +x scripts/ffmpeg/*.sh`
+7. `scripts/ffmpeg/build-android.sh --jobs "$(nproc)" --abis <abi> --api 24`（缓存命中则跳过）
+8. 校验 `build/ffmpeg/dist/android-<abi>/version.txt` 非空且含 `9.0.2`，`file` 打印 ELF 类型
+9. `scripts/ffmpeg/install-to-app.sh android-<abi>` → `android/app/src/main/jniLibs/<abi>/`
+10. `flutter build apk --release --target-platform <android-arm64|android-arm|android-x64> --split-per-abi`
+11. 断言 `app-<abi>-release.apk` 里有 `lib/<abi>/libffmpeg_exe.so`（§7）
+12. 打包成 `rain_fui-android-<abi>.apk` + `…-ffmpeg-version.txt` 并上传
+
+矩阵实现细节：`target_platform` 用的是 Flutter 自己的 ABI 名（`android-arm64` / `android-arm`
+/ `android-x64`），与契约里的 `android-<abi>` 不是一套命名，别混淆。
 
 `NDK 28.2.13676358` 不是随手写的数字：它就是 Flutter 3.47.x 的默认 `ndkVersion`
 （`flutter/packages/flutter_tools/gradle/src/main/kotlin/FlutterExtension.kt:42`），
 而 `android/app/build.gradle.kts` 用的是 `ndkVersion = flutter.ndkVersion`。
 
-
 ### `release`（仅 tag `v*`，ubuntu-latest，15 min）
 
-`needs: [analyze-and-test, build]`，条件：
+`needs: [analyze-and-test, build, build-android]`，条件：
 
 ```yaml
-if: ${{ !cancelled() && needs.build.result == 'success' && startsWith(github.ref, 'refs/tags/v') }}
+if: >-
+  ${{ !cancelled()
+      && needs.build.result == 'success'
+      && needs.build-android.result == 'success'
+      && startsWith(github.ref, 'refs/tags/v') }}
 ```
 
 `download-artifact@v4`（`merge-multiple: true`）→ 打许可证包 → `softprops/action-gh-release@v2`
@@ -206,7 +242,7 @@ FFmpeg 缓存的三条硬规则：
 
 | 平台 | 断言 |
 | --- | --- |
-| android | `unzip -l build/app/outputs/flutter-apk/app-arm64-v8a-release.apk` 里必须有 `lib/arm64-v8a/libffmpeg_exe.so`；否则把 APK 里所有 `.so` 打出来再失败。另外对 `android:extractNativeLibs="true"` / `useLegacyPackaging` 只发 `::warning::`（那是 Lead 的 android/** 范围） |
+| android | 每个 leg 各查自己的包：`unzip -l build/app/outputs/flutter-apk/app-<abi>-release.apk` 里必须有 `lib/<abi>/libffmpeg_exe.so`；否则把 APK 里所有 `.so` 打出来再失败。另外对 `android:extractNativeLibs="true"` / `useLegacyPackaging` 只发 `::warning::`（那是 Lead 的 android/** 范围） |
 | windows | `build/windows/x64/runner/Release/ffmpeg.exe` 存在（且 `rain_fui.exe` 也在） |
 | linux | `build/linux/x64/release/bundle/lib/ffmpeg` 存在、**有可执行位**、`file` 显示 ELF、`-version` 能跑 |
 | web | `build/web/ffmpeg/ffmpeg.wasm` 与 `ffmpeg.js` 存在、`build/web/index.html` 存在 |
@@ -228,18 +264,24 @@ FFmpeg 缓存的三条硬规则：
 ## 8. 已知限制
 
 1. **iOS / macOS 不构建**（见 §2）。没有 Apple 签名/公证材料，也没有 iOS/macOS 版 FFmpeg 产物。
-2. **Android 只出 `arm64-v8a`**。契约 §5 定义了 3 个 ABI，但 FFmpeg 每个 ABI 都要独立编一遍
-   （LTO 下 arm64 单 ABI 就要 ~20 min），CI 成本 ×3。arm64 覆盖绝大多数真机；
-   `build-android.sh --abis arm64-v8a,armeabi-v7a,x86_64` + `install-to-app.sh android-arm64-v8a android-armeabi-v7a android-x86_64`
-   + 去掉 `--split-per-abi` 的 `--target-platform` 过滤即可扩到全 ABI（同时把对应 leg 的
-   `timeout` 抬到 300+ 分钟，或拆成 3 个 leg）。
-3. **没有端到端转码测试**。CI 只验证二进制能跑（`-version`，linux 上再加一次
-   `testsrc → null` 的编码冒烟）和它能进包；真正的转码回归要靠 `test/` 里的集成测试。
+2. **Android 三个 ABI 都构建，但没有真机测试**。CI 只证明 APK 里确实有对应 ABI 的
+   `libffmpeg_exe.so`、且 `extractNativeLibs` / `useLegacyPackaging` 配置正确；
+   `-version` 之外的转码回归要么在真机/模拟器上手跑，要么靠 `test/real_binary_test.dart`
+   在桌面上验证同一份 FFmpeg 源码。三个 leg 各自缓存，冷缓存墙钟≈最慢的 ABI，
+   成本是 3 份 SDK/NDK 安装（见 §5、§12）。
+3. **转码测试分两层**：linux 上 CI 跑一次 `testsrc → null` 编码冒烟；web 上跑
+   `tool/serve_web.py --smoke` + headless Chrome，真实转一次 mpeg4/aac 并断言 `SMOKE_OK`
+   （runner 没有 Chrome 时降级为 warning）。其余组合（Windows、Android 真机）只验证
+   `-version` 与打包正确，转码回归靠 `test/real_binary_test.dart` 或手动。
 4. **Android release 用 debug 签名**，不能上架，不能覆盖已发布的正式签名包。
 5. **Windows / macOS 未签名**，SmartScreen 会提示；没有安装器（只有 zip 便携包）。
-6. **web 包没开 COOP/COEP**：契约 §7 明确单线程（`--disable-pthreads`），所以不需要这两个头；
-   但如果将来启用 pthreads，托管它的服务器必须加头，否则 `SharedArrayBuffer` 不可用。
-7. **emsdk 版本钉在 `3.1.64`**。`scripts/ffmpeg/build-web.sh` 只要求 `emcc em++ emar emranlib emnm`
+6. **web 包必须开 COOP/COEP**：契约 §7 现在就是线程化 wasm（FFmpeg 9 的 CLI 调度器硬依赖
+   pthreads），托管它的服务器必须发 `Cross-Origin-Opener-Policy: same-origin` +
+   `Cross-Origin-Embedder-Policy: require-corp`，否则没有 `SharedArrayBuffer`、wasm 无法初始化
+   （桥接层会返回 “cross-origin isolation required”，不会崩）。仓库自带 `tool/serve_web.py` 会加头，
+   GitHub Pages / S3 这类静态托管需要自己配响应头或用 `coi-serviceworker` 之类方案。
+7. **emsdk 版本钉在 `6.0.13`**（本地验证过的版本；Emscripten 6 的 pthread 引导内联在
+   `ffmpeg.js` 里、不再产出独立 worker 脚本，`web/ffmpeg/ffmpeg_worker.js` 依赖这个行为）。`scripts/ffmpeg/build-web.sh` 只要求 `emcc em++ emar emranlib emnm`
    在 PATH 上（不校验版本），所以版本选错不会在脚本里报错，而是晚到 `configure`/链接阶段才炸；
    第一次跑 web leg 时请重点看这一步，必要时改 `setup-emsdk` 的 `version` 并 bump `FFMPEG_CACHE_EPOCH`。
 8. **`flutter channel: stable` 不钉小版本**。本地是 3.47.8，但 CI 跟 stable 走；
@@ -259,7 +301,7 @@ FFmpeg 缓存的三条硬规则：
 | NDK / AGP / Gradle 升级 | `ANDROID_NDK_VERSION`、`cmake;3.22.1`、`FFMPEG_CACHE_EPOCH` |
 | emsdk 升级 | `setup-emsdk` 的 `version` + `FFMPEG_CACHE_EPOCH` |
 | FFmpeg 子模块换 tag | 不用改（key 里的 sha 会自动变）；`FFMPEG_VERSION` 环境变量要跟着改 |
-| 新增 ABI | 见 §8 第 2 条 |
+| 新增 ABI | `build-android` 矩阵加一条 `abi` / `target_platform`；同时改契约 §5、`build-android.sh` 的 ABI 列表、`install-to-app.sh` 与 §8 的落地路径 |
 | 启用 iOS / macOS | 见 §2：写真正的步骤，删掉占位 job 的 `if`/失败步骤 |
 | 换 release 打包方式 | `build` job 末尾的 `Package *` 步骤 + `release` job |
 
@@ -313,10 +355,15 @@ test -f build/windows/x64/runner/Release/ffmpeg.exe
 # ---------- android ----------
 sdkmanager --install "ndk;28.2.13676358" "cmake;3.22.1"
 export ANDROID_NDK_HOME="$ANDROID_SDK_ROOT/ndk/28.2.13676358"
-./scripts/ffmpeg/build-android.sh --jobs "$(nproc)" --abis arm64-v8a --api 24
-./scripts/ffmpeg/install-to-app.sh android-arm64-v8a
-flutter build apk --release --target-platform android-arm64 --split-per-abi
-unzip -l build/app/outputs/flutter-apk/app-arm64-v8a-release.apk | grep libffmpeg_exe.so
+for abi in arm64-v8a armeabi-v7a x86_64; do
+  platform="android-arm64"
+  [ "$abi" = "armeabi-v7a" ] && platform="android-arm"
+  [ "$abi" = "x86_64" ] && platform="android-x64"
+  ./scripts/ffmpeg/build-android.sh --jobs "$(nproc)" --abis "$abi" --api 24
+  ./scripts/ffmpeg/install-to-app.sh "android-$abi"
+  flutter build apk --release --target-platform "$platform" --split-per-abi
+  unzip -l "build/app/outputs/flutter-apk/app-$abi-release.apk" | grep "lib/$abi/libffmpeg_exe.so"
+done
 
 # ---------- web ----------
 #   需要 emsdk：source <emsdk>/emsdk_env.sh
@@ -337,13 +384,16 @@ ls -l build/web/ffmpeg/ffmpeg.wasm
 | --- | --- | --- |
 | analyze & test | ~3 min | ~2 min |
 | build (linux) | ~25 min | ~5 min |
-| build (android) | ~32 min | ~8 min |
+| build (android-arm64-v8a) | ~25 min | ~8 min |
+| build (android-armeabi-v7a) | ~22 min | ~7 min |
+| build (android-x86_64) | ~23 min | ~7 min |
 | build (windows) | ~40 min | ~10 min |
 | build (web) | ~25 min | ~4 min |
 | release | — | ~1 min |
 
-一次 tag 发布总墙钟 ≈ `3 + max(各平台) ≈ 45 min`（冷）/ ≈ 12 min（热）。
-超时设置：android 150、windows 180、linux 120、web 90 分钟——都比冷缓存实测留了
+Android 三个 leg 与 windows/linux/web 并行，所以一次 tag 发布的总墙钟
+≈ `3 + max(所有 leg) ≈ 40 min`（冷）/ ≈ 12 min（热）——Android 不再串行叠加。
+超时设置：android 各 leg 120、windows 180、linux 120、web 90 分钟——都比冷缓存实测留了
 3～4 倍余量，避免偶发慢 runner 被打断。
 
 > 数字是按“LTO full + 4 核”的 FFmpeg 全量编译估的（单个 ABI 的 FFmpeg configure+make

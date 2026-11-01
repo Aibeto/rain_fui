@@ -6,7 +6,8 @@
 #   3) 构建 Flutter 应用   flutter build <...>
 #   4) 断言产物里真的有 FFmpeg（unzip -l / ls），失败即红
 #
-# 只构建 4 个受支持目标：android / windows / linux / web。
+# 只构建 4 个受支持平台：android / windows / linux / web；Android 的三个 ABI
+# 是三个**独立并行的 job**（build-android 矩阵），不是串在一个 job 里。
 # iOS / macOS 放在独立的 build-unsupported job 里，job 级 if 恒为假（默认）
 # → GitHub UI 显示为 “skipped”，而不是让用户以为“这些平台没配置”。
 # 为什么不能写成矩阵里 skip: true + jobs.<id>.if: !matrix.skip：docs/ci.md。
@@ -81,9 +82,10 @@ jobs:
         run: flutter test --reporter expanded
 
   # ---------------------------------------------------------------------------
-  # 平台构建（矩阵）
+  # 桌面 / web 构建（矩阵）：windows / linux / web 各一个 leg
   #
-  # 为什么只有这 4 个目标：仓库只 vendor 了 FFmpeg 的 4 套产物（build-contract §5），
+  # Android 不在这里：三个 ABI 拆成了各自的 job（build-android），并行跑。
+  # 为什么只有这 4 个平台：仓库只 vendor 了 FFmpeg 的 4 套产物（build-contract §5），
   # 且没有 macOS/iOS 的 sign/notarize 凭据（无 secrets）；Windows/Linux/Android/Web
   # 都能用未签名 / debug 签名的产物跑通完整链路。其余平台显式 skip。
   # ---------------------------------------------------------------------------
@@ -96,12 +98,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: android
-            os: ubuntu-latest
-            skip: false
-            timeout: 150
-            artifact: rain_fui-android-arm64-v8a
-            ffmpeg_target: android-arm64-v8a
           - platform: windows
             os: windows-latest
             skip: false
@@ -167,48 +163,6 @@ jobs:
             build/ffmpeg/ffbuild
           key: ffmpeg-${{ env.FFMPEG_CACHE_EPOCH }}-${{ runner.os }}-${{ matrix.ffmpeg_target }}-${{ steps.ffmpeg-rev.outputs.sha }}-${{ hashFiles('scripts/ffmpeg/**') }}
 
-      # ---------------- Android 工具链 ----------------
-      - name: Android · JDK 17 (temurin)
-        if: matrix.platform == 'android'
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Android · Android SDK
-        if: matrix.platform == 'android'
-        uses: android-actions/setup-android@v3
-
-      - name: Android · NDK + CMake, export ANDROID_NDK_HOME
-        if: matrix.platform == 'android'
-        shell: bash
-        run: |
-          set -euo pipefail
-          yes | sdkmanager --licenses >/dev/null 2>&1 || true
-          sdkmanager --install "ndk;${{ env.ANDROID_NDK_VERSION }}" "cmake;3.22.1" >/dev/null
-          NDK_HOME="${ANDROID_SDK_ROOT:?ANDROID_SDK_ROOT is not set}/ndk/${{ env.ANDROID_NDK_VERSION }}"
-          if [ ! -d "$NDK_HOME" ]; then
-            echo "::error::NDK ${{ env.ANDROID_NDK_VERSION }} 未安装到 $NDK_HOME"
-            exit 1
-          fi
-          cat "$NDK_HOME/source.properties" || true
-          {
-            echo "ANDROID_NDK_HOME=$NDK_HOME"
-            echo "ANDROID_NDK_ROOT=$NDK_HOME"
-            echo "ANDROID_NDK=$NDK_HOME"
-          } >> "$GITHUB_ENV"
-
-      - name: Android · Cache Gradle
-        if: matrix.platform == 'android'
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-
-
       # ---------------- Linux 工具链 ----------------
       - name: Linux · apt 依赖（FFmpeg 构建 + Flutter desktop）
         if: matrix.platform == 'linux'
@@ -262,11 +216,6 @@ jobs:
           set -euo pipefail
           ls -l scripts/ffmpeg
           chmod +x scripts/ffmpeg/*.sh
-
-      - name: FFmpeg · build android-arm64-v8a
-        if: matrix.platform == 'android' && steps.ffmpeg-cache.outputs.cache-hit != 'true'
-        shell: bash
-        run: ./scripts/ffmpeg/build-android.sh --jobs "$(nproc)" --abis arm64-v8a --api 24
 
       - name: FFmpeg · build windows-x64 (MSYS2 MinGW64)
         if: matrix.platform == 'windows' && steps.ffmpeg-cache.outputs.cache-hit != 'true'
@@ -325,11 +274,6 @@ jobs:
           }
 
       # ---------------- 落地进平台工程（build-contract §8） ----------------
-      - name: Install FFmpeg into app (android-arm64-v8a)
-        if: matrix.platform == 'android'
-        shell: bash
-        run: ./scripts/ffmpeg/install-to-app.sh android-arm64-v8a
-
       - name: Install FFmpeg into app (windows-x64)
         if: matrix.platform == 'windows'
         shell: msys2 {0}
@@ -346,11 +290,6 @@ jobs:
         run: ./scripts/ffmpeg/install-to-app.sh web
 
       # ---------------- flutter build ----------------
-      - name: flutter build apk (arm64, split-per-abi)
-        if: matrix.platform == 'android'
-        shell: bash
-        run: flutter build apk --release --target-platform android-arm64 --split-per-abi
-
       - name: flutter build windows
         if: matrix.platform == 'windows'
         shell: pwsh
@@ -367,31 +306,6 @@ jobs:
         run: flutter build web --release
 
       # ---------------- 断言 FFmpeg 真的进了应用产物 ----------------
-      - name: Assert FFmpeg inside APK
-        if: matrix.platform == 'android'
-        shell: bash
-        run: |
-          set -euo pipefail
-          APK=build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
-          if [ ! -f "$APK" ]; then
-            echo "::error::APK 不存在: $APK"
-            ls -l build/app/outputs/flutter-apk || true
-            exit 1
-          fi
-          ls -l "$APK"
-          if ! unzip -l "$APK" | grep -E 'lib/arm64-v8a/libffmpeg_exe\.so'; then
-            echo "::error::APK 里没有 lib/arm64-v8a/libffmpeg_exe.so（install-to-app 没落地？）"
-            unzip -l "$APK" | grep -E '\.so$' || echo "（APK 内没有任何 .so）"
-            exit 1
-          fi
-          # 运行时需要解压成可执行文件，见 build-contract §8；只告警，布局由 Lead 维护
-          if ! grep -q 'extractNativeLibs="true"' android/app/src/main/AndroidManifest.xml; then
-            echo "::warning::AndroidManifest.xml 缺 android:extractNativeLibs=\"true\"，libffmpeg_exe.so 运行时不会被解压（build-contract §8）"
-          fi
-          if ! grep -rq 'useLegacyPackaging' android/app/build.gradle.kts; then
-            echo "::warning::android/app/build.gradle.kts 里没有 useLegacyPackaging = true（build-contract §8）"
-          fi
-
       - name: Assert FFmpeg inside windows bundle
         if: matrix.platform == 'windows'
         shell: pwsh
@@ -468,18 +382,6 @@ jobs:
               ;;
           esac
 
-      - name: Package android
-        if: matrix.platform == 'android'
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p build/release-artifacts
-          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
-             build/release-artifacts/rain_fui-android-arm64-v8a.apk
-          cp build/ffmpeg/dist/android-arm64-v8a/version.txt \
-             build/release-artifacts/rain_fui-android-arm64-v8a-ffmpeg-version.txt
-          ls -l build/release-artifacts
-
       # ---------------- 打包 + 上传（release job 直接复用这些文件） ----------------
       - name: Package linux
         if: matrix.platform == 'linux'
@@ -539,6 +441,190 @@ jobs:
           retention-days: 14
 
   # ---------------------------------------------------------------------------
+  # Android：三个 ABI = 三个独立 job，**并行**跑。
+  #
+  # 为什么拆开：三个 ABI 的交叉编译互不依赖（各自 build/ffmpeg/ffbuild/android-<abi>
+  # 与 dist/android-<abi>，缓存键也是 per-ABI）。塞进一个 job 只能串行约 40 分钟；
+  # 拆开后墙钟时间≈最慢的那个 ABI。代价是 runner 分钟数略增（3 × SDK/NDK 安装）。
+  #
+  # 矩阵里没有 platform 字段，所以这些 step 不再需要 `if: matrix.platform == 'android'`。
+  # ---------------------------------------------------------------------------
+  build-android:
+    name: build (android-${{ matrix.abi }})
+    needs: analyze-and-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false # 一个 ABI 红了，另外两个仍然跑完，便于一次看全
+      matrix:
+        include:
+          - abi: arm64-v8a
+            target_platform: android-arm64
+          - abi: armeabi-v7a
+            target_platform: android-arm
+          - abi: x86_64
+            target_platform: android-x64
+
+    steps:
+      - name: Checkout (+ FFmpeg 子模块)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: recursive
+
+      - name: Set up Flutter (stable)
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PUB_CACHE }}
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            pub-${{ runner.os }}-
+
+      - name: flutter pub get
+        run: flutter pub get
+
+      - name: Resolve FFmpeg submodule revision
+        id: ffmpeg-rev
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha=$(git -C third_party/ffmpeg rev-parse HEAD)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "FFmpeg submodule @ $sha"
+
+      # 每个 ABI 一份缓存：键里带 abi，leg 之间不会互相污染
+      - name: Cache FFmpeg build output
+        id: ffmpeg-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/ffmpeg/dist
+            build/ffmpeg/ffbuild
+          key: ffmpeg-${{ env.FFMPEG_CACHE_EPOCH }}-${{ runner.os }}-android-${{ matrix.abi }}-${{ steps.ffmpeg-rev.outputs.sha }}-${{ hashFiles('scripts/ffmpeg/**') }}
+
+      - name: Android · JDK 17 (temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Android · Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Android · NDK + CMake, export ANDROID_NDK_HOME
+        shell: bash
+        run: |
+          set -euo pipefail
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
+          sdkmanager --install "ndk;${{ env.ANDROID_NDK_VERSION }}" "cmake;3.22.1" >/dev/null
+          NDK_HOME="${ANDROID_SDK_ROOT:?ANDROID_SDK_ROOT is not set}/ndk/${{ env.ANDROID_NDK_VERSION }}"
+          if [ ! -d "$NDK_HOME" ]; then
+            echo "::error::NDK ${{ env.ANDROID_NDK_VERSION }} 未安装到 $NDK_HOME"
+            exit 1
+          fi
+          cat "$NDK_HOME/source.properties" || true
+          {
+            echo "ANDROID_NDK_HOME=$NDK_HOME"
+            echo "ANDROID_NDK_ROOT=$NDK_HOME"
+            echo "ANDROID_NDK=$NDK_HOME"
+          } >> "$GITHUB_ENV"
+
+      - name: Android · Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Prepare scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          ls -l scripts/ffmpeg
+          chmod +x scripts/ffmpeg/*.sh
+
+      - name: FFmpeg · build android-${{ matrix.abi }}
+        if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: ./scripts/ffmpeg/build-android.sh --jobs "$(nproc)" --abis ${{ matrix.abi }} --api 24
+
+      - name: Verify FFmpeg dist
+        shell: bash
+        run: |
+          set -euo pipefail
+          DIST="build/ffmpeg/dist/android-${{ matrix.abi }}"
+          echo "== $DIST =="
+          ls -l "$DIST" || { echo "::error::缺少目录 $DIST"; exit 1; }
+          if [ ! -s "$DIST/version.txt" ]; then
+            echo "::error::$DIST/version.txt 缺失或为空（build-contract §5）"
+            exit 1
+          fi
+          cat "$DIST/version.txt"
+          grep -q "${{ env.FFMPEG_VERSION }}" "$DIST/version.txt" \
+            || { echo "::error::version.txt 里没有 ${{ env.FFMPEG_VERSION }}"; exit 1; }
+          file "$DIST/libffmpeg_exe.so"
+
+      - name: Install FFmpeg into app (android-${{ matrix.abi }})
+        shell: bash
+        run: ./scripts/ffmpeg/install-to-app.sh android-${{ matrix.abi }}
+
+      - name: flutter build apk (${{ matrix.abi }}, split-per-abi)
+        shell: bash
+        run: flutter build apk --release --target-platform ${{ matrix.target_platform }} --split-per-abi
+
+      - name: Assert FFmpeg inside APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK=build/app/outputs/flutter-apk/app-${{ matrix.abi }}-release.apk
+          if [ ! -f "$APK" ]; then
+            echo "::error::APK 不存在: $APK"
+            ls -l build/app/outputs/flutter-apk || true
+            exit 1
+          fi
+          ls -l "$APK"
+          if ! unzip -l "$APK" | grep -qE "lib/${{ matrix.abi }}/libffmpeg_exe\.so"; then
+            echo "::error::APK 里没有 lib/${{ matrix.abi }}/libffmpeg_exe.so（install-to-app 没落地？）"
+            unzip -l "$APK" | grep -E '\.so$' || echo "（APK 内没有任何 .so）"
+            exit 1
+          fi
+          # 运行时需要解压成可执行文件，见 build-contract §8；只告警，布局由 Lead 维护
+          if ! grep -q 'extractNativeLibs="true"' android/app/src/main/AndroidManifest.xml; then
+            echo "::warning::AndroidManifest.xml 缺 android:extractNativeLibs=\"true\"，libffmpeg_exe.so 运行时不会被解压（build-contract §8）"
+          fi
+          if ! grep -rq 'useLegacyPackaging' android/app/build.gradle.kts; then
+            echo "::warning::android/app/build.gradle.kts 里没有 useLegacyPackaging = true（build-contract §8）"
+          fi
+
+      - name: Package android-${{ matrix.abi }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/release-artifacts
+          cp build/app/outputs/flutter-apk/app-${{ matrix.abi }}-release.apk \
+             build/release-artifacts/rain_fui-android-${{ matrix.abi }}.apk
+          cp build/ffmpeg/dist/android-${{ matrix.abi }}/version.txt \
+             build/release-artifacts/rain_fui-android-${{ matrix.abi }}-ffmpeg-version.txt
+          ls -l build/release-artifacts
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rain_fui-android-${{ matrix.abi }}
+          path: build/release-artifacts
+          if-no-files-found: error
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------
   # iOS / macOS：**故意**整条跳过，但仍然出现在 CI 图里（用户要求“其他平台直接跳过
   # 构建”，跳过必须看得见，不能像没配置一样消失）。
   #
@@ -582,9 +668,14 @@ jobs:
     needs:
       - analyze-and-test
       - build
+      - build-android
     # 矩阵里被 skip 的 leg 不影响 needs.build 的总体结论（success），但这里显式写成
     # result == 'success'，避免“构建被跳过却发布了空包”
-    if: ${{ !cancelled() && needs.build.result == 'success' && startsWith(github.ref, 'refs/tags/v') }}
+    if: >-
+      ${{ !cancelled()
+          && needs.build.result == 'success'
+          && needs.build-android.result == 'success'
+          && startsWith(github.ref, 'refs/tags/v') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
