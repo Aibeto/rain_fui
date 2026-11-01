@@ -483,9 +483,7 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
                           suffix: _container == null
                               ? ''
                               : '.${_container!.extension}',
-                          directory: _outputPath() == null
-                              ? null
-                              : p.dirname(_outputPath()!),
+                          directory: _outputDir,
                           onChanged: () => setState(() {}),
                         ),
                         const SizedBox(height: AppMetrics.sectionGap),
@@ -1175,7 +1173,7 @@ class _OutputField extends StatelessWidget {
   final TextEditingController controller;
   final String suffix;
 
-  /// Folder the finished file is written to, shown under the name field.
+  /// Folder the finished file is written to, shown beside the label.
   final String? directory;
   final VoidCallback onChanged;
 
@@ -1183,16 +1181,37 @@ class _OutputField extends StatelessWidget {
   Widget build(BuildContext context) {
     final FluentThemeData theme = FluentTheme.of(context);
     final AppL10n l10n = context.l10n;
-    final Widget field = Row(
+    final String? folder = directory;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        SizedBox(
-          width: AppMetrics.fieldWidth,
-          child: Text(
-            l10n(I18nKey.jobLabelOutputName),
-            style: theme.typography.body,
-          ),
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: Text(
+                l10n(I18nKey.jobLabelOutputName),
+                style: theme.typography.body,
+              ),
+            ),
+            // The destination sits next to the label as a quiet subtitle, so
+            // the name field below keeps the full width of the form.
+            if (folder != null)
+              Flexible(
+                child: Text(
+                  '${l10n(I18nKey.jobOutputTo)} $folder',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: theme.typography.caption?.copyWith(
+                    color: theme.resources.textFillColorTertiary,
+                  ),
+                ),
+              ),
+          ],
         ),
-        Expanded(
+        const SizedBox(height: 6),
+        SizedBox(
+          width: double.infinity,
           child: TextBox(
             controller: controller,
             onChanged: (_) => onChanged(),
@@ -1210,45 +1229,6 @@ class _OutputField extends StatelessWidget {
                       l10n.locale,
                     ),
                   ),
-          ),
-        ),
-      ],
-    );
-    final String? folder = directory;
-    if (folder == null) {
-      return field;
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        field,
-        Padding(
-          padding: const EdgeInsetsDirectional.only(
-            start: AppMetrics.fieldWidth,
-            top: 6,
-          ),
-          child: Row(
-            children: <Widget>[
-              Icon(
-                FluentIcons.folder_24_regular,
-                size: 12,
-                color: theme.resources.textFillColorTertiary,
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  folder,
-                  style: AppTheme.mono(
-                    theme.typography.caption?.copyWith(
-                      color: theme.resources.textFillColorSecondary,
-                    ),
-                    l10n.locale,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
           ),
         ),
       ],

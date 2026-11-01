@@ -86,6 +86,7 @@ const Map<String, String> plPl = <String, String>{
   'job_label_audio_codec': 'Koder audio',
   'job_label_container': 'Kontener',
   'job_label_output_name': 'Nazwa pliku wyjściowego',
+  'job_output_to': 'Wynik w',
   'job_no_video': 'Bez wideo',
   'job_no_audio': 'Bez dźwięku',
   'job_no_container': 'Bez kontenera',

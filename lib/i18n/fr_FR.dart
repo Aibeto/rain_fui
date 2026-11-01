@@ -88,6 +88,7 @@ const Map<String, String> frFr = <String, String>{
   'job_label_audio_codec': 'Codec audio',
   'job_label_container': 'Conteneur',
   'job_label_output_name': 'Nom de sortie',
+  'job_output_to': 'Sortie vers',
   'job_no_video': 'Aucune vidéo',
   'job_no_audio': 'Aucun audio',
   'job_no_container': 'Aucun conteneur',

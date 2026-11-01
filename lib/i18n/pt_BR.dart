@@ -87,6 +87,7 @@ const Map<String, String> ptBr = <String, String>{
   'job_label_audio_codec': 'Codec de áudio',
   'job_label_container': 'Contêiner',
   'job_label_output_name': 'Nome do arquivo de saída',
+  'job_output_to': 'Saída para',
   'job_no_video': 'Sem vídeo',
   'job_no_audio': 'Sem áudio',
   'job_no_container': 'Sem contêiner',

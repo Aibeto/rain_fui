@@ -84,6 +84,7 @@ const Map<String, String> ruRu = <String, String>{
   'job_label_audio_codec': 'Аудиокодек',
   'job_label_container': 'Контейнер',
   'job_label_output_name': 'Имя файла вывода',
+  'job_output_to': 'Вывод в',
   'job_no_video': 'Без видео',
   'job_no_audio': 'Без звука',
   'job_no_container': 'Без контейнера',

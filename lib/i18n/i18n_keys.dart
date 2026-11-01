@@ -96,6 +96,9 @@ abstract final class I18nKey {
   static const String jobLabelAudioCodec = 'job_label_audio_codec';
   static const String jobLabelContainer = 'job_label_container';
   static const String jobLabelOutputName = 'job_label_output_name';
+
+  /// Caption that names the folder the finished file lands in.
+  static const String jobOutputTo = 'job_output_to';
   static const String jobNoVideo = 'job_no_video';
   static const String jobNoAudio = 'job_no_audio';
   static const String jobNoContainer = 'job_no_container';
@@ -246,6 +249,7 @@ abstract final class I18nKey {
     jobLabelAudioCodec,
     jobLabelContainer,
     jobLabelOutputName,
+    jobOutputTo,
     jobNoVideo,
     jobNoAudio,
     jobNoContainer,

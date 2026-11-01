@@ -85,6 +85,7 @@ const Map<String, String> viVn = <String, String>{
   'job_label_audio_codec': 'Bộ mã hoá âm thanh',
   'job_label_container': 'Vùng chứa',
   'job_label_output_name': 'Tên đầu ra',
+  'job_output_to': 'Đầu ra vào',
   'job_no_video': 'Không có video',
   'job_no_audio': 'Không có âm thanh',
   'job_no_container': 'Không có vùng chứa',

@@ -83,6 +83,7 @@ const Map<String, String> zhTw = <String, String>{
   'job_label_audio_codec': '音訊編碼器',
   'job_label_container': '封裝格式',
   'job_label_output_name': '輸出名稱',
+  'job_output_to': '輸出至',
   'job_no_video': '無視訊',
   'job_no_audio': '無音訊',
   'job_no_container': '無封裝',

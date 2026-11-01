@@ -86,6 +86,7 @@ const Map<String, String> thTh = <String, String>{
   'job_label_audio_codec': 'ตัวเข้ารหัสเสียง',
   'job_label_container': 'คอนเทนเนอร์',
   'job_label_output_name': 'ชื่อเอาต์พุต',
+  'job_output_to': 'เอาต์พุตไปที่',
   'job_no_video': 'ไม่มีวิดีโอ',
   'job_no_audio': 'ไม่มีเสียง',
   'job_no_container': 'ไม่มีคอนเทนเนอร์',

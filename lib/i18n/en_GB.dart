@@ -87,6 +87,7 @@ const Map<String, String> enGb = <String, String>{
   'job_label_audio_codec': 'Audio codec',
   'job_label_container': 'Container',
   'job_label_output_name': 'Output file name',
+  'job_output_to': 'Output to',
   'job_no_video': 'No video',
   'job_no_audio': 'No audio',
   'job_no_container': 'No container',

@@ -85,6 +85,7 @@ const Map<String, String> ar = <String, String>{
   'job_label_audio_codec': 'ترميز الصوت',
   'job_label_container': 'الحاوية',
   'job_label_output_name': 'اسم ملف الإخراج',
+  'job_output_to': 'الإخراج إلى',
   'job_no_video': 'بلا فيديو',
   'job_no_audio': 'بلا صوت',
   'job_no_container': 'بلا حاوية',

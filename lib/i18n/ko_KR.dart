@@ -85,6 +85,7 @@ const Map<String, String> koKr = <String, String>{
   'job_label_audio_codec': '오디오 코덱',
   'job_label_container': '컨테이너',
   'job_label_output_name': '출력 이름',
+  'job_output_to': '출력 위치',
   'job_no_video': '비디오 없음',
   'job_no_audio': '오디오 없음',
   'job_no_container': '컨테이너 없음',

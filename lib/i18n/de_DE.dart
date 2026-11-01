@@ -88,6 +88,7 @@ const Map<String, String> deDe = <String, String>{
   'job_label_audio_codec': 'Audiocodec',
   'job_label_container': 'Container',
   'job_label_output_name': 'Ausgabename',
+  'job_output_to': 'Ausgabe nach',
   'job_no_video': 'Kein Video',
   'job_no_audio': 'Kein Audio',
   'job_no_container': 'Kein Container',

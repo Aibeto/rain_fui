@@ -86,6 +86,7 @@ const Map<String, String> trTr = <String, String>{
   'job_label_audio_codec': 'Ses kodlayıcı',
   'job_label_container': 'Kapsayıcı',
   'job_label_output_name': 'Çıktı adı',
+  'job_output_to': 'Çıktı konumu',
   'job_no_video': 'Video yok',
   'job_no_audio': 'Ses yok',
   'job_no_container': 'Kapsayıcı yok',
