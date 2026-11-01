@@ -85,7 +85,7 @@ const Map<String, String> jaJp = <String, String>{
   'job_label_audio_codec': '音声コーデック',
   'job_label_container': 'コンテナ',
   'job_label_output_name': '出力名',
-  'job_output_to': '出力先',
+  'job_output_to': '出力先 Download/rain_fui',
   'job_no_video': '映像なし',
   'job_no_audio': '音声なし',
   'job_no_container': 'コンテナなし',

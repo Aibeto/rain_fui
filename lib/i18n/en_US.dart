@@ -91,7 +91,7 @@ const Map<String, String> enUs = <String, String>{
   'job_label_audio_codec': 'Audio codec',
   'job_label_container': 'Container',
   'job_label_output_name': 'Output name',
-  'job_output_to': 'Output to',
+  'job_output_to': 'Output to Download/rain_fui',
   'job_no_video': 'No video',
   'job_no_audio': 'No audio',
   'job_no_container': 'No container',

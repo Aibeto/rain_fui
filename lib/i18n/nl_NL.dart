@@ -88,7 +88,7 @@ const Map<String, String> nlNl = <String, String>{
   'job_label_audio_codec': 'Audiocodec',
   'job_label_container': 'Container',
   'job_label_output_name': 'Naam van uitvoerbestand',
-  'job_output_to': 'Uitvoer naar',
+  'job_output_to': 'Uitvoer naar Download/rain_fui',
   'job_no_video': 'Geen video',
   'job_no_audio': 'Geen audio',
   'job_no_container': 'Geen container',

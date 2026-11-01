@@ -90,7 +90,7 @@ const Map<String, String> itIt = <String, String>{
   'job_label_audio_codec': 'Codec audio',
   'job_label_container': 'Contenitore',
   'job_label_output_name': 'Nome del file di output',
-  'job_output_to': 'Output in',
+  'job_output_to': 'Output in Download/rain_fui',
   'job_no_video': 'Nessun video',
   'job_no_audio': 'Nessun audio',
   'job_no_container': 'Nessun contenitore',

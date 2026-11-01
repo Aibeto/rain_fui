@@ -87,7 +87,7 @@ const Map<String, String> idId = <String, String>{
   'job_label_audio_codec': 'Kodek audio',
   'job_label_container': 'Wadah',
   'job_label_output_name': 'Nama keluaran',
-  'job_output_to': 'Keluaran ke',
+  'job_output_to': 'Keluaran ke Download/rain_fui',
   'job_no_video': 'Tanpa video',
   'job_no_audio': 'Tanpa audio',
   'job_no_container': 'Tanpa wadah',

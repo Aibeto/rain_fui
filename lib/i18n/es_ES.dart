@@ -86,7 +86,7 @@ const Map<String, String> esEs = <String, String>{
   'job_label_audio_codec': 'Códec de audio',
   'job_label_container': 'Contenedor',
   'job_label_output_name': 'Nombre de salida',
-  'job_output_to': 'Salida a',
+  'job_output_to': 'Salida a Download/rain_fui',
   'job_no_video': 'Sin vídeo',
   'job_no_audio': 'Sin audio',
   'job_no_container': 'Sin contenedor',

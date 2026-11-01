@@ -83,7 +83,7 @@ const Map<String, String> zhCn = <String, String>{
   'job_label_audio_codec': '音频编码器',
   'job_label_container': '封装格式',
   'job_label_output_name': '输出名称',
-  'job_output_to': '输出到',
+  'job_output_to': '输出到 Download/rain_fui',
   'job_no_video': '无视频',
   'job_no_audio': '无音频',
   'job_no_container': '无封装',

@@ -1192,7 +1192,7 @@ class _OutputField extends StatelessWidget {
             if (folder != null)
               Flexible(
                 child: Text(
-                  '${l10n(I18nKey.jobOutputTo)} $folder',
+                  l10n(I18nKey.jobOutputTo),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.end,
