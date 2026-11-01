@@ -37,6 +37,7 @@ const List<OptionSpec> _videoRateOptions = <OptionSpec>[
   IntOption(
     flag: '-qmin',
     labelKey: I18nKey.optQuantMin,
+    defaultValue: '2',
     min: 1,
     max: 31,
     advanced: true,
@@ -44,6 +45,7 @@ const List<OptionSpec> _videoRateOptions = <OptionSpec>[
   IntOption(
     flag: '-qmax',
     labelKey: I18nKey.optQuantMax,
+    defaultValue: '31',
     min: 1,
     max: 31,
     advanced: true,

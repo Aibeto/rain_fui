@@ -1179,7 +1179,12 @@ class _RangeFieldState extends State<_RangeField> {
     final _FieldHost host = _FieldHost.of(context);
     final String? current =
         host.valueOf[widget.spec.flag] ?? widget.spec.initialValue;
-    final double fallback = (widget.min + widget.max) / 2;
+    // When the flag is off, the thumb still has to sit on the value the
+    // encoder would use, otherwise the row reads as "somewhere in the middle".
+    final double fallback =
+        double.tryParse(widget.spec.defaultValue ?? '')
+            ?.clamp(widget.min, widget.max) ??
+        widget.min;
     final double shown =
         double.tryParse(current ?? '')?.clamp(widget.min, widget.max) ??
         fallback;
