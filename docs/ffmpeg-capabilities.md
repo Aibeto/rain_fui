@@ -657,3 +657,16 @@ ADPCM / DPCM 编码器：
   默认带 `-strict -2`。
 - **仍未覆盖**：每个编码器的专属 AVOption 只挑了常用几项，`-crf`/`-preset`/`-tune` 在本构建
   完全不存在，其余参数走"自定义参数"输入框。
+
+## 9. 运行时探针与完整编码器表
+
+表里现在写的是 FFmpeg 能编出来的全部编码器，而界面上显示哪些，取决于启动时对实际二进制的探测：
+
+`lib/services/encoder_availability.dart` 在 `main()` 里跑一次 `ffmpeg -encoders`，把结果交给 `MediaCapabilities`，下拉框只列真正存在的编码器。探测不到（web）时退回 `kBaselineEncoderNames`，也就是打包构建的清单，所以不会出现选了必然失败的项。
+
+容器能不能放某个编码器，按 codec id 判断，不按编码器名：`libx264`、`h264_nvenc`、`h264_qsv` 都算 `h264`，映射表由 `tool/gen_capabilities.py` 生成。数据来源都在 `tool/data/`：
+
+* `encoders-system.json`、`encoders-bundled.json`：两个真实二进制各自报的编码器、codec id 与像素格式；
+* `containers-system.json`：27 个 muxer 对哪些 codec id 真的能写，靠一只 64×64 的单帧和 0.2 秒静音逐个试出来，dv 和 mxf 另用 720×576 与带视频流的组合手工量过。
+
+`tool/check_catalog.dart` 用原生构建和完整构建两种假设各查一遍，验证 mp4 收 H.264、WebM 不收、flac 不收 opus、原生构建不列 libx264 这些结论。
