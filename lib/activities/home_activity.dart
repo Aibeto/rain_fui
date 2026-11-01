@@ -121,12 +121,12 @@ class _HomeActivityState extends State<HomeActivity> {
 
   @override
   Widget build(BuildContext context) {
-    final ResourceDictionary resources = FluentTheme.of(context).resources;
+    final FluentThemeData theme = FluentTheme.of(context);
 
     return ColoredBox(
       // Painted first so the safe-area insets above and below the bars carry the
       // bar colour instead of a lighter page tint.
-      color: resources.solidBackgroundFillColorBase,
+      color: theme.scaffoldBackgroundColor,
       child: Column(
         children: <Widget>[
           SafeArea(

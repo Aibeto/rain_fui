@@ -268,12 +268,11 @@ class _MediaJobActivityState extends State<MediaJobActivity> {
   @override
   Widget build(BuildContext context) {
     final FluentThemeData theme = FluentTheme.of(context);
-    final ResourceDictionary resources = theme.resources;
     final AppL10n l10n = context.l10n;
     final List<OptionSpec> advanced = _advancedOptions;
 
     return ColoredBox(
-      color: resources.solidBackgroundFillColorBase,
+      color: theme.scaffoldBackgroundColor,
       child: SafeArea(
         child: Column(
           children: <Widget>[
@@ -577,6 +576,7 @@ class _PickerRow<T> extends StatelessWidget {
           Expanded(
             child: ComboBox<T?>(
               isExpanded: true,
+              popupColor: FluentTheme.of(context).menuColor,
               value: value,
               items: <ComboBoxItem<T?>>[
                 if (allowNone)
@@ -743,6 +743,8 @@ class _OptionField extends StatelessWidget {
             host.valueOf[choice.flag] ?? choice.initialValue;
         return ComboBox<String>(
           isExpanded: true,
+          // Solid popup fill; the default tint lets the page show through.
+          popupColor: FluentTheme.of(context).menuColor,
           value: current,
           items: <ComboBoxItem<String>>[
             for (final OptionChoice option in choice.choices)
@@ -876,7 +878,7 @@ class _ActionBar extends StatelessWidget {
       height: 56,
       padding: const EdgeInsetsDirectional.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: resources.solidBackgroundFillColorBase,
+        color: theme.scaffoldBackgroundColor,
         border: Border(
           top: BorderSide(color: resources.controlStrokeColorDefault),
         ),

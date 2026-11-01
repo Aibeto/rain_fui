@@ -1,4 +1,12 @@
 {
   "version": 1,
-  "entries": []
+  "entries": [
+    {
+      "content": "Rain FUI (flutter FFmpeg GUI at /home/aibeto/code/rain_fui): UI layer built with fluent_ui + fluentui_system_icons, 19 plain-Map locales in lib/i18n (44 keys, en_US fallback), OFL fonts bundled under assets/fonts, hand-built shell (no Scaffold/acrylic because blur is banned), ThemeService cycle light→dark→system. Commits are Conventional Commits in Chinese, each stamped with the newest file mtime of its batch instead of the current clock.",
+      "created_at": "2026-11-01T08:53:08.389Z",
+      "updated_at": "2026-11-01T08:53:08.389Z",
+      "target": "memory",
+      "importance": "normal"
+    }
+  ]
 }

@@ -88,7 +88,7 @@ class _LanguageActivityState extends State<LanguageActivity> {
     final ResourceDictionary resources = theme.resources;
 
     return ColoredBox(
-      color: resources.layerFillColorDefault,
+      color: theme.scaffoldBackgroundColor,
       child: Column(
         children: <Widget>[
           SafeArea(bottom: false, child: _Header(title: 'Language')),
@@ -153,7 +153,7 @@ class _Header extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsetsDirectional.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: resources.solidBackgroundFillColorBase,
+        color: theme.scaffoldBackgroundColor,
         border: Border(
           bottom: BorderSide(color: resources.controlStrokeColorDefault),
         ),
@@ -228,7 +228,7 @@ class _LanguageRow extends StatelessWidget {
                   ? resources.subtleFillColorTertiary
                   : hovered
                   ? resources.subtleFillColorSecondary
-                  : resources.layerFillColorDefault,
+                  : theme.scaffoldBackgroundColor,
               child: Padding(
                 padding: const EdgeInsetsDirectional.fromSTEB(24, 0, 24, 0),
                 child: Row(

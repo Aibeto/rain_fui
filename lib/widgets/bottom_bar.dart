@@ -48,7 +48,7 @@ class AppBottomBar extends StatelessWidget {
       height: _barHeight,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: resources.solidBackgroundFillColorBase,
+        color: theme.scaffoldBackgroundColor,
         border: Border(
           top: BorderSide(color: resources.controlStrokeColorDefault),
         ),

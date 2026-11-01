@@ -50,7 +50,7 @@ class AppTopBar extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsetsDirectional.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: resources.solidBackgroundFillColorBase,
+        color: theme.scaffoldBackgroundColor,
         border: Border(
           bottom: BorderSide(color: resources.controlStrokeColorDefault),
         ),

@@ -24,7 +24,7 @@ class HomeContent extends StatelessWidget {
     final AppL10n l10n = context.l10n;
 
     return ColoredBox(
-      color: resources.layerFillColorDefault,
+      color: theme.scaffoldBackgroundColor,
       child: Padding(
         padding: const EdgeInsetsDirectional.fromSTEB(24, 20, 24, 16),
         child: ListenableBuilder(

@@ -105,11 +105,26 @@ abstract final class AppTheme {
 
   static FluentThemeData dark(Locale locale) => _theme(Brightness.dark, locale);
 
+  /// Page surface. Pure white and pure black on purpose: the Fluent defaults
+  /// (#f3f3f3 / #202020) are close enough to the flyout and card fills that
+  /// dropdown panels visually merge into the page behind them.
+  static const Color lightSurface = Color(0xFFFFFFFF);
+  static const Color darkSurface = Color(0xFF000000);
+
+  /// Solid fill used by menus, combo-box popups and tooltips.
+  static Color surfaceFor(Brightness brightness) =>
+      brightness == Brightness.light ? lightSurface : darkSurface;
+
   static FluentThemeData _theme(Brightness brightness, Locale locale) {
     final List<String> fallback = fallbackFor(locale);
+    final Color surface = surfaceFor(brightness);
     return FluentThemeData(
       brightness: brightness,
       fontFamily: fontFamily,
+      scaffoldBackgroundColor: surface,
+      micaBackgroundColor: surface,
+      menuColor: surface,
+      cardColor: surface,
       typography: _withFallback(
         Typography.fromBrightness(brightness: brightness),
         fallback,

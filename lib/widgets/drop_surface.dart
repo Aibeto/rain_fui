@@ -71,7 +71,6 @@ class _DropSurfaceState extends State<DropSurface> {
   @override
   Widget build(BuildContext context) {
     final FluentThemeData theme = FluentTheme.of(context);
-    final ResourceDictionary resources = theme.resources;
     final Color accent = theme.accentColor.normal;
 
     return DropTarget(
@@ -97,7 +96,7 @@ class _DropSurfaceState extends State<DropSurface> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: resources.solidBackgroundFillColorBase,
+                        color: theme.scaffoldBackgroundColor,
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(color: accent),
                       ),
