@@ -44,6 +44,7 @@ const Map<String, String> itIt = <String, String>{
       'La cartella comparirà come sorgente nella schermata iniziale.',
   'action_add': 'Aggiungi',
   'option_unset': 'Non impostato',
+  'option_edit': 'Inserisci un valore manualmente',
   'job_section_input': 'Ingresso',
   'job_label_video_decoder': 'Decodificatore video',
   'job_label_audio_decoder': 'Decodificatore audio',
@@ -101,6 +102,9 @@ const Map<String, String> itIt = <String, String>{
   // Elenco attività.
   'jobs_title': 'Attività',
   'jobs_empty': 'I file che avvii alla codifica compaiono qui.',
+  'job_log_title': 'Output',
+  'job_log_autoscroll': 'Scorrimento automatico',
+  'job_log_empty': 'Ancora nessun output',
   'job_state_queued': 'In coda',
   'job_state_running': 'Codifica in corso',
   'job_state_paused': 'In pausa',

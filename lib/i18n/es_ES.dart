@@ -41,6 +41,7 @@ const Map<String, String> esEs = <String, String>{
       'La carpeta aparecerá como fuente en la pantalla de inicio.',
   'action_add': 'Añadir',
   'option_unset': 'Sin definir',
+  'option_edit': 'Introducir un valor manualmente',
   'job_section_input': 'Entrada',
   'job_label_video_decoder': 'Decodificador de vídeo',
   'job_label_audio_decoder': 'Decodificador de audio',
@@ -97,6 +98,9 @@ const Map<String, String> esEs = <String, String>{
   // Lista de tareas.
   'jobs_title': 'Tareas',
   'jobs_empty': 'Los archivos que empieces a codificar aparecen aquí.',
+  'job_log_title': 'Salida',
+  'job_log_autoscroll': 'Desplazamiento automático',
+  'job_log_empty': 'Aún no hay salida',
   'job_state_queued': 'En cola',
   'job_state_running': 'Codificando',
   'job_state_paused': 'En pausa',

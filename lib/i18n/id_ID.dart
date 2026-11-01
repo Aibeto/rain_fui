@@ -42,6 +42,7 @@ const Map<String, String> idId = <String, String>{
       'Folder akan dicantumkan sebagai sumber di layar utama.',
   'action_add': 'Tambahkan',
   'option_unset': 'Tidak diatur',
+  'option_edit': 'Masukkan nilai secara manual',
   'job_section_input': 'Masukan',
   'job_label_video_decoder': 'Dekoder video',
   'job_label_audio_decoder': 'Dekoder audio',
@@ -98,6 +99,9 @@ const Map<String, String> idId = <String, String>{
   // Job list.
   'jobs_title': 'Tugas',
   'jobs_empty': 'Berkas yang mulai Anda enkode akan muncul di sini.',
+  'job_log_title': 'Keluaran',
+  'job_log_autoscroll': 'Gulir otomatis',
+  'job_log_empty': 'Belum ada keluaran',
   'job_state_queued': 'Dalam antrean',
   'job_state_running': 'Mengenkode',
   'job_state_paused': 'Dijeda',

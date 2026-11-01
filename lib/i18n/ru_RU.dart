@@ -39,6 +39,7 @@ const Map<String, String> ruRu = <String, String>{
   'add_source_confirm_body': 'Папка появится как источник на главном экране.',
   'action_add': 'Добавить',
   'option_unset': 'Не задано',
+  'option_edit': 'Введите значение вручную',
   'job_section_input': 'Вход',
   'job_label_video_decoder': 'Видеодекодер',
   'job_label_audio_decoder': 'Аудиодекодер',
@@ -95,6 +96,9 @@ const Map<String, String> ruRu = <String, String>{
   // Job list.
   'jobs_title': 'Задачи',
   'jobs_empty': 'Файлы, которые вы начнёте кодировать, появятся здесь.',
+  'job_log_title': 'Вывод',
+  'job_log_autoscroll': 'Автопрокрутка',
+  'job_log_empty': 'Пока нет вывода',
   'job_state_queued': 'В очереди',
   'job_state_running': 'Кодирование',
   'job_state_paused': 'Приостановлено',

@@ -44,6 +44,7 @@ const Map<String, String> nlNl = <String, String>{
       'De map wordt als bron op het startscherm vermeld.',
   'action_add': 'Toevoegen',
   'option_unset': 'Niet ingesteld',
+  'option_edit': 'Voer handmatig een waarde in',
   'job_section_input': 'Invoer',
   'job_label_video_decoder': 'Videodecoder',
   'job_label_audio_decoder': 'Audiodecoder',
@@ -99,6 +100,9 @@ const Map<String, String> nlNl = <String, String>{
   // Job list.
   'jobs_title': 'Taken',
   'jobs_empty': 'Bestanden die je gaat coderen, verschijnen hier.',
+  'job_log_title': 'Uitvoer',
+  'job_log_autoscroll': 'Automatisch scrollen',
+  'job_log_empty': 'Nog geen uitvoer',
   'job_state_queued': 'In wachtrij',
   'job_state_running': 'Bezig met coderen',
   'job_state_paused': 'Gepauzeerd',

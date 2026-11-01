@@ -39,6 +39,7 @@ const Map<String, String> koKr = <String, String>{
   'add_source_confirm_body': '폴더가 홈 화면에 소스로 표시됩니다.',
   'action_add': '추가',
   'option_unset': '설정 안 함',
+  'option_edit': '값 직접 입력',
   'job_section_input': '입력',
   'job_label_video_decoder': '비디오 디코더',
   'job_label_audio_decoder': '오디오 디코더',
@@ -96,6 +97,9 @@ const Map<String, String> koKr = <String, String>{
   // Job list.
   'jobs_title': '작업',
   'jobs_empty': '인코딩을 시작한 파일이 여기에 표시됩니다.',
+  'job_log_title': '출력',
+  'job_log_autoscroll': '자동 스크롤',
+  'job_log_empty': '아직 출력이 없습니다',
   'job_state_queued': '대기 중',
   'job_state_running': '인코딩 중',
   'job_state_paused': '일시 중지됨',

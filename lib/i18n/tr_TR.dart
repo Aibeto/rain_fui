@@ -40,6 +40,7 @@ const Map<String, String> trTr = <String, String>{
   'add_source_confirm_body': 'Klasör ana ekranda kaynak olarak listelenir.',
   'action_add': 'Ekle',
   'option_unset': 'Ayarlanmadı',
+  'option_edit': 'Değeri elle girin',
   'job_section_input': 'Giriş',
   'job_label_video_decoder': 'Video çözücü',
   'job_label_audio_decoder': 'Ses çözücü',
@@ -97,6 +98,9 @@ const Map<String, String> trTr = <String, String>{
   // Job list.
   'jobs_title': 'Görevler',
   'jobs_empty': 'Kodlamaya başladığınız dosyalar burada görünür.',
+  'job_log_title': 'Çıktı',
+  'job_log_autoscroll': 'Otomatik kaydırma',
+  'job_log_empty': 'Henüz çıktı yok',
   'job_state_queued': 'Kuyrukta',
   'job_state_running': 'Kodlanıyor',
   'job_state_paused': 'Duraklatıldı',

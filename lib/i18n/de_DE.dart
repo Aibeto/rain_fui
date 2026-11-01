@@ -43,6 +43,7 @@ const Map<String, String> deDe = <String, String>{
       'Der Ordner wird auf der Startseite als Quelle aufgeführt.',
   'action_add': 'Hinzufügen',
   'option_unset': 'Nicht gesetzt',
+  'option_edit': 'Wert manuell eingeben',
   'job_section_input': 'Eingabe',
   'job_label_video_decoder': 'Videodecoder',
   'job_label_audio_decoder': 'Audiodecoder',
@@ -99,6 +100,9 @@ const Map<String, String> deDe = <String, String>{
   // Aufgabenliste.
   'jobs_title': 'Aufgaben',
   'jobs_empty': 'Dateien, die Sie zu codieren beginnen, erscheinen hier.',
+  'job_log_title': 'Ausgabe',
+  'job_log_autoscroll': 'Automatisch scrollen',
+  'job_log_empty': 'Noch keine Ausgabe',
   'job_state_queued': 'In Warteschlange',
   'job_state_running': 'Codierung läuft',
   'job_state_paused': 'Angehalten',

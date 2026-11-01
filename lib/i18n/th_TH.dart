@@ -40,6 +40,7 @@ const Map<String, String> thTh = <String, String>{
   'add_source_confirm_body': 'โฟลเดอร์จะแสดงเป็นแหล่งข้อมูลบนหน้าหลัก',
   'action_add': 'เพิ่ม',
   'option_unset': 'ไม่ตั้งค่า',
+  'option_edit': 'ป้อนค่าด้วยตนเอง',
   'job_section_input': 'อินพุต',
   'job_label_video_decoder': 'ตัวถอดรหัสวิดีโอ',
   'job_label_audio_decoder': 'ตัวถอดรหัสเสียง',
@@ -98,6 +99,9 @@ const Map<String, String> thTh = <String, String>{
   // Job list.
   'jobs_title': 'งาน',
   'jobs_empty': 'ไฟล์ที่คุณเริ่มเข้ารหัสจะแสดงที่นี่',
+  'job_log_title': 'เอาต์พุต',
+  'job_log_autoscroll': 'เลื่อนอัตโนมัติ',
+  'job_log_empty': 'ยังไม่มีเอาต์พุต',
   'job_state_queued': 'อยู่ในคิว',
   'job_state_running': 'กำลังเข้ารหัส',
   'job_state_paused': 'หยุดชั่วคราว',

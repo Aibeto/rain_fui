@@ -42,6 +42,7 @@ const Map<String, String> ptBr = <String, String>{
   'add_source_confirm_body': 'A pasta será listada como fonte na tela inicial.',
   'action_add': 'Adicionar',
   'option_unset': 'Não definido',
+  'option_edit': 'Inserir um valor manualmente',
   'job_section_input': 'Entrada',
   'job_label_video_decoder': 'Decodificador de vídeo',
   'job_label_audio_decoder': 'Decodificador de áudio',
@@ -98,6 +99,9 @@ const Map<String, String> ptBr = <String, String>{
   // Lista de tarefas.
   'jobs_title': 'Tarefas',
   'jobs_empty': 'Os arquivos que você começar a codificar aparecem aqui.',
+  'job_log_title': 'Saída',
+  'job_log_autoscroll': 'Rolagem automática',
+  'job_log_empty': 'Ainda sem saída',
   'job_state_queued': 'Na fila',
   'job_state_running': 'Codificando',
   'job_state_paused': 'Pausado',

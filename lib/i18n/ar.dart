@@ -40,6 +40,7 @@ const Map<String, String> ar = <String, String>{
   'add_source_confirm_body': 'سيظهر المجلد كمصدر في الشاشة الرئيسية.',
   'action_add': 'إضافة',
   'option_unset': 'غير محدد',
+  'option_edit': 'إدخال قيمة يدويًا',
   'job_section_input': 'الإدخال',
   'job_label_video_decoder': 'فاك ترميز الفيديو',
   'job_label_audio_decoder': 'فاك ترميز الصوت',
@@ -96,6 +97,9 @@ const Map<String, String> ar = <String, String>{
   // Job list.
   'jobs_title': 'المهام',
   'jobs_empty': 'تظهر هنا الملفات التي تبدأ ترميزها.',
+  'job_log_title': 'الإخراج',
+  'job_log_autoscroll': 'التمرير التلقائي',
+  'job_log_empty': 'لا يوجد إخراج بعد',
   'job_state_queued': 'في قائمة الانتظار',
   'job_state_running': 'جارٍ الترميز',
   'job_state_paused': 'متوقف مؤقتًا',

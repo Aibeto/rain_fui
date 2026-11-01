@@ -43,6 +43,7 @@ const Map<String, String> frFr = <String, String>{
       'Le dossier sera ajouté comme source sur l’écran d’accueil.',
   'action_add': 'Ajouter',
   'option_unset': 'Non défini',
+  'option_edit': 'Saisir une valeur manuellement',
   'job_section_input': 'Entrée',
   'job_label_video_decoder': 'Décodeur vidéo',
   'job_label_audio_decoder': 'Décodeur audio',
@@ -99,6 +100,9 @@ const Map<String, String> frFr = <String, String>{
   // Liste des tâches.
   'jobs_title': 'Tâches',
   'jobs_empty': 'Les fichiers que vous mettez en encodage apparaissent ici.',
+  'job_log_title': 'Sortie',
+  'job_log_autoscroll': 'Défilement auto',
+  'job_log_empty': 'Aucune sortie pour l’instant',
   'job_state_queued': 'En attente',
   'job_state_running': 'Encodage',
   'job_state_paused': 'En pause',

@@ -45,6 +45,7 @@ const Map<String, String> enUs = <String, String>{
       'The folder will be listed as a source on the home screen.',
   'action_add': 'Add',
   'option_unset': 'Not set',
+  'option_edit': 'Enter a value manually',
   'job_section_input': 'Input',
   'job_label_video_decoder': 'Video decoder',
   'job_label_audio_decoder': 'Audio decoder',
@@ -102,6 +103,10 @@ const Map<String, String> enUs = <String, String>{
   // Job list.
   'jobs_title': 'Tasks',
   'jobs_empty': 'Files you start encoding show up here.',
+  'job_log_title': 'Output',
+  'job_log_autoscroll': 'Auto-scroll',
+  'job_log_empty': 'No output yet',
+
   'job_state_queued': 'Queued',
   'job_state_running': 'Encoding',
   'job_state_paused': 'Paused',

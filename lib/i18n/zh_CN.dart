@@ -39,6 +39,7 @@ const Map<String, String> zhCn = <String, String>{
   'add_source_confirm_body': '该文件夹会作为来源显示在主页上。',
   'action_add': '添加',
   'option_unset': '不设置',
+  'option_edit': '手动输入数值',
   'job_section_input': '输入',
   'job_label_video_decoder': '视频解码器',
   'job_label_audio_decoder': '音频解码器',
@@ -94,6 +95,9 @@ const Map<String, String> zhCn = <String, String>{
   // Job list.
   'jobs_title': '任务',
   'jobs_empty': '开始编码的文件会显示在这里。',
+  'job_log_title': '输出',
+  'job_log_autoscroll': '自动滚动',
+  'job_log_empty': '暂无输出',
   'job_state_queued': '排队中',
   'job_state_running': '编码中',
   'job_state_paused': '已暂停',

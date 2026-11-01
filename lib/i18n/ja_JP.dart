@@ -39,6 +39,7 @@ const Map<String, String> jaJp = <String, String>{
   'add_source_confirm_body': 'フォルダーはホーム画面にソースとして表示されます。',
   'action_add': '追加',
   'option_unset': '未設定',
+  'option_edit': '値を直接入力',
   'job_section_input': '入力',
   'job_label_video_decoder': '映像デコーダー',
   'job_label_audio_decoder': '音声デコーダー',
@@ -96,6 +97,9 @@ const Map<String, String> jaJp = <String, String>{
   // Job list.
   'jobs_title': 'タスク',
   'jobs_empty': 'エンコードを開始したファイルがここに表示されます。',
+  'job_log_title': '出力',
+  'job_log_autoscroll': '自動スクロール',
+  'job_log_empty': '出力はまだありません',
   'job_state_queued': '待機中',
   'job_state_running': 'エンコード中',
   'job_state_paused': '一時停止中',

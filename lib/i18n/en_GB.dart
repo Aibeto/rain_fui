@@ -41,6 +41,7 @@ const Map<String, String> enGb = <String, String>{
       'The folder will appear as a source on the home screen.',
   'action_add': 'Add',
   'option_unset': 'Not set',
+  'option_edit': 'Type a value manually',
   'job_section_input': 'Input',
   'job_label_video_decoder': 'Video decoder',
   'job_label_audio_decoder': 'Audio decoder',
@@ -98,6 +99,9 @@ const Map<String, String> enGb = <String, String>{
   // Job list.
   'jobs_title': 'Tasks',
   'jobs_empty': 'Files you start encoding will appear here.',
+  'job_log_title': 'Output',
+  'job_log_autoscroll': 'Scroll automatically',
+  'job_log_empty': 'No output yet',
   'job_state_queued': 'Queued',
   'job_state_running': 'Encoding',
   'job_state_paused': 'Paused',

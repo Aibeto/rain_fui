@@ -41,6 +41,7 @@ const Map<String, String> viVn = <String, String>{
       'Thư mục sẽ được liệt kê làm nguồn trên màn hình chính.',
   'action_add': 'Thêm',
   'option_unset': 'Không đặt',
+  'option_edit': 'Nhập giá trị thủ công',
   'job_section_input': 'Đầu vào',
   'job_label_video_decoder': 'Bộ giải mã video',
   'job_label_audio_decoder': 'Bộ giải mã âm thanh',
@@ -96,6 +97,9 @@ const Map<String, String> viVn = <String, String>{
   // Job list.
   'jobs_title': 'Tác vụ',
   'jobs_empty': 'Các tệp bạn bắt đầu mã hoá sẽ hiện ở đây.',
+  'job_log_title': 'Đầu ra',
+  'job_log_autoscroll': 'Tự động cuộn',
+  'job_log_empty': 'Chưa có đầu ra',
   'job_state_queued': 'Đang chờ',
   'job_state_running': 'Đang mã hoá',
   'job_state_paused': 'Tạm dừng',

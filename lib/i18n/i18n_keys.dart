@@ -51,6 +51,7 @@ abstract final class I18nKey {
 
   /// Shown as the empty entry of an option that may be left unset.
   static const String optionUnset = 'option_unset';
+  static const String optionEdit = 'option_edit';
 
   static const String actionCancel = 'action_cancel';
   static const String actionClose = 'action_close';
@@ -106,6 +107,9 @@ abstract final class I18nKey {
   // Job list.
   static const String jobsTitle = 'jobs_title';
   static const String jobsEmpty = 'jobs_empty';
+  static const String jobLogTitle = 'job_log_title';
+  static const String jobLogAutoscroll = 'job_log_autoscroll';
+  static const String jobLogEmpty = 'job_log_empty';
   static const String jobStateQueued = 'job_state_queued';
   static const String jobStateRunning = 'job_state_running';
   static const String jobStatePaused = 'job_state_paused';
@@ -197,6 +201,7 @@ abstract final class I18nKey {
     addSourceConfirmBody,
     actionAdd,
     optionUnset,
+    optionEdit,
     jobSectionInput,
     jobLabelVideoDecoder,
     jobLabelAudioDecoder,
@@ -244,6 +249,9 @@ abstract final class I18nKey {
     mediaTypeUnknown,
     jobsTitle,
     jobsEmpty,
+    jobLogTitle,
+    jobLogAutoscroll,
+    jobLogEmpty,
     jobStateQueued,
     jobStateRunning,
     jobStatePaused,

@@ -39,6 +39,7 @@ const Map<String, String> zhTw = <String, String>{
   'add_source_confirm_body': '該資料夾會作為來源顯示在首頁上。',
   'action_add': '新增',
   'option_unset': '不設定',
+  'option_edit': '手動輸入數值',
   'job_section_input': '輸入',
   'job_label_video_decoder': '視訊解碼器',
   'job_label_audio_decoder': '音訊解碼器',
@@ -94,6 +95,9 @@ const Map<String, String> zhTw = <String, String>{
   // Job list.
   'jobs_title': '工作',
   'jobs_empty': '開始編碼的檔案會顯示在這裡。',
+  'job_log_title': '輸出',
+  'job_log_autoscroll': '自動捲動',
+  'job_log_empty': '尚無輸出',
   'job_state_queued': '佇列中',
   'job_state_running': '編碼中',
   'job_state_paused': '已暫停',

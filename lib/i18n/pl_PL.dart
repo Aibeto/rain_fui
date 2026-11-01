@@ -41,6 +41,7 @@ const Map<String, String> plPl = <String, String>{
       'Folder zostanie dodany jako źródło na ekranie głównym.',
   'action_add': 'Dodaj',
   'option_unset': 'Nie ustawiono',
+  'option_edit': 'Wpisz wartość ręcznie',
   'job_section_input': 'Wejście',
   'job_label_video_decoder': 'Dekoder wideo',
   'job_label_audio_decoder': 'Dekoder dźwięku',
@@ -97,6 +98,9 @@ const Map<String, String> plPl = <String, String>{
   // Job list.
   'jobs_title': 'Zadania',
   'jobs_empty': 'Pliki, których kodowanie rozpoczniesz, pojawią się tutaj.',
+  'job_log_title': 'Dane wyjściowe',
+  'job_log_autoscroll': 'Automatyczne przewijanie',
+  'job_log_empty': 'Brak danych wyjściowych',
   'job_state_queued': 'W kolejce',
   'job_state_running': 'Kodowanie',
   'job_state_paused': 'Wstrzymano',
