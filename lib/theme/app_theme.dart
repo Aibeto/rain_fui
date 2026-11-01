@@ -126,6 +126,11 @@ abstract final class AppTheme {
   static const Color lightInset = Color(0xFFF7F7F7);
   static const Color darkInset = Color(0xFF0D0D0D);
 
+  /// Progress bars: solid blue while the length is known, pale blue while it
+  /// is not yet known.
+  static const Color progressRunning = Color(0xFF0078D4);
+  static const Color progressUnknown = Color(0xFF9EC9EC);
+
   static const Color lightBorder = Color(0xFFE3E3E3);
   static const Color darkBorder = Color(0xFF2E2E2E);
 

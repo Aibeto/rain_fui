@@ -229,6 +229,19 @@ class JobRow extends StatelessWidget {
         final String? percent = barValue == null
             ? null
             : '${barValue.round()}%';
+        // Colour carries the outcome: red for a failure, green for a finished
+        // job, blue while it runs and pale blue when the length is unknown.
+        final Color barColor = switch (job.state) {
+          JobState.completed => theme.resources.systemFillColorSuccess,
+          JobState.failed => theme.resources.systemFillColorCritical,
+          JobState.queued ||
+          JobState.cancelled ||
+          JobState.paused => theme.resources.systemFillColorNeutral,
+          JobState.running =>
+            barValue == null
+                ? AppTheme.progressUnknown
+                : AppTheme.progressRunning,
+        };
 
         // HoverButton gives the row a hover border and keeps the click and the
         // long press on the same widget.
@@ -294,7 +307,12 @@ class JobRow extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 6),
-                        ProgressBar(value: barValue),
+                        ProgressBar(
+                          value: barValue,
+                          activeColor: barColor,
+                          backgroundColor: AppTheme.borderFor(theme.brightness),
+                          strokeWidth: 3,
+                        ),
                         if (job.error != null) ...<Widget>[
                           const SizedBox(height: 4),
                           Text(
@@ -370,7 +388,7 @@ class JobRow extends StatelessWidget {
   Color _stateColor(FluentThemeData theme) {
     final ResourceDictionary resources = theme.resources;
     return switch (job.state) {
-      JobState.running => theme.accentColor,
+      JobState.running => AppTheme.progressRunning,
       JobState.paused => resources.systemFillColorCaution,
       JobState.completed => resources.systemFillColorSuccess,
       JobState.failed => resources.systemFillColorCritical,
