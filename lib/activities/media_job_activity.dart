@@ -527,7 +527,7 @@ class _FileCard extends StatelessWidget {
                 Text(l10n(_kindKey(kind)), style: theme.typography.bodyStrong),
                 const SizedBox(height: 2),
                 SelectableText(
-                  file.display,
+                  file.name,
                   style: AppTheme.mono(
                     theme.typography.caption?.copyWith(
                       color: resources.textFillColorSecondary,
@@ -651,6 +651,13 @@ class _PickerRow<T> extends StatelessWidget {
           Expanded(
             child: ComboBox<T?>(
               isExpanded: true,
+              // Sizing the popup here keeps a long encoder name from
+              // stretching the menu across the whole window.
+              popupConstraints: const BoxConstraints(
+                minWidth: 280,
+                maxWidth: 320,
+                maxHeight: 360,
+              ),
               popupColor: FluentTheme.of(context).menuColor,
               value: value,
               items: <ComboBoxItem<T?>>[
@@ -1123,19 +1130,11 @@ class _RangeFieldState extends State<_RangeField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
+        // The flag and the value controls share the first line; the readable
+        // parameter name sits below it, because translated names are long
+        // enough to push the controls off a narrow window.
         Row(
           children: <Widget>[
-            Flexible(
-              child: Text(
-                widget.spec.labelKey == null
-                    ? widget.spec.flag
-                    : l10n(widget.spec.labelKey!),
-                style: theme.typography.bodyStrong,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(width: 8),
             Text(widget.spec.flag, style: mono, maxLines: 1),
             const Spacer(),
             Container(
@@ -1174,7 +1173,17 @@ class _RangeFieldState extends State<_RangeField> {
             ),
           ],
         ),
-        const SizedBox(height: 2),
+        Padding(
+          padding: const EdgeInsetsDirectional.only(top: 2, bottom: 2),
+          child: Text(
+            widget.spec.labelKey == null
+                ? widget.spec.flag
+                : l10n(widget.spec.labelKey!),
+            style: theme.typography.bodyStrong,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
         if (_editing)
           Row(
             children: <Widget>[
