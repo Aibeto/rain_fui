@@ -6,6 +6,7 @@ import '../i18n/i18n_keys.dart';
 import '../models/source_selection.dart';
 import 'add_source_dialog.dart';
 import 'selection_result_dialog.dart';
+import '../activities/media_job_activity.dart';
 
 /// Height of the chrome bars, in logical pixels.
 const double _barHeight = 48;
@@ -29,6 +30,11 @@ class AppBottomBar extends StatelessWidget {
       return;
     }
     onSelection?.call(selection);
+    if (selection.folders.isEmpty && selection.files.length == 1) {
+      await Navigator.of(context)
+          .push(MediaJobActivity.route(selection.files.single));
+      return;
+    }
     await showSelectionResultDialog(context, selection);
   }
 

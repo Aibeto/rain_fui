@@ -10,6 +10,7 @@ import '../widgets/home_sidebar.dart';
 import '../widgets/message_dialog.dart';
 import '../widgets/selection_result_dialog.dart';
 import '../widgets/top_bar.dart';
+import 'media_job_activity.dart';
 
 /// The home screen: top bar, collapsible sidebar, content region and the
 /// bottom bar.
@@ -42,7 +43,6 @@ class _HomeActivityState extends State<HomeActivity> {
 
   /// The rail starts closed so the content region gets the whole window first.
   bool _sidebarVisible = false;
-  SourceSelection? _selection;
 
   void _toggleSidebar() {
     setState(() => _sidebarVisible = !_sidebarVisible);
@@ -55,17 +55,15 @@ class _HomeActivityState extends State<HomeActivity> {
     setState(() => _sidebarVisible = false);
   }
 
-  /// Keeps the last selection on screen. The bottom bar shows its own result
-  /// dialog, so this only stores state.
-  void _rememberSelection(SourceSelection selection) {
-    setState(() => _selection = selection);
-  }
-
-  /// Drops are stored and then reported through the same result dialog the
-  /// pickers use (spec §8).
+  /// A single dropped file opens the encode form; anything else keeps the
+  /// result dialog (spec §8).
   Future<void> _handleDroppedSelection(SourceSelection selection) async {
-    _rememberSelection(selection);
     if (!mounted) {
+      return;
+    }
+    if (selection.folders.isEmpty && selection.files.length == 1) {
+      await Navigator.of(context)
+          .push(MediaJobActivity.route(selection.files.single));
       return;
     }
     await showSelectionResultDialog(context, selection);
@@ -83,20 +81,13 @@ class _HomeActivityState extends State<HomeActivity> {
     );
   }
 
-  void _clearSelection() {
-    setState(() => _selection = null);
-  }
-
   /// Builds the shell body: pushes the content aside when the window can afford
   /// a permanent rail, floats the rail above the content when it cannot.
   Widget _buildBody(BuildContext context, BoxConstraints constraints) {
     final Widget content = DropSurface(
       onSelection: _handleDroppedSelection,
       onError: _handleDropError,
-      child: HomeContent(
-        selection: _selection,
-        onClearRequested: _selection == null ? null : _clearSelection,
-      ),
+      child: const HomeContent(),
     );
 
     if (constraints.maxWidth >= _pushSidebarBreakpoint) {
@@ -151,10 +142,7 @@ class _HomeActivityState extends State<HomeActivity> {
                   _buildBody(context, constraints),
             ),
           ),
-          SafeArea(
-            top: false,
-            child: AppBottomBar(onSelection: _rememberSelection),
-          ),
+          const SafeArea(top: false, child: AppBottomBar()),
         ],
       ),
     );
