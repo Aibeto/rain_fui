@@ -293,6 +293,10 @@ build_x265() {
     # x265 4.1 still asks CMake for two pre-3.0 policies; CMake 4 refuses them.
     sed -i -e 's/CMP0025 OLD/CMP0025 NEW/' -e 's/CMP0054 OLD/CMP0054 NEW/' \
         "$SRC/x265/source/CMakeLists.txt"
+    # wasm32 looks like a 32-bit x86 to x265, which then adds -march=i686 and
+    # em++ rejects it.
+    sed -i 's/elseif(X86 AND NOT X64)$/elseif(X86 AND NOT X64 AND NOT EMSCRIPTEN)/' \
+        "$SRC/x265/source/CMakeLists.txt"
     # Assembly is off for cross builds: it needs the target's assembler and the
     # NDK/mingw paths differ enough to be a project of its own.
     local asm=OFF
@@ -307,7 +311,7 @@ build_x265() {
     local pc="$PREFIX/lib/pkgconfig/x265.pc"
     local cxxlib=stdc++
     case "$TARGET" in
-        android-*) cxxlib=c++ ;;
+        android-*|web-wasm) cxxlib=c++ ;;
     esac
     # x265's own x265.pc names an archive with -l:libunwind.a, which FFmpeg's
     # static pkg-config mode turns into a broken -l-l: option; write a plain one.
@@ -325,6 +329,33 @@ Libs: -L\${libdir} -lx265 -l$cxxlib -lm
 Cflags: -I\${includedir}
 EOF
     fi
+}
+
+unpack_flat() { # unpack_flat <file> <dir>  (archives without a top directory)
+    [ -d "$SRC/$2" ] && return 0
+    log "unpack $1"
+    mkdir -p "$SRC/$2"
+    tar -xf "$SRC/$1" -C "$SRC/$2"
+}
+
+build_aom() {
+    fetch https://deb.debian.org/debian/pool/main/a/aom/aom_3.14.1.orig.tar.xz aom-3.14.1.tar.xz
+    unpack_flat aom-3.14.1.tar.xz aom
+    log "build libaom 3.14.1"
+    # aom's NEON/SVE translation units are memory hungry; 20 parallel clang
+    # processes get OOM-killed on a 32 GB machine, 8 does not.
+    local JOBS=8
+    local cpu_args=()
+    case "$TARGET" in
+        android-arm64-v8a) cpu_args=(-DAOM_TARGET_CPU=arm64) ;;
+        android-armeabi-v7a) cpu_args=(-DAOM_TARGET_CPU=generic) ;;
+        android-x86_64|windows-x64) cpu_args=(-DAOM_TARGET_CPU=x86_64) ;;
+        web-wasm) cpu_args=(-DAOM_TARGET_CPU=generic) ;;
+    esac
+    cmake_build "$SRC/aom" \
+        -DENABLE_TESTS=OFF -DENABLE_EXAMPLES=OFF -DENABLE_TOOLS=OFF \
+        -DENABLE_DOCS=OFF -DCONFIG_PIC=1 -DENABLE_CCACHE=OFF \
+        "${cpu_args[@]}"
 }
 
 build_x264() {
@@ -446,7 +477,7 @@ build_webp() {
         -DWEBP_BUILD_EXTRAS=OFF
 }
 
-for dep in nvcodec lame svtav1 x264 opus ogg vorbis vpx webp x265; do
+for dep in nvcodec lame svtav1 x264 opus ogg vorbis vpx webp x265 aom; do
     want "$dep" || continue
     "build_$dep"
 done

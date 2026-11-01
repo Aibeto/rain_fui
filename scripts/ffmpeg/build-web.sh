@@ -110,7 +110,7 @@ if [ "${FFMPEG_EXTERNAL_LIBS:-0}" = "1" ]; then
     EXTRA_INC=" -I$(ffmpeg_deps_prefix)/include"
     EXTRA_LIB=" -L$(ffmpeg_deps_prefix)/lib"
     EXTERNAL_LINK_LIBS=()
-    for pkg in mp3lame opus vorbisenc vorbis vpx libwebp x264; do
+    for pkg in mp3lame opus vorbisenc vorbis vpx libwebp x264 aom; do
         if pkg-config --exists "$pkg" 2>/dev/null; then
             # shellcheck disable=SC2207
             EXTERNAL_LINK_LIBS+=( $(pkg-config --libs "$pkg") )

@@ -271,21 +271,26 @@ Builds verified on this machine (FFmpeg 9.0.2 source, `FFMPEG_EXTERNAL_LIBS=1`,
 | target | artifact | size | software encoders |
 |---|---|---|---|
 | linux-x64 | `dist/linux-x64/ffmpeg` | 33 077 664 B | libx264/libx265/libvpx/libaom/libsvtav1/libopus/libvorbis/libmp3lame/libwebp + nvenc/qsv/vaapi |
-| android-arm64-v8a | `dist/android-arm64-v8a/libffmpeg_exe.so` | 31 651 136 B | libx264/libx265/libvpx/libsvtav1/libopus/libvorbis/libmp3lame/libwebp + 11 MediaCodec |
-| android-armeabi-v7a | `dist/android-armeabi-v7a/libffmpeg_exe.so` | 28 531 088 B | same software set (libvpx without NEON) + MediaCodec |
-| android-x86_64 | `dist/android-x86_64/libffmpeg_exe.so` | 39 004 528 B | same software set + MediaCodec |
-| windows-x64 | `dist/windows-x64/ffmpeg.exe` | 43 837 454 B | libx264/libx265/libvpx/libsvtav1/libopus/libvorbis/libmp3lame/libwebp |
-| web | `dist/web/ffmpeg.wasm` | 22 131 982 B | libx264/libvpx/libopus/libvorbis/libmp3lame/libwebp (wasm) |
+| android-arm64-v8a | `dist/android-arm64-v8a/libffmpeg_exe.so` | 38 008 656 B | libx264/libx265/libvpx/libsvtav1/libopus/libvorbis/libmp3lame/libwebp + 11 MediaCodec |
+| android-armeabi-v7a | `dist/android-armeabi-v7a/libffmpeg_exe.so` | 32 753 584 B | same software set (libvpx without NEON) + MediaCodec |
+| android-x86_64 | `dist/android-x86_64/libffmpeg_exe.so` | 48 433 744 B | same software set + MediaCodec |
+| windows-x64 | `dist/windows-x64/ffmpeg.exe` | 53 011 470 B | libx264/libx265/libvpx/libsvtav1/libopus/libvorbis/libmp3lame/libwebp |
+| web | `dist/web/ffmpeg.wasm` | 25 654 275 B | libx264/libvpx/libaom/libopus/libvorbis/libmp3lame/libwebp (wasm) |
 
-The wasm target links its own copies of the same libraries. Emscripten needs a
+The wasm target links its own copies of most of the same libraries. Emscripten needs a
 few extra fixes, all handled in the scripts: x264 is configured with
 `--disable-asm` and its generated `config.mak` loses the `-m64` that would pick
 wasm64, x264's `sched_getaffinity` probe is routed to its Android fallback, and
 the manual `emcc` link in `build-web.sh` appends `pkg-config --libs` for the
 enabled libraries plus `-lmp3lame`, `-lwebpmux` and `-lwebpdemux` because those
-archives carry no usable `.pc` entry. libaom is the one library not built here:
-`aomedia.googlesource.com` is unreachable from this network, so Linux takes it
-from the sysroot and the other platforms use SVT-AV1 for AV1.
+archives carry no usable `.pc` entry. libaom comes from the Debian source
+mirror because `aomedia.googlesource.com` is unreachable from this network; for
+wasm it is configured with `-DAOM_TARGET_CPU=generic`, and x265's CMake needs
+`EMSCRIPTEN` added to its "32-bit x86" branch or em++ rejects `-march=i686`.
+Web therefore carries H.264 (libx264), VP8/VP9, AV1 (libaom), Opus, Vorbis,
+MP3 and WebP, but no HEVC: x265's wasm archive links against Emscripten's C++
+runtime in a way FFmpeg's `emcc` probe cannot satisfy, so x265 stays out of the
+web build and only the native/mobile builds carry HEVC.
 
 ## LTO and parallelism
 
