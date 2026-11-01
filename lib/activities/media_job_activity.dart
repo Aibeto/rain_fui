@@ -940,7 +940,6 @@ class _RateModeRow extends StatelessWidget {
               popupConstraints: BoxConstraints(
                 minWidth: width,
                 maxWidth: width,
-                maxHeight: 280,
               ),
               value: mode,
               items: <ComboBoxItem<_RateMode>>[
@@ -1020,7 +1019,6 @@ class _PickerRow<T> extends StatelessWidget {
               popupConstraints: BoxConstraints(
                 minWidth: width,
                 maxWidth: width,
-                maxHeight: 360,
               ),
               popupColor: FluentTheme.of(context).menuColor,
               placeholder: Text(noneLabel),
@@ -1131,11 +1129,7 @@ class _DecoderRow extends StatelessWidget {
           child: ComboBox<String?>(
             isExpanded: true,
             popupColor: theme.menuColor,
-            popupConstraints: BoxConstraints(
-              minWidth: width,
-              maxWidth: width,
-              maxHeight: 320,
-            ),
+            popupConstraints: BoxConstraints(minWidth: width, maxWidth: width),
             value: value,
             placeholder: Text(l10n(I18nKey.jobDecoderAuto)),
             items: <ComboBoxItem<String?>>[
@@ -1436,11 +1430,7 @@ class _OptionField extends StatelessWidget {
         return ComboBox<String>(
           isExpanded: true,
           popupColor: FluentTheme.of(context).menuColor,
-          popupConstraints: BoxConstraints(
-            minWidth: width,
-            maxWidth: width,
-            maxHeight: 320,
-          ),
+          popupConstraints: BoxConstraints(minWidth: width, maxWidth: width),
           value: current,
           placeholder: Text(context.l10n(I18nKey.optionUnset)),
           items: <ComboBoxItem<String>>[
