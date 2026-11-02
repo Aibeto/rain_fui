@@ -417,6 +417,20 @@ under `set -u` — with 3.2 the very first dependency build fails with
 `cross[@]: unbound variable`. `common.sh` now checks the version up front, and the
 CI leg installs Homebrew bash and puts it first on `PATH`.
 
+The **x86_64 slice needs `nasm`** (FFmpeg's configure refuses x86 without it, and
+aom/libvpx assemble with it); `build-macos.sh` and `build-deps.sh --target
+macos-x64` both check for it up front instead of failing deep inside a recipe.
+`--arch arm64` builds the native slice alone.
+
+Some of the pinned dependency sources predate the current toolchains, which is
+why the recipes patch them rather than patching clang:
+
+* LAME 3.100 rewrites `memcpy` to `bcopy` when its configure finds `bcopy`; macOS
+  no longer declares it, so the recipe passes `ac_cv_func_bcopy=no`.
+* libvorbis 1.3.7 hard-codes `-force_cpusubtype_ALL` in its `*-*-darwin*` CFLAGS
+  and modern `ld` rejects it, so the recipe strips the flag from `configure`.
+* x265's `.pc` names the C++ runtime; on macOS that is `libc++`, not libstdc++.
+
 macOS is the only target whose artifact is signed by the build itself. On Apple
 Silicon an unsigned (or wrongly signed) executable does not launch, and every
 universal build carries an arm64 slice, so `build-macos.sh` always ends with

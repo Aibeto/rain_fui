@@ -174,6 +174,10 @@ case "$TARGET" in
             *) die "unknown macOS arch '$arch' (expected macos-arm64 / macos-x64)" ;;
         esac
         require_cmd xcrun "install Xcode or the command line tools"
+        if [ "$arch" = "x86_64" ] \
+           && ! command -v nasm >/dev/null 2>&1 && ! command -v yasm >/dev/null 2>&1; then
+            die "macos-x64 needs nasm for aom/libvpx assembly (brew install nasm)"
+        fi
         sdk="$(xcrun --sdk macosx --show-sdk-path)"
         macmin="${MACOSX_DEPLOYMENT_TARGET:-11.0}"
         export MACOSX_DEPLOYMENT_TARGET="$macmin"
@@ -368,9 +372,12 @@ build_x265() {
     # x265 does not always install a .pc file; FFmpeg's configure insists on
     # one, so write the few lines it needs.
     local pc="$PREFIX/lib/pkgconfig/x265.pc"
+    # x265 is C++, so its .pc has to drag in the C++ runtime. Apple has no
+    # libstdc++ worth linking (clang++ uses libc++), and the NDK/emscripten
+    # ship libc++ under the bare 'c++' name.
     local cxxlib=stdc++
     case "$TARGET" in
-        android-*|web-wasm) cxxlib=c++ ;;
+        android-*|web-wasm|macos-*) cxxlib=c++ ;;
     esac
     # x265's own x265.pc names an archive with -l:libunwind.a, which FFmpeg's
     # static pkg-config mode turns into a broken -l-l: option; write a plain one.
@@ -513,6 +520,12 @@ build_vorbis() {
     log "build libvorbis 1.3.7"
     local dir
     dir="$(srccopy vorbis libvorbis-1.3.7.tar.gz)"
+    # configure 的 *-*-darwin* 分支把 -force_cpusubtype_ALL 写死进 CFLAGS，而
+    # Xcode 15 的 ld 已经不认这个选项：库本身编得出来，默认构建的自测程序
+    # test_sharedbook（lib/Makefile.am 的 vorbis_selftests）却在链接处报
+    # "ld: unknown options: -force_cpusubtype_ALL"。这个参数早无意义，直接从
+    # configure 里抹掉（只有 darwin 分支有，别的平台是空操作）。
+    sed -i.bak 's/ -force_cpusubtype_ALL//g' "$dir/configure" && rm -f "$dir/configure.bak"
     ( cd "$dir" && make distclean >/dev/null 2>&1 || true
       { [ -x ./configure ] || ./autogen.sh >/dev/null; } && \
       ${EM_CROSS:+emconfigure} ./configure \
@@ -572,11 +585,12 @@ build_webp() {
 
 for dep in nvcodec lame svtav1 x264 opus ogg vorbis vpx webp x265 aom zlib; do
     want "$dep" || continue
-    # nv-codec-headers only makes sense where a CUDA driver exists; on android
-    # and web the headers would just get --enable-nvenc added to a configure
-    # line that cannot satisfy it.
+    # nv-codec-headers only makes sense where a CUDA driver exists; on android,
+    # web and macOS the headers would just get --enable-nvenc added to a
+    # configure line that cannot satisfy it (macOS has no CUDA at all, and
+    # external-libs.sh only offers nvenc on linux/windows).
     case "$dep:$TARGET" in
-        nvcodec:android-*|nvcodec:web-wasm|nvcodec:ios-*)
+        nvcodec:android-*|nvcodec:web-wasm|nvcodec:ios-*|nvcodec:macos-*)
             log "skip $dep (no use on $TARGET)"
             continue
             ;;
