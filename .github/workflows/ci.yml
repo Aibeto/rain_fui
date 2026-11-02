@@ -578,9 +578,11 @@ jobs:
       - name: 工具（nasm / pkg-config）
         run: |
           set -euo pipefail
+          # 镜像通常自带这两个，装不上也别直接失败；nasm 只影响 x86_64 那份的
+          # aom/vpx 汇编（缺失时自动退化成 C），pkg-config 则是硬需求。
           brew install nasm pkg-config || brew upgrade nasm pkg-config || true
-          nasm -v
-          pkg-config --version
+          nasm -v || echo "::warning::nasm 缺失：x86_64 的 aom/libvpx 将走 C 实现"
+          pkg-config --version || { echo "::error::pkg-config 缺失，无法定位依赖前缀"; exit 1; }
 
       - name: Prepare scripts
         run: chmod +x scripts/ffmpeg/*.sh
