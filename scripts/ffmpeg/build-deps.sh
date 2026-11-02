@@ -180,7 +180,10 @@ case "$TARGET" in
         CC="$(xcrun --sdk macosx --find clang)" || die "no clang in the macOS SDK"
         CXX="$(xcrun --sdk macosx --find clang++)" || die "no clang++ in the macOS SDK"
         export CC CXX
-        export CFLAGS="-O2 -arch $arch -isysroot $sdk -mmacosx-version-min=$macmin"
+        # Xcode 15+ 的 clang 把「隐式函数声明」当错误（C99 起本就应该），而
+        # LAME 3.100 / libvorbis 这类 2000 年代的 autotools 源码正是靠隐式声明
+        # 过日子的；只降级这条诊断，别的错误照旧。
+        export CFLAGS="-O2 -arch $arch -isysroot $sdk -mmacosx-version-min=$macmin -Wno-implicit-function-declaration"
         export CXXFLAGS="$CFLAGS"
         export LDFLAGS="-arch $arch -isysroot $sdk -mmacosx-version-min=$macmin"
         export HOST="$triple"
@@ -311,6 +314,10 @@ build_lame() {
     local dir
     dir="$(srccopy lame-3.100 lame-3.100.tar.gz)"
     ( cd "$dir" && make distclean >/dev/null 2>&1 || true
+      # ac_cv_func_bcopy=no：LAME 探测到 bcopy 就把 mpg123.h 里的 memcpy 改写成
+      # bcopy(...)，而 macOS 的头文件不再声明 bcopy，新版 clang 直接报错退出。
+      # 走 memcpy 分支完全等价，而且各平台一致。
+      ac_cv_func_bcopy=no \
       ./configure \
         --prefix="$PREFIX" \
         --disable-shared --enable-static \
