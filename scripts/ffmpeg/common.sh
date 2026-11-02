@@ -127,6 +127,9 @@ ffmpeg_default_jobs() {
         nproc
     elif [ -n "${NUMBER_OF_PROCESSORS:-}" ]; then
         printf '%s\n' "$NUMBER_OF_PROCESSORS"
+    elif command -v sysctl >/dev/null 2>&1 && sysctl -n hw.ncpu 2>/dev/null; then
+        # macOS/BSD have no nproc; sysctl already printed the count.
+        :
     else
         printf '4\n'
     fi

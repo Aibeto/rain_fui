@@ -377,12 +377,18 @@ build_x265() {
     unpack x265-4.1.tar.gz x265
     log "build x265 4.1"
     # x265 4.1 still asks CMake for two pre-3.0 policies; CMake 4 refuses them.
-    sed -i -e 's/CMP0025 OLD/CMP0025 NEW/' -e 's/CMP0054 OLD/CMP0054 NEW/' \
-        "$SRC/x265/source/CMakeLists.txt"
+    # 注意就地编辑只能写 `sed -i.bak …`：macOS 的 BSD sed 不接受 `-i -e`，
+    # 它会把 `-e` 当成备份后缀，再把表达式当成文件名，报
+    # "sed: -e: No such file or directory"。
+    sed -i.bak -e 's/CMP0025 OLD/CMP0025 NEW/' -e 's/CMP0054 OLD/CMP0054 NEW/' \
+        "$SRC/x265/source/CMakeLists.txt" \
+        && rm -f "$SRC/x265/source/CMakeLists.txt.bak"
     # wasm32 looks like a 32-bit x86 to x265, which then adds -march=i686 and
     # em++ rejects it.
-    sed -i 's/elseif(X86 AND NOT X64)$/elseif(X86 AND NOT X64 AND NOT EMSCRIPTEN)/' \
-        "$SRC/x265/source/CMakeLists.txt"
+    sed -i.bak \
+        's/elseif(X86 AND NOT X64)$/elseif(X86 AND NOT X64 AND NOT EMSCRIPTEN)/' \
+        "$SRC/x265/source/CMakeLists.txt" \
+        && rm -f "$SRC/x265/source/CMakeLists.txt.bak"
     # Assembly is off for cross builds: it needs the target's assembler and the
     # NDK/mingw paths differ enough to be a project of its own.
     local asm=OFF
@@ -491,8 +497,10 @@ build_x264() {
     # Emscripten has no sched_getaffinity; x264 already has a fallback for
     # Android, so route wasm through the same branch.
     if [ "${EM_CROSS:-0}" = "1" ]; then
-        sed -i 's/^#ifdef __ANDROID__$/#if defined(__ANDROID__) || defined(__EMSCRIPTEN__)/' \
-            "$dir/common/cpu.c"
+        sed -i.bak \
+            's/^#ifdef __ANDROID__$/#if defined(__ANDROID__) || defined(__EMSCRIPTEN__)/' \
+            "$dir/common/cpu.c" \
+            && rm -f "$dir/common/cpu.c.bak"
     fi
     ( cd "$dir" && make distclean >/dev/null 2>&1 || true
       ${EM_CROSS:+emconfigure} ./configure \
@@ -504,7 +512,7 @@ build_x264() {
       # x264 adds -m64 for x86_64 hosts; under emcc that means wasm64 and the
       # archive then refuses to link against wasm32 objects.
       if [ "${EM_CROSS:-0}" = "1" ]; then
-          sed -i -e 's/-m64//g' config.mak
+          sed -i.bak -e 's/-m64//g' config.mak && rm -f config.mak.bak
       fi
       make -j"$JOBS" >>"${BUILD_LOG:-/dev/null}" 2>&1
       make install >>"${BUILD_LOG:-/dev/null}" 2>&1 )

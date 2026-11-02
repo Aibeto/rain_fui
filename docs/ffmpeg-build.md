@@ -422,6 +422,13 @@ aom/libvpx assemble with it); `build-macos.sh` and `build-deps.sh --target
 macos-x64` both check for it up front instead of failing deep inside a recipe.
 `--arch arm64` builds the native slice alone.
 
+In-place edits must use the **`sed -i.bak` form** (or `-i ''`). BSD `sed` in
+macOS reads the word after `-i` as the backup extension, so a GNU-style
+`sed -i -e 's/a/b/' file` makes it treat `-e` as a filename and die with
+`sed: -e: No such file or directory` — which is exactly how the x265 recipe
+failed on the mac leg even though both of its patches are no-ops on 4.1. Every
+`sed -i` in `scripts/` now writes a `.bak` and deletes it.
+
 Some of the pinned dependency sources predate the current toolchains, which is
 why the recipes patch them rather than patching clang:
 
