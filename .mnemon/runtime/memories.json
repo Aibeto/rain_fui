@@ -21,6 +21,13 @@
       "updated_at": "2026-11-02T02:06:50.609Z",
       "target": "memory",
       "importance": "normal"
+    },
+    {
+      "content": "Rain FUI macOS CI 排障经验（scripts/ffmpeg）：macOS runner 用 /bin/bash 3.2，`set -u` 下展开「已声明但为空」的数组会报 `cross[@]: unbound variable`，故 common.sh 的 ffmpeg_require_bash() 强制 bash 4+，CI 先 `brew install bash` 并把 `$(brew --prefix)/bin` 塞进 $GITHUB_PATH（该写入只对后续 step 生效）。老依赖要打补丁而不是改 clang：LAME 3.100 传 `ac_cv_func_bcopy=no`（否则 configure 把 memcpy 改写成已不声明的 bcopy），libvorbis 1.3.7 要把 `-force_cpusubtype_ALL` 从 configure 的 *-*-darwin* 分支里 sed 掉（Xcode 15 的 ld 不认，挂的是默认构建的自测程序 test_sharedbook），x265 的 .pc 在 macOS 要用 `c++`（libc++）而不是 stdc++。macOS 不构建 nv-codec-headers（external-libs.sh 的 macos 分支从不发 --enable-nvenc，没有 CUDA）。x86_64 分片必须有 nasm（FFmpeg configure 缺汇编器直接拒绝 x86），build-macos.sh 与 build-deps.sh --target macos-x64 已提前检查。CI 断言里凡是 `… | head -N` 都要改 `sed -n '1,Np'`：pipefail 下 head 提前关管道会让上游拿 SIGPIPE（tar 报 `tar: stdout: write error`，exit 2）。版本断言接受 RELEASE tag、n 前缀或 submodule 短提交号三者之一（CI 的 submodule 没有 tag，FFmpeg 只打印提交号）——common.sh 与 ci.yml 共 4 处都要一致。Xcode 的 Embed ffmpeg 阶段用 install -m 0755 复制到 Contents/Frameworks 再 ad-hoc 重签，FRAMEWORKS_FOLDER_PATH 为空时兜底为 Contents/Frameworks。",
+      "created_at": "2026-11-02T08:20:40.274Z",
+      "updated_at": "2026-11-02T08:20:40.274Z",
+      "target": "memory",
+      "importance": "normal"
     }
   ]
 }
