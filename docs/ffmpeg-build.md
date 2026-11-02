@@ -222,7 +222,15 @@ line names it explicitly; without it configure stops at
 
 zlib is built per target as well: mingw and emscripten do not ship it, and
 without it png, apng, zmbv, exr, flashsv, flashsv2, pdv and the matching
-decoders silently disappear from that platform's build.
+decoders silently disappear from that platform's build. The recipe deletes the
+shared library after installing it: zlib 1.3.1's CMake has no
+`ZLIB_BUILD_SHARED` option (`add_library(zlib SHARED …)` is unconditional), so a
+`libz.dylib`/`libz.so` lands in the prefix and `-L$PREFIX/lib` precedes the SDK,
+making `-lz` pick the shared object. On Linux the SONAME happens to match the
+system `libz.so.1` and the binary still runs; on macOS the install name is
+`@rpath/libz.1.dylib`, there is no rpath, and dyld fails with
+`Library not loaded: @rpath/libz.1.dylib`. Only `libz.a` is kept, because the
+helper has to be self-contained.
 
 Building only writes `build/ffmpeg/dist/`; the Flutter trees the app actually
 loads (`linux/ffmpeg/`, `windows/ffmpeg/`, `android/app/src/main/jniLibs/`,
