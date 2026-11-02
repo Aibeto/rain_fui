@@ -134,3 +134,4 @@ ffmpeg_report_artifact "$distdir/ffmpeg"
 printf '\n[ffmpeg] %s: artifact -version first line:\n  %s\n' "$TARGET" "$first"
 log "$TARGET build complete in $(ffmpeg_elapsed "$start")"
 log "dist: $distdir"
+ffmpeg_remind_install linux-x64

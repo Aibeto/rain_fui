@@ -256,4 +256,5 @@ API $API may be unsupported by this NDK — try --api 24 (Flutter minSdk) or a n
 done
 
 log "android build complete in $(ffmpeg_elapsed "$start_all")"
+ffmpeg_remind_install android
 log "dist: $FFMPEG_DIST/{$(printf 'android-%s,' "${ABI_LIST[@]}" | sed 's/,$//')}"

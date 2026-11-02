@@ -222,6 +222,14 @@ zlib is built per target as well: mingw and emscripten do not ship it, and
 without it png, apng, zmbv, exr, flashsv, flashsv2, pdv and the matching
 decoders silently disappear from that platform's build.
 
+Building only writes `build/ffmpeg/dist/`; the Flutter trees the app actually
+loads (`linux/ffmpeg/`, `windows/ffmpeg/`, `android/app/src/main/jniLibs/`,
+`web/ffmpeg/`) are updated by `scripts/ffmpeg/install-to-app.sh`. Skipping that
+step is invisible at runtime: the app starts, the probe succeeds, and the codec
+list is simply the previous binary's. `python3 tool/check_packaged.py` compares
+the two sets by hash and fails when they diverge; every build script now prints
+the install command when it finishes.
+
 `python3 tool/check_parity.py` compares all five builds against the Linux one and
 reports encoder or decoder names that differ, ignoring hardware back ends and
 libraries the project does not build. It is the guard against a platform quietly

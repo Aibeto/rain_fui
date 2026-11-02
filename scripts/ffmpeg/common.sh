@@ -184,6 +184,12 @@ ffmpeg_lto_link_flags() {
 }
 
 # ---------------------------------------------------------------------------
+# Reminder printed by every build: dist/ is not what the app loads.
+ffmpeg_remind_install() {
+    log "the app tree still has the previous binary until you run:"
+    log "  scripts/ffmpeg/install-to-app.sh $1"
+}
+
 # helpers: zlib probe, build layout, configure, make
 # ---------------------------------------------------------------------------
 # ffmpeg_zlib_available <cc> [extra compiler flags...]

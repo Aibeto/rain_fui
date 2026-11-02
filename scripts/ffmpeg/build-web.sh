@@ -372,3 +372,4 @@ if command -v file >/dev/null 2>&1; then
 fi
 [ -n "$first" ] && printf '  -version first line: %s\n' "$first"
 log "$TARGET build complete in $(ffmpeg_elapsed "$start")"
+ffmpeg_remind_install web

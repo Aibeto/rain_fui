@@ -204,3 +204,4 @@ fi
 ffmpeg_report_artifact "$dst"
 log "$TARGET build complete in $(ffmpeg_elapsed "$start")"
 log "dist: $distdir"
+ffmpeg_remind_install windows-x64
