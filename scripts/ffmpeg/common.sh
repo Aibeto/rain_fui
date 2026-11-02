@@ -89,6 +89,36 @@ ffmpeg_tag() {
     tr -d '[:space:]' < "$FFMPEG_SRC/RELEASE" 2>/dev/null || true
 }
 
+# ffmpeg_version_tokens: every string a correct `-version` first line may
+# carry. FFmpeg builds its version string with `git describe`, and a checkout
+# without tags (a CI submodule, for instance) prints the bare commit hash
+# ("ffmpeg version 946fcce") instead of the release name, so both forms are
+# legitimate.
+ffmpeg_version_tokens() {
+    local tag sha
+    tag="$(ffmpeg_tag)"
+    if [ -n "$tag" ]; then
+        printf '%s\n' "$tag" "n$tag"
+    fi
+    sha="$(git -C "$FFMPEG_SRC" rev-parse --short HEAD 2>/dev/null || true)"
+    if [ -n "$sha" ]; then
+        printf '%s\n' "$sha"
+    fi
+}
+
+# ffmpeg_version_matches <first line>: 0 when any token appears in it.
+ffmpeg_version_matches() {
+    local line="$1" token tokens
+    [ -n "$line" ] || return 1
+    tokens="$(ffmpeg_version_tokens)"
+    for token in $tokens; do
+        case "$line" in
+            *"$token"*) return 0 ;;
+        esac
+    done
+    return 1
+}
+
 # ---------------------------------------------------------------------------
 # jobs / timing
 # ---------------------------------------------------------------------------
@@ -306,10 +336,9 @@ ffmpeg_version_file() {
         first="$fallback"
     fi
     [ -n "$first" ] || die "cannot determine FFmpeg version for '$bin' (not runnable and no fallback given)"
-    case "$first" in
-        *"$tag"*) ;;
-        *) warn "version line does not mention $tag: $first" ;;
-    esac
+    if ! ffmpeg_version_matches "$first"; then
+        warn "version line does not mention $tag: $first"
+    fi
     mkdir -p "$(dirname "$out")"
     printf '%s\n' "$first" > "$out"
     printf '%s\n' "$first"
@@ -317,13 +346,18 @@ ffmpeg_version_file() {
 
 # ffmpeg_require_version_line <binary> <expected tag> — contract §9.3.
 ffmpeg_require_version_line() {
-    local bin="$1" tag="$2" text first
+    local bin="$1" tag="$2" text first tokens
     text="$("$bin" -version 2>&1 || true)"
     first="${text%%$'\n'*}"
-    case "$first" in
-        *"$tag"*) log "version check: $first" ;;
-        *) die "version check FAILED for '$bin': expected '$tag', got '${first:-<no output>}'" ;;
-    esac
+    # Accept the release tag, its n-prefixed form, or the source commit: a
+    # checkout without tags (CI's submodule) prints "ffmpeg version 946fcce",
+    # which is this exact source, not a mismatch.
+    if ffmpeg_version_matches "$first"; then
+        log "version check: $first"
+        return 0
+    fi
+    tokens="$(ffmpeg_version_tokens | tr '\n' ' ')"
+    die "version check FAILED for '$bin': expected one of [${tokens% }], got '${first:-<no output>}'"
 }
 
 # ffmpeg_banner <target> — one-line build header.
