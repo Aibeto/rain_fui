@@ -190,14 +190,16 @@ case "$TARGET" in
     macos-*)
         # 一个 runner 上同时给 arm64 和 x86_64 编依赖，只能靠 -arch 区分；SDK 路径
         # 和部署目标都显式给出，否则 Homebrew 的头文件会被混进来。
-        arch="${TARGET#macos-}"
-        case "$arch" in
-            arm64)  triple="aarch64-apple-darwin" ;;
-            x86_64) triple="x86_64-apple-darwin" ;;
-            *) die "unknown macOS arch '$arch' (expected macos-arm64 / macos-x64)" ;;
+        # 注意目标名是短写：macos-x64，而 clang/cmake 要的是 x86_64，两者不能混
+        # （写成 `arch="${TARGET#macos-}"` 再和 x86_64 比，macos-x64 永远匹配不上）。
+        suffix="${TARGET#macos-}"
+        case "$suffix" in
+            arm64)      clang_arch=arm64;  triple="aarch64-apple-darwin" ;;
+            x64|x86_64) clang_arch=x86_64; triple="x86_64-apple-darwin" ;;
+            *) die "unknown macOS arch '$suffix' (expected macos-arm64 / macos-x64)" ;;
         esac
         require_cmd xcrun "install Xcode or the command line tools"
-        if [ "$arch" = "x86_64" ] \
+        if [ "$clang_arch" = "x86_64" ] \
            && ! command -v nasm >/dev/null 2>&1 && ! command -v yasm >/dev/null 2>&1; then
             die "macos-x64 needs nasm for aom/libvpx assembly (brew install nasm)"
         fi
@@ -210,12 +212,12 @@ case "$TARGET" in
         # Xcode 15+ 的 clang 把「隐式函数声明」当错误（C99 起本就应该），而
         # LAME 3.100 / libvorbis 这类 2000 年代的 autotools 源码正是靠隐式声明
         # 过日子的；只降级这条诊断，别的错误照旧。
-        export CFLAGS="-O2 -arch $arch -isysroot $sdk -mmacosx-version-min=$macmin -Wno-implicit-function-declaration"
+        export CFLAGS="-O2 -arch $clang_arch -isysroot $sdk -mmacosx-version-min=$macmin -Wno-implicit-function-declaration"
         export CXXFLAGS="$CFLAGS"
-        export LDFLAGS="-arch $arch -isysroot $sdk -mmacosx-version-min=$macmin"
+        export LDFLAGS="-arch $clang_arch -isysroot $sdk -mmacosx-version-min=$macmin"
         export HOST="$triple"
         CMAKE_TARGET_ARGS=(
-            -DCMAKE_OSX_ARCHITECTURES="$arch"
+            -DCMAKE_OSX_ARCHITECTURES="$clang_arch"
             -DCMAKE_OSX_SYSROOT="$sdk"
             -DCMAKE_OSX_DEPLOYMENT_TARGET="$macmin"
         )

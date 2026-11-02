@@ -466,6 +466,12 @@ Each architecture gets its own tree (`build/ffmpeg/ffbuild/macos-arm64`,
 Both are always configured with `--enable-cross-compile --sysroot`, even when
 the arch matches the host: configure must not probe the target by running it.
 
+Note the two spellings: the **target name** is the short `macos-x64`, while
+clang, CMake and autoconf want the triple spelling `x86_64` (`-arch x86_64`,
+`CMAKE_OSX_ARCHITECTURES=x86_64`, `HOST=x86_64-apple-darwin`). `build-deps.sh`
+derives one from the other explicitly; comparing the target suffix against
+`x86_64` silently never matches and dies with `unknown macOS arch 'x64'`.
+
 What the macOS build adds on top of the shared flags:
 
 * `--enable-videotoolbox --enable-audiotoolbox`. `--disable-autodetect` turns
