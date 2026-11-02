@@ -314,8 +314,19 @@ jobs:
             exit 1
           fi
           cat "$DIST/version.txt"
-          grep -q "${{ env.FFMPEG_VERSION }}" "$DIST/version.txt" \
-            || { echo "::error::version.txt 里没有 ${{ env.FFMPEG_VERSION }}"; exit 1; }
+          # FFmpeg 的版本串来自 git describe：CI 的 submodule 没有 tag，只会打印
+          # 提交号（"ffmpeg version 946fcce"）。tag、n 前缀、源码提交号三者任一
+          # 都算通过，和 scripts/ffmpeg/common.sh 的断言保持一致。
+          ffmpeg_sha="$(git -C third_party/ffmpeg rev-parse --short HEAD)"
+          version_ok=0
+          for token in "${{ env.FFMPEG_VERSION }}" "n${{ env.FFMPEG_VERSION }}" "$ffmpeg_sha"; do
+            [ -n "$token" ] || continue
+            if grep -qF -- "$token" "$DIST/version.txt"; then version_ok=1; break; fi
+          done
+          if [ "$version_ok" != 1 ]; then
+            echo "::error::version.txt 里既没有 ${{ env.FFMPEG_VERSION }} 也没有提交号 $ffmpeg_sha"
+            exit 1
+          fi
 
       - name: Verify the third-party encoders are really inside this build
         shell: bash
@@ -840,8 +851,19 @@ jobs:
             exit 1
           fi
           cat "$DIST/version.txt"
-          grep -q "${{ env.FFMPEG_VERSION }}" "$DIST/version.txt" \
-            || { echo "::error::version.txt 里没有 ${{ env.FFMPEG_VERSION }}"; exit 1; }
+          # FFmpeg 的版本串来自 git describe：CI 的 submodule 没有 tag，只会打印
+          # 提交号（"ffmpeg version 946fcce"）。tag、n 前缀、源码提交号三者任一
+          # 都算通过，和 scripts/ffmpeg/common.sh 的断言保持一致。
+          ffmpeg_sha="$(git -C third_party/ffmpeg rev-parse --short HEAD)"
+          version_ok=0
+          for token in "${{ env.FFMPEG_VERSION }}" "n${{ env.FFMPEG_VERSION }}" "$ffmpeg_sha"; do
+            [ -n "$token" ] || continue
+            if grep -qF -- "$token" "$DIST/version.txt"; then version_ok=1; break; fi
+          done
+          if [ "$version_ok" != 1 ]; then
+            echo "::error::version.txt 里既没有 ${{ env.FFMPEG_VERSION }} 也没有提交号 $ffmpeg_sha"
+            exit 1
+          fi
           file "$DIST/libffmpeg_exe.so"
 
       - name: Verify the third-party encoders and MediaCodec are inside this build

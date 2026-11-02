@@ -83,6 +83,9 @@ build/ffmpeg/dist/<target>/version.txt
 | `web`（暂时废弃） | `ffmpeg.js` + `ffmpeg.wasm` | Emscripten `MODULARIZE` 工厂，见 §7。入口已注释（m05703），产物不再生成 |
 
 `version.txt` 内容 = 产物 `-version` 输出的第一行（例：`ffmpeg version 9.0.2 Copyright (c) 2000-2025 the FFmpeg developers`）。
+FFmpeg 的版本串来自 submodule 里的 `git describe`，因此没有 tag 的检出（例如 CI 的
+submodule）会写成纯提交号 `ffmpeg version 946fcce …`——断言必须同时接受 tag、`n` 前缀
+和源码短提交号三者之一。
 Android 无法在主机执行，写 `ffmpeg version <TAG> (cross-compiled for <target>)` 即可。
 
 ## 6. 脚本 CLI 契约
@@ -167,7 +170,8 @@ Android 必须保持 `android:extractNativeLibs="true"` + `useLegacyPackaging = 
 
 1. `scripts/ffmpeg/build-<target>.sh` 退出码 0，产物齐全且 `version.txt` 非空。
 2. `scripts/ffmpeg/install-to-app.sh <target>` 把文件放到 §8 的位置。
-3. 宿主可执行的目标：`./build/ffmpeg/dist/<target>/ffmpeg -version` 必须打印 `9.0.2`。
+3. 宿主可执行的目标：`./build/ffmpeg/dist/<target>/ffmpeg -version` 的第一行必须含
+   `9.0.2`、`n9.0.2` 或 submodule 的短提交号之一（无 tag 的检出只有提交号）。
 4. Android：`flutter build apk --release --target-platform android-arm64` 后，APK 内
    `lib/arm64-v8a/libffmpeg_exe.so` 存在（CI 用 `unzip -l` 断言）。
 5. macOS：`flutter build macos --release` 后

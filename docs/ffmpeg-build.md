@@ -102,7 +102,9 @@ build tree first. `bash -n` is enough to syntax-check them.
 `scripts/ffmpeg/build-linux.sh [--jobs N] [--clean] [--arch x86_64]`
 : native x86_64 build with the host compiler. `CC=clang` switches to Clang.
   Adds `--enable-zlib` when `zlib.h` is available, `--disable-x86asm` when nasm
-  is missing, then verifies that the produced binary prints `9.0.2`.
+  is missing, then verifies that the produced binary's version line carries
+  `9.0.2`, `n9.0.2` or the submodule's short commit (a tag-less checkout only
+  has the commit).
 
 `scripts/ffmpeg/build.sh [--targets LIST] [--all] [--jobs N] [--api N] [--clean] [--no-install] [--dry-run] [-y]`
 : the interactive front door: prints the target menu and asks which ones to
@@ -528,9 +530,11 @@ persistent storage (MEMFS only); `-y` overwrites inside that in-memory FS.
 * **`emcc: command not found`** — the script sources `$EMSDK/emsdk_env.sh`
   automatically; set `EMSDK` if the SDK is not at `~/emsdk`.
 * **NDK not found** — set `ANDROID_NDK_HOME` to the NDK root.
-* **`version.txt` says `n9.0.2`** — FFmpeg's `version.sh` uses `git describe`
-  inside the submodule, so the banner carries the `n9.0.2` tag name. It still
-  contains `9.0.2` and satisfies the contract.
+* **`version.txt` says `n9.0.2` or `946fcce`** — FFmpeg's `version.sh` uses
+  `git describe` inside the submodule, so the banner carries the tag name, and a
+  checkout without tags (CI's submodule) carries the bare commit instead. Both
+  satisfy the contract: the assertions accept tag, `n`-prefixed tag or short
+  commit.
 * **Android 16 KB pages** — the link flags already set
   `-Wl,-z,max-page-size=16384`; verify with
   `llvm-readelf -l libffmpeg_exe.so | grep LOAD` (alignment `0x4000`).

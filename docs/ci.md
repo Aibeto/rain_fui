@@ -163,7 +163,8 @@ dart run tool/check_catalog.dart    # 编码器/容器表自洽（codec id、容
    libaom / SVT-AV1 / vpx / webp / opus / vorbis / lame / zlib
 10. `scripts/ffmpeg/build-<target>.sh`（缓存命中则跳过），带 `FFMPEG_EXTERNAL_LIBS=1`、
     `FFMPEG_LTO=0` 与 `FFMPEG_DEPS_TARGET`，所以第三方库会被真的链进来
-11. 校验 `build/ffmpeg/dist/<target>/version.txt` 存在、非空、含 `9.0.2`（契约 §9.1/§9.3）
+11. 校验 `build/ffmpeg/dist/<target>/version.txt` 存在、非空，且含 `9.0.2`、`n9.0.2`
+    或 submodule 短提交号之一（契约 §9.1/§9.3：CI 的 submodule 没有 tag）
 12. **断言第三方编码器真的在二进制里**：`tool/check_expected_encoders.py --target <t>
     --expect libx264,libx265,libaom-av1,libsvtav1,libvpx,libvpx-vp9,libwebp,libopus,
     libvorbis,libmp3lame,zmbv`（见 §7）
@@ -230,7 +231,8 @@ checkout(+submodule) → flutter → pub get → brew install nasm pkg-config
 9. `scripts/ffmpeg/build-deps.sh --target android-<abi>`（缓存命中则跳过；用 NDK 的 clang）
 10. `scripts/ffmpeg/build-android.sh --jobs "$(nproc)" --abis <abi> --api 24`（缓存命中则跳过），
     带 `FFMPEG_EXTERNAL_LIBS=1` 与 `FFMPEG_DEPS_TARGET=android-<abi>`
-11. 校验 `build/ffmpeg/dist/android-<abi>/version.txt` 非空且含 `9.0.2`，`file` 打印 ELF 类型
+11. 校验 `build/ffmpeg/dist/android-<abi>/version.txt` 非空且含 `9.0.2` / `n9.0.2` /
+    提交号之一，`file` 打印 ELF 类型
 12. 断言编码器在：`tool/check_expected_encoders.py --target android-<abi> --expect …,
     h264_mediacodec,hevc_mediacodec`（MediaCodec 需要 `--enable-jni --enable-mediacodec`）
 13. `scripts/ffmpeg/install-to-app.sh android-<abi>` → `android/app/src/main/jniLibs/<abi>/`
