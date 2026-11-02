@@ -41,6 +41,15 @@ env:
   ANDROID_NDK_VERSION: '28.2.13676358'
   # FFmpeg 构建缓存纪元：升级 emsdk / NDK / gcc 等工具链后 +1，强制所有 FFmpeg 缓存失效
   FFMPEG_CACHE_EPOCH: 'v1'
+  # 每个 leg 都带第三方编码器（libx264 / libx265 / libaom-av1 / SVT-AV1 / vpx /
+  # webp / opus / vorbis / lame）与平台后端（nvenc / vaapi / qsv / MediaCodec）。
+  # 缺这些的构建照样编译成功，只是编码器列表悄悄变短 —— 所以下面每个 leg 都用
+  # tool/check_expected_encoders.py 兜住，不让“少了一半编码器”的包溜过去。
+  FFMPEG_EXTERNAL_LIBS: '1'
+  # LTO 在 CI 上换不来速度，只是让链接更慢、缓存更脆弱
+  FFMPEG_LTO: '0'
+  # 依赖库缓存纪元：改 build-deps.sh 里的库版本或工具链后 +1
+  FFMPEG_DEPS_EPOCH: 'v1'
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -78,6 +87,14 @@ jobs:
       - name: flutter analyze
         run: flutter analyze
 
+      # 三个不依赖二进制、也不需要 network 的仓库级检查：文案完整性、UI 硬规则
+      # （无模糊、无 Material 图标、无硬编码文案）、编码器/容器表的自洽性。
+      - name: Repo checks (i18n / UI rules / capability catalog)
+        run: |
+          python3 tool/check_i18n.py
+          python3 tool/check_ui_rules.py --strict
+          dart run tool/check_catalog.dart
+
       - name: flutter test
         run: flutter test --reporter expanded
 
@@ -101,21 +118,27 @@ jobs:
           - platform: windows
             os: windows-latest
             skip: false
-            timeout: 180
+            # 依赖库（x264/x265/aom/svtav1/vpx/webp/opus/vorbis/lame/zlib）在
+            # mingw 下逐个编译，比原生构建慢得多
+            timeout: 300
             artifact: rain_fui-windows-x64
             ffmpeg_target: windows-x64
+            ffmpeg_deps: windows-x64
           - platform: linux
             os: ubuntu-latest
             skip: false
-            timeout: 120
+            timeout: 240
             artifact: rain_fui-linux-x64
             ffmpeg_target: linux-x64
+            ffmpeg_deps: linux-x64
           - platform: web
             os: ubuntu-latest
             skip: false
-            timeout: 90
+            timeout: 240
             artifact: rain_fui-web
             ffmpeg_target: web
+            # FFmpeg 的 web 构建从 build/ffmpeg/deps/web-wasm 取库
+            ffmpeg_deps: web-wasm
 
     steps:
       # ---------------- 公共 ----------------
@@ -163,6 +186,16 @@ jobs:
             build/ffmpeg/ffbuild
           key: ffmpeg-${{ env.FFMPEG_CACHE_EPOCH }}-${{ runner.os }}-${{ matrix.ffmpeg_target }}-${{ steps.ffmpeg-rev.outputs.sha }}-${{ hashFiles('scripts/ffmpeg/**') }}
 
+      # 依赖前缀单独缓存：它的键与 FFmpeg 自身无关（改 FFmpeg 版本不该重编 aom）
+      - name: Cache FFmpeg dependency prefix
+        id: deps-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/ffmpeg/deps/${{ matrix.ffmpeg_deps }}
+            build/ffmpeg/deps/src
+          key: ffmpeg-deps-${{ env.FFMPEG_DEPS_EPOCH }}-${{ runner.os }}-${{ matrix.ffmpeg_deps }}-${{ hashFiles('scripts/ffmpeg/build-deps.sh', 'scripts/ffmpeg/external-libs.sh') }}
+
       # ---------------- Linux 工具链 ----------------
       - name: Linux · apt 依赖（FFmpeg 构建 + Flutter desktop）
         if: matrix.platform == 'linux'
@@ -172,6 +205,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             build-essential nasm yasm pkg-config patch \
+            autoconf automake libtool gettext \
             clang cmake ninja-build libgtk-3-dev liblzma-dev libstdc++-12-dev \
             zip unzip file
           nasm -v
@@ -195,6 +229,11 @@ jobs:
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-nasm
             mingw-w64-x86_64-pkgconf
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+            automake
+            autoconf
+            libtool
 
       # ---------------- web 工具链（Emscripten） ----------------
       - name: web · Emscripten SDK
@@ -209,6 +248,17 @@ jobs:
         shell: bash
         run: emcc --version | head -1
 
+      # x265 / aom / svtav1 / zlib 走 CMake，vpx / opus / vorbis / x264 走 configure
+      - name: web · apt 依赖（cmake / ninja / autotools）
+        if: matrix.platform == 'web'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake ninja-build pkg-config patch \
+            autoconf automake libtool nasm yasm
+
       # ---------------- 构建 FFmpeg（缓存命中则跳过编译） ----------------
       - name: Prepare scripts
         shell: bash
@@ -217,19 +267,36 @@ jobs:
           ls -l scripts/ffmpeg
           chmod +x scripts/ffmpeg/*.sh
 
+      # ---------------- 第三方依赖库（缓存命中则跳过） ----------------
+      - name: FFmpeg deps · build ${{ matrix.ffmpeg_deps }} (MSYS2 MinGW64)
+        if: matrix.platform == 'windows' && steps.deps-cache.outputs.cache-hit != 'true'
+        shell: msys2 {0}
+        run: bash ./scripts/ffmpeg/build-deps.sh --target ${{ matrix.ffmpeg_deps }} --jobs "$(nproc)"
+
+      - name: FFmpeg deps · build ${{ matrix.ffmpeg_deps }}
+        if: matrix.platform != 'windows' && steps.deps-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: ./scripts/ffmpeg/build-deps.sh --target ${{ matrix.ffmpeg_deps }} --jobs "$(nproc)"
+
       - name: FFmpeg · build windows-x64 (MSYS2 MinGW64)
         if: matrix.platform == 'windows' && steps.ffmpeg-cache.outputs.cache-hit != 'true'
         shell: msys2 {0}
+        env:
+          FFMPEG_DEPS_TARGET: ${{ matrix.ffmpeg_deps }}
         run: bash ./scripts/ffmpeg/build-windows.sh --jobs "$(nproc)"
 
       - name: FFmpeg · build linux-x64
         if: matrix.platform == 'linux' && steps.ffmpeg-cache.outputs.cache-hit != 'true'
         shell: bash
+        env:
+          FFMPEG_DEPS_TARGET: ${{ matrix.ffmpeg_deps }}
         run: ./scripts/ffmpeg/build-linux.sh --jobs "$(nproc)" --arch x86_64
 
       - name: FFmpeg · build web
         if: matrix.platform == 'web' && steps.ffmpeg-cache.outputs.cache-hit != 'true'
         shell: bash
+        env:
+          FFMPEG_DEPS_TARGET: ${{ matrix.ffmpeg_deps }}
         run: ./scripts/ffmpeg/build-web.sh --jobs "$(nproc)"
 
       # ---------------- 校验 FFmpeg 产物（build-contract §9.1 / §9.3） ----------------
@@ -247,6 +314,18 @@ jobs:
           cat "$DIST/version.txt"
           grep -q "${{ env.FFMPEG_VERSION }}" "$DIST/version.txt" \
             || { echo "::error::version.txt 里没有 ${{ env.FFMPEG_VERSION }}"; exit 1; }
+
+      - name: Verify the third-party encoders are really inside this build
+        shell: bash
+        run: |
+          set -euo pipefail
+          # 少了这一条，CI 会愉快地发布一个只剩原生编码器的包：编译成功、
+          # 版本号正确，只是编码器列表短了一半。
+          # windows-latest 上 python3 不一定在 PATH，取第一个能用的解释器
+          PY="$(command -v python3 || command -v python || command -v py)"
+          "$PY" tool/check_expected_encoders.py \
+            --target "${{ matrix.ffmpeg_target }}" \
+            --expect libx264,libx265,libaom-av1,libsvtav1,libvpx,libvpx-vp9,libwebp,libopus,libvorbis,libmp3lame,zmbv
 
       - name: Verify FFmpeg binary runs (linux)
         if: matrix.platform == 'linux'
@@ -288,6 +367,13 @@ jobs:
         if: matrix.platform == 'web'
         shell: bash
         run: ./scripts/ffmpeg/install-to-app.sh web
+
+      - name: Verify install-to-app really replaced the app-tree binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          PY="$(command -v python3 || command -v python || command -v py)"
+          "$PY" tool/check_packaged.py --only "${{ matrix.ffmpeg_target }}"
 
       # ---------------- flutter build ----------------
       - name: flutter build windows
@@ -453,7 +539,9 @@ jobs:
     name: build (android-${{ matrix.abi }})
     needs: analyze-and-test
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    # 每个 ABI 都要先编 9 个依赖库（x264/x265/aom/svtav1/vpx/webp/opus/vorbis/
+    # lame），再编 FFmpeg 与 APK；arm64 与 x86_64 的 aom 段最慢
+    timeout-minutes: 300
     strategy:
       fail-fast: false # 一个 ABI 红了，另外两个仍然跑完，便于一次看全
       matrix:
@@ -508,6 +596,17 @@ jobs:
             build/ffmpeg/ffbuild
           key: ffmpeg-${{ env.FFMPEG_CACHE_EPOCH }}-${{ runner.os }}-android-${{ matrix.abi }}-${{ steps.ffmpeg-rev.outputs.sha }}-${{ hashFiles('scripts/ffmpeg/**') }}
 
+      # 每个 ABI 一个依赖前缀：键里带 abi，leg 之间不互相污染，缓存也不会
+      # 把 arm64 的 .a 当成 x86_64 的
+      - name: Cache FFmpeg dependency prefix
+        id: deps-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/ffmpeg/deps/android-${{ matrix.abi }}
+            build/ffmpeg/deps/src
+          key: ffmpeg-deps-${{ env.FFMPEG_DEPS_EPOCH }}-${{ runner.os }}-android-${{ matrix.abi }}-${{ hashFiles('scripts/ffmpeg/build-deps.sh', 'scripts/ffmpeg/external-libs.sh') }}
+
       - name: Android · JDK 17 (temurin)
         uses: actions/setup-java@v4
         with:
@@ -545,6 +644,15 @@ jobs:
           restore-keys: |
             gradle-${{ runner.os }}-
 
+      - name: Android · apt 依赖（FFmpeg 与依赖库都要 autotools / cmake）
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake ninja-build pkg-config patch \
+            autoconf automake libtool nasm yasm
+
       - name: Prepare scripts
         shell: bash
         run: |
@@ -552,9 +660,16 @@ jobs:
           ls -l scripts/ffmpeg
           chmod +x scripts/ffmpeg/*.sh
 
+      - name: FFmpeg deps · build android-${{ matrix.abi }}
+        if: steps.deps-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: ./scripts/ffmpeg/build-deps.sh --target android-${{ matrix.abi }} --jobs "$(nproc)"
+
       - name: FFmpeg · build android-${{ matrix.abi }}
         if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
         shell: bash
+        env:
+          FFMPEG_DEPS_TARGET: android-${{ matrix.abi }}
         run: ./scripts/ffmpeg/build-android.sh --jobs "$(nproc)" --abis ${{ matrix.abi }} --api 24
 
       - name: Verify FFmpeg dist
@@ -573,9 +688,23 @@ jobs:
             || { echo "::error::version.txt 里没有 ${{ env.FFMPEG_VERSION }}"; exit 1; }
           file "$DIST/libffmpeg_exe.so"
 
+      - name: Verify the third-party encoders and MediaCodec are inside this build
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Android 的列表里必须同时有软件编码器和 MediaCodec：前者来自我们自己
+          # 编的库，后者需要 --enable-jni --enable-mediacodec（external-libs.sh）
+          python3 tool/check_expected_encoders.py \
+            --target "android-${{ matrix.abi }}" \
+            --expect libx264,libx265,libaom-av1,libsvtav1,libvpx,libvpx-vp9,libwebp,libopus,libvorbis,libmp3lame,zmbv,h264_mediacodec,hevc_mediacodec
+
       - name: Install FFmpeg into app (android-${{ matrix.abi }})
         shell: bash
         run: ./scripts/ffmpeg/install-to-app.sh android-${{ matrix.abi }}
+
+      - name: Verify install-to-app really replaced the jniLibs binary
+        shell: bash
+        run: python3 tool/check_packaged.py --only "android-${{ matrix.abi }}"
 
       - name: flutter build apk (${{ matrix.abi }}, split-per-abi)
         shell: bash

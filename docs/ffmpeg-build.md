@@ -503,3 +503,28 @@ scripts/ffmpeg/install-to-app.sh linux android web
 
 `configure.args` next to each build tree records the exact configure line for
 reproducibility and license auditing.
+
+CI always builds with the third-party libraries, so every leg runs:
+
+```bash
+scripts/ffmpeg/build-deps.sh --target <deps>          # cached dependency prefix
+FFMPEG_EXTERNAL_LIBS=1 FFMPEG_DEPS_TARGET=<deps> \
+  scripts/ffmpeg/build-<platform>.sh
+```
+
+`<deps>` is `linux-x64`, `windows-x64`, `web-wasm` (the dist directory is still
+`web`), or `android-<abi>`. The three Android ABIs are three separate parallel
+jobs and never share a dependency prefix.
+
+Two CI-specific details:
+
+* `FFMPEG_LTO=0`. LTO only lengthens the link on a throwaway runner.
+* The web link option follows the link list: `-O0` once x265 is linked (binaryen's
+  `wasm-opt` cannot parse that module and emcc 6 dropped `--no-wasm-opt`), `-O3`
+  otherwise. `WEB_LINK_OPT` is an escape hatch, not something CI sets.
+
+A build is only accepted when the encoders are really inside it, which is what
+`python3 tool/check_expected_encoders.py --target <t> --expect …` asserts; and
+`python3 tool/check_packaged.py --only <t>` asserts the app tree got that exact
+binary (a build without `install-to-app.sh` leaves the old one in place and is
+otherwise invisible).

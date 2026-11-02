@@ -127,7 +127,15 @@ tag `v*` 时，`release` job 把上面这些包（4 个平台、6 个 artifact�
 
 ```
 checkout(fetch-depth:1, 无子模块) → flutter(stable) → cache pub → flutter pub get
-→ flutter analyze → flutter test --reporter expanded
+→ flutter analyze → 仓库级检查 → flutter test --reporter expanded
+```
+
+仓库级检查（都不需要 FFmpeg 二进制，也不需要网络）：
+
+```
+python3 tool/check_i18n.py          # 19 个语言包：键集、顺序、空值、结构
+python3 tool/check_ui_rules.py --strict   # 无模糊效果、无 Material/Cupertino 图标、无硬编码文案
+dart run tool/check_catalog.dart    # 编码器/容器表自洽（codec id、容器归属、基线假设）
 ```
 
 故意**不**拉 FFmpeg 子模块：这一步只关心 Dart。`test/` 里的集成测试在没有
@@ -145,23 +153,31 @@ checkout(fetch-depth:1, 无子模块) → flutter(stable) → cache pub → flut
    三套 OS 路径一致，键含 `hashFiles('pubspec.lock')`）
 4. `flutter pub get`
 5. **FFmpeg 构建缓存**（见 §6）
-6. 平台工具链（见下）
-7. `chmod +x scripts/ffmpeg/*.sh` + 打印 `ls -l`
-8. `scripts/ffmpeg/build-<target>.sh`（缓存命中则跳过）
-9. 校验 `build/ffmpeg/dist/<target>/version.txt` 存在、非空、含 `9.0.2`（契约 §9.1/§9.3）
-10. 宿主可执行的目标再跑一次 `-version`（linux 额外做一次 `testsrc → null` 编码冒烟）
-11. `scripts/ffmpeg/install-to-app.sh <target>`（契约 §8 的落地路径）
-12. `flutter build ...`
-13. **断言 FFmpeg 真在产物里**（见 §7）
-14. 打包到 `build/release-artifacts/` → `actions/upload-artifact@v4`
+6. **依赖库缓存**（见 §6，键与 FFmpeg 版本解耦）
+7. 平台工具链（见下）
+8. `chmod +x scripts/ffmpeg/*.sh` + 打印 `ls -l`
+9. `scripts/ffmpeg/build-deps.sh --target <deps>`（缓存命中则跳过）——libx264 / libx265 /
+   libaom / SVT-AV1 / vpx / webp / opus / vorbis / lame / zlib
+10. `scripts/ffmpeg/build-<target>.sh`（缓存命中则跳过），带 `FFMPEG_EXTERNAL_LIBS=1`、
+    `FFMPEG_LTO=0` 与 `FFMPEG_DEPS_TARGET`，所以第三方库会被真的链进来
+11. 校验 `build/ffmpeg/dist/<target>/version.txt` 存在、非空、含 `9.0.2`（契约 §9.1/§9.3）
+12. **断言第三方编码器真的在二进制里**：`tool/check_expected_encoders.py --target <t>
+    --expect libx264,libx265,libaom-av1,libsvtav1,libvpx,libvpx-vp9,libwebp,libopus,
+    libvorbis,libmp3lame,zmbv`（见 §7）
+13. 宿主可执行的目标再跑一次 `-version`（linux 额外做一次 `testsrc → null` 编码冒烟）
+14. `scripts/ffmpeg/install-to-app.sh <target>`（契约 §8 的落地路径）
+15. **断言落地真的换掉了旧二进制**：`tool/check_packaged.py --only <target>`（sha256 比对）
+16. `flutter build ...`
+17. **断言 FFmpeg 真在产物里**（见 §7）
+18. 打包到 `build/release-artifacts/` → `actions/upload-artifact@v4`
 
 平台工具链：
 
 | 平台 | 工具链 |
 | --- | --- |
-| windows | `msys2/setup-msys2@v2`（`msystem: MINGW64`，`mingw-w64-x86_64-gcc`、`nasm`、`pkgconf`、`make`、`git`）；FFmpeg 的两步用 `shell: msys2 {0}` 跑，Flutter 构建用默认 `pwsh` |
-| linux | apt: `build-essential nasm yasm pkg-config patch clang cmake ninja-build libgtk-3-dev liblzma-dev libstdc++-12-dev zip unzip file`；`flutter config --enable-linux-desktop` |
-| web | `mymindstorm/setup-emsdk@v14`（`version: 6.0.13`，`actions-cache-folder`），并打印 `emcc --version` |
+| windows | `msys2/setup-msys2@v2`（`msystem: MINGW64`：`mingw-w64-x86_64-gcc`、`nasm`、`pkgconf`、`cmake`、`ninja`、`make`、`git`，外加 `autoconf`/`automake`/`libtool` 给 x264/opus/vorbis/vpx 的 configure）；FFmpeg 与依赖库的步骤用 `shell: msys2 {0}` 跑，Flutter 构建用默认 `pwsh` |
+| linux | apt: `build-essential nasm yasm pkg-config patch autoconf automake libtool gettext clang cmake ninja-build libgtk-3-dev liblzma-dev libstdc++-12-dev zip unzip file`；`flutter config --enable-linux-desktop` |
+| web | `mymindstorm/setup-emsdk@v14`（`version: 6.0.13`，`actions-cache-folder`）+ apt 的 `cmake ninja-build autoconf automake libtool nasm yasm`；打印 `emcc --version` |
 
 
 ### `build-android`（矩阵：`arm64-v8a` / `armeabi-v7a` / `x86_64`，`needs: analyze-and-test`）
@@ -179,16 +195,23 @@ checkout(fetch-depth:1, 无子模块) → flutter(stable) → cache pub → flut
 1. checkout（`submodules: recursive`）→ Flutter stable → pub 缓存 → `flutter pub get`
 2. `Resolve FFmpeg submodule revision`（缓存键的一部分）
 3. FFmpeg 构建缓存：key 里带 `android-${{ matrix.abi }}`，三个 leg 互不命中
-4. JDK 17（temurin）+ Android SDK + `sdkmanager --install "ndk;28.2.13676358" "cmake;3.22.1"`，
+4. **依赖库缓存**：每个 ABI 一份前缀（`build/ffmpeg/deps/android-<abi>`），同样带 abi
+5. JDK 17（temurin）+ Android SDK + `sdkmanager --install "ndk;28.2.13676358" "cmake;3.22.1"`，
    `ANDROID_NDK_HOME` / `ANDROID_NDK_ROOT` / `ANDROID_NDK` 写进 `$GITHUB_ENV`
-5. `~/.gradle/caches`、`~/.gradle/wrapper` 缓存
-6. `chmod +x scripts/ffmpeg/*.sh`
-7. `scripts/ffmpeg/build-android.sh --jobs "$(nproc)" --abis <abi> --api 24`（缓存命中则跳过）
-8. 校验 `build/ffmpeg/dist/android-<abi>/version.txt` 非空且含 `9.0.2`，`file` 打印 ELF 类型
-9. `scripts/ffmpeg/install-to-app.sh android-<abi>` → `android/app/src/main/jniLibs/<abi>/`
-10. `flutter build apk --release --target-platform <android-arm64|android-arm|android-x64> --split-per-abi`
-11. 断言 `app-<abi>-release.apk` 里有 `lib/<abi>/libffmpeg_exe.so`（§7）
-12. 打包成 `rain_fui-android-<abi>.apk` + `…-ffmpeg-version.txt` 并上传
+6. `~/.gradle/caches`、`~/.gradle/wrapper` 缓存
+7. apt：`build-essential cmake ninja-build pkg-config patch autoconf automake libtool nasm yasm`
+8. `chmod +x scripts/ffmpeg/*.sh`
+9. `scripts/ffmpeg/build-deps.sh --target android-<abi>`（缓存命中则跳过；用 NDK 的 clang）
+10. `scripts/ffmpeg/build-android.sh --jobs "$(nproc)" --abis <abi> --api 24`（缓存命中则跳过），
+    带 `FFMPEG_EXTERNAL_LIBS=1` 与 `FFMPEG_DEPS_TARGET=android-<abi>`
+11. 校验 `build/ffmpeg/dist/android-<abi>/version.txt` 非空且含 `9.0.2`，`file` 打印 ELF 类型
+12. 断言编码器在：`tool/check_expected_encoders.py --target android-<abi> --expect …,
+    h264_mediacodec,hevc_mediacodec`（MediaCodec 需要 `--enable-jni --enable-mediacodec`）
+13. `scripts/ffmpeg/install-to-app.sh android-<abi>` → `android/app/src/main/jniLibs/<abi>/`
+14. `tool/check_packaged.py --only android-<abi>`：jniLibs 里的 .so 必须与新产物同 sha256
+15. `flutter build apk --release --target-platform <android-arm64|android-arm|android-x64> --split-per-abi`
+16. 断言 `app-<abi>-release.apk` 里有 `lib/<abi>/libffmpeg_exe.so`（§7）
+17. 打包成 `rain_fui-android-<abi>.apk` + `…-ffmpeg-version.txt` 并上传
 
 矩阵实现细节：`target_platform` 用的是 Flutter 自己的 ABI 名（`android-arm64` / `android-arm`
 / `android-x64`），与契约里的 `android-<abi>` 不是一套命名，别混淆。
@@ -226,6 +249,11 @@ tag 里带 `-` 时自动标 prerelease）。
 | Gradle | `~/.gradle/caches`、`~/.gradle/wrapper` | `gradle-<os>-<hash(android/**/*.gradle*, gradle-wrapper.properties)>` | Gradle/AGP 依赖变化 |
 | Emscripten | `emsdk-cache`（action 管理） | setup-emsdk 内部（含 version） | emsdk 版本变化 |
 | FFmpeg 构建 | `build/ffmpeg/dist`、`build/ffmpeg/ffbuild` | `ffmpeg-<EPOCH>-<os>-<target>-<submodule sha>-<hash(scripts/ffmpeg/**)>` | 子模块 commit 变 / 脚本改 / 手动 bump `FFMPEG_CACHE_EPOCH` |
+| 依赖库前缀 | `build/ffmpeg/deps/<deps-target>`、`build/ffmpeg/deps/src`（源码包，省重复下载） | `ffmpeg-deps-<DEPS_EPOCH>-<os>-<deps-target>-<hash(build-deps.sh, external-libs.sh)>` | 库版本/工具链改 / 手动 bump `FFMPEG_DEPS_EPOCH` |
+
+依赖缓存的键**刻意不含 FFmpeg 子模块 commit**：换 FFmpeg 版本不该重编 aom 和 x265，
+而库版本变了（`build-deps.sh` 改）自然会换键。同一台 runner 上 Android 的三个 ABI
+各自命中自己的前缀，因为键里带 abi。
 
 FFmpeg 缓存的三条硬规则：
 
@@ -235,10 +263,30 @@ FFmpeg 缓存的三条硬规则：
 
 升级 emsdk / NDK / 编译器后如果缓存里的产物已经不可信，把 workflow 顶部的
 `FFMPEG_CACHE_EPOCH` 从 `v1` 改成 `v2`，所有 FFmpeg 缓存一次性失效。
+依赖库同理：改 `build-deps.sh` 里的库版本、换 NDK/emsdk/mingw 之后把
+`FFMPEG_DEPS_EPOCH` +1。
 
 ---
 
 ## 7. 构建后断言（“FFmpeg 真的进包了吗”）
+
+断言分三层，缺一层就会出现“编译成功但功能悄悄变少”的绿灯：
+
+**第一层：二进制里到底有什么**
+
+| 检查 | 命令 | 覆盖的问题 |
+| --- | --- | --- |
+| 编码器清单 | `tool/check_expected_encoders.py --target <t> --expect …` | 忘了 `FFMPEG_EXTERNAL_LIBS=1`、依赖前缀没找到、`--disable-autodetect` 把库探测关掉——构建照样成功，只是没有 libx264/libx265/libaom-av1/SVT-AV1/MediaCodec |
+| 性能/一致性对齐 | `tool/check_parity.py`（本地或专门的 job） | 某个平台少了 zlib 之类的依赖，整组编码器（png/apng/exr/zmbv…）跟着消失 |
+| 容器白名单 | `tool/check_catalog.dart` | 白名单是用原生构建量出来的，mp4 只认 8 个编码器（见 docs/ffmpeg-capabilities.md §9） |
+
+**第二层：装进 app 树的是不是新二进制**
+
+| 检查 | 命令 | 覆盖的问题 |
+| --- | --- | --- |
+| 落地一致性 | `tool/check_packaged.py --only <t>` | 只 build 没 install：探针仍然成功、日志没有回退提示，只是列表来自旧二进制（Android 曾经就这样和 Linux 一模一样） |
+
+**第三层：产物里有没有 FFmpeg**
 
 | 平台 | 断言 |
 | --- | --- |
@@ -298,8 +346,10 @@ FFmpeg 缓存的三条硬规则：
 | 改动 | 要动的地方 |
 | --- | --- |
 | Flutter stable 升级 | 一般不用改；若默认 NDK 变了 → 改 `ANDROID_NDK_VERSION`（核对 `FlutterExtension.kt`） |
-| NDK / AGP / Gradle 升级 | `ANDROID_NDK_VERSION`、`cmake;3.22.1`、`FFMPEG_CACHE_EPOCH` |
-| emsdk 升级 | `setup-emsdk` 的 `version` + `FFMPEG_CACHE_EPOCH` |
+| NDK / AGP / Gradle 升级 | `ANDROID_NDK_VERSION`、`cmake;3.22.1`、`FFMPEG_CACHE_EPOCH`、`FFMPEG_DEPS_EPOCH` |
+| emsdk 升级 | `setup-emsdk` 的 `version` + `FFMPEG_CACHE_EPOCH` + `FFMPEG_DEPS_EPOCH` |
+| 依赖库版本 / 新增依赖库 | `scripts/ffmpeg/build-deps.sh` 的配方与下载地址；`external-libs.sh` 的探测；`FFMPEG_DEPS_EPOCH` +1；`docs/ffmpeg-build.md` 的表 |
+| 少一个平台就要多一个依赖前缀 | `build` / `build-android` 矩阵里的 `ffmpeg_deps` 字段（`linux-x64`、`windows-x64`、`web-wasm`、`android-<abi>`） |
 | FFmpeg 子模块换 tag | 不用改（key 里的 sha 会自动变）；`FFMPEG_VERSION` 环境变量要跟着改 |
 | 新增 ABI | `build-android` 矩阵加一条 `abi` / `target_platform`；同时改契约 §5、`build-android.sh` 的 ABI 列表、`install-to-app.sh` 与 §8 的落地路径 |
 | 启用 iOS / macOS | 见 §2：写真正的步骤，删掉占位 job 的 `if`/失败步骤 |
@@ -333,13 +383,23 @@ actionlint -shellcheck shellcheck .github/workflows/ci.yml
 
 ```bash
 # ---------- analyze & test ----------
-flutter pub get && flutter analyze && flutter test
+flutter pub get && flutter analyze
+python3 tool/check_i18n.py
+python3 tool/check_ui_rules.py --strict
+dart run tool/check_catalog.dart
+flutter test
 
 # ---------- linux ----------
-sudo apt-get install -y build-essential nasm yasm pkg-config patch clang cmake \
-     ninja-build libgtk-3-dev liblzma-dev libstdc++-12-dev zip unzip file
-./scripts/ffmpeg/build-linux.sh --jobs "$(nproc)" --arch x86_64
+sudo apt-get install -y build-essential nasm yasm pkg-config patch autoconf \
+     automake libtool gettext clang cmake ninja-build libgtk-3-dev liblzma-dev \
+     libstdc++-12-dev zip unzip file
+./scripts/ffmpeg/build-deps.sh --target linux-x64 --jobs "$(nproc)"
+FFMPEG_EXTERNAL_LIBS=1 FFMPEG_LTO=0 FFMPEG_DEPS_TARGET=linux-x64 \
+  ./scripts/ffmpeg/build-linux.sh --jobs "$(nproc)" --arch x86_64
+python3 tool/check_expected_encoders.py --target linux-x64 \
+  --expect libx264,libx265,libaom-av1,libsvtav1,libvpx,libwebp,libopus,libvorbis,libmp3lame
 ./scripts/ffmpeg/install-to-app.sh linux-x64
+python3 tool/check_packaged.py --only linux-x64
 flutter config --enable-linux-desktop
 flutter build linux --release
 test -x build/linux/x64/release/bundle/lib/ffmpeg \
@@ -347,7 +407,9 @@ test -x build/linux/x64/release/bundle/lib/ffmpeg \
 tar -czf /tmp/rain_fui-linux-x64.tar.gz -C build/linux/x64/release bundle
 
 # ---------- windows（MSYS2 MinGW64 shell 里跑前两步，pwsh 跑 flutter）----------
-./scripts/ffmpeg/build-windows.sh --jobs "$(nproc)"
+./scripts/ffmpeg/build-deps.sh --target windows-x64 --jobs "$(nproc)"
+FFMPEG_EXTERNAL_LIBS=1 FFMPEG_LTO=0 FFMPEG_DEPS_TARGET=windows-x64 \
+  ./scripts/ffmpeg/build-windows.sh --jobs "$(nproc)"
 ./scripts/ffmpeg/install-to-app.sh windows-x64
 flutter build windows --release
 test -f build/windows/x64/runner/Release/ffmpeg.exe
@@ -359,7 +421,11 @@ for abi in arm64-v8a armeabi-v7a x86_64; do
   platform="android-arm64"
   [ "$abi" = "armeabi-v7a" ] && platform="android-arm"
   [ "$abi" = "x86_64" ] && platform="android-x64"
-  ./scripts/ffmpeg/build-android.sh --jobs "$(nproc)" --abis "$abi" --api 24
+  ./scripts/ffmpeg/build-deps.sh --target "android-$abi" --jobs "$(nproc)"
+  FFMPEG_EXTERNAL_LIBS=1 FFMPEG_LTO=0 FFMPEG_DEPS_TARGET="android-$abi" \
+    ./scripts/ffmpeg/build-android.sh --jobs "$(nproc)" --abis "$abi" --api 24
+  python3 tool/check_expected_encoders.py --target "android-$abi" \
+    --expect libx264,libaom-av1,libsvtav1,h264_mediacodec
   ./scripts/ffmpeg/install-to-app.sh "android-$abi"
   flutter build apk --release --target-platform "$platform" --split-per-abi
   unzip -l "build/app/outputs/flutter-apk/app-$abi-release.apk" | grep "lib/$abi/libffmpeg_exe.so"
@@ -367,8 +433,13 @@ done
 
 # ---------- web ----------
 #   需要 emsdk：source <emsdk>/emsdk_env.sh
-./scripts/ffmpeg/build-web.sh --jobs "$(nproc)"
+./scripts/ffmpeg/build-deps.sh --target web-wasm --jobs "$(nproc)"
+FFMPEG_EXTERNAL_LIBS=1 FFMPEG_LTO=0 FFMPEG_DEPS_TARGET=web-wasm \
+  ./scripts/ffmpeg/build-web.sh --jobs "$(nproc)"
+python3 tool/check_expected_encoders.py --target web \
+  --expect libx264,libaom-av1,libsvtav1,libmp3lame
 ./scripts/ffmpeg/install-to-app.sh web
+python3 tool/check_packaged.py --only web
 flutter build web --release
 ls -l build/web/ffmpeg/ffmpeg.wasm
 ```
@@ -392,9 +463,21 @@ ls -l build/web/ffmpeg/ffmpeg.wasm
 | release | — | ~1 min |
 
 Android 三个 leg 与 windows/linux/web 并行，所以一次 tag 发布的总墙钟
-≈ `3 + max(所有 leg) ≈ 40 min`（冷）/ ≈ 12 min（热）——Android 不再串行叠加。
-超时设置：android 各 leg 120、windows 180、linux 120、web 90 分钟——都比冷缓存实测留了
-3～4 倍余量，避免偶发慢 runner 被打断。
+≈ `3 + max(所有 leg)`——Android 不再串行叠加。
+
+带第三方库之后每个 leg 多出“编 9～11 个依赖库”的时间（4 核上 x264/opus/vorbis/vpx/webp
+各 1～2 min，x265/aom/SVT-AV1 各 5～10 min，zlib 可忽略），所以：
+
+| job | 冷缓存（FFmpeg + 依赖都要编） | 热缓存（两者都命中） |
+| --- | --- | --- |
+| build (windows) | ~70 min | ~12 min |
+| build (linux) | ~45 min | ~6 min |
+| build (web) | ~45 min | ~6 min |
+| build (android-<abi>) | ~55 min | ~10 min |
+
+超时设置：android 各 leg 300、windows 300、linux 240、web 240 分钟。依赖库的缓存命中率
+决定实际时长，第一次跑（冷）最慢；之后只要不 bump `FFMPEG_DEPS_EPOCH`、不改
+`build-deps.sh`，依赖前缀就一直命中。
 
 > 数字是按“LTO full + 4 核”的 FFmpeg 全量编译估的（单个 ABI 的 FFmpeg configure+make
 > 在 4 核上通常 15～30 min）。第一次真跑之后请用实际耗时回来修正这张表。
