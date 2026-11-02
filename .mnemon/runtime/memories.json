@@ -28,6 +28,13 @@
       "updated_at": "2026-11-02T08:20:40.274Z",
       "target": "memory",
       "importance": "normal"
+    },
+    {
+      "content": "Rain FUI macOS 构建排障补充：①zlib 1.3.1 的 CMake 没有 ZLIB_BUILD_SHARED 选项，共享库无条件构建，`-L$PREFIX/lib` 排在 SDK 前会让 `-lz` 命中 `@rpath/libz.1.dylib`（Linux 靠同名 SONAME 侥幸），build_zlib 装完必须删掉共享库只留 libz.a；②build-macos.sh 用 `otool -L` 校验\"只允许系统库\"时，fat 二进制会为每个切片打印 `…/ffmpeg (architecture arm64):` 标题行，必须先只保留含 `(compatibility version` 的行，否则会把自己的产物当外部依赖；③libvpx 必须用带版本号的 darwin 目标（arm64-darwin20-gcc / x86_64-darwin20-gcc），无版本号的 arm64-darwin-gcc 是 iOS 路径（xcrun --sdk iphoneos），无版本号的 x86_64-darwin-gcc 不在 all_platforms；④依赖目标名短写 macos-x64 与三元组 x86_64 不能混。",
+      "created_at": "2026-11-02T14:31:29.152Z",
+      "updated_at": "2026-11-02T14:31:29.152Z",
+      "target": "memory",
+      "importance": "normal"
     }
   ]
 }
