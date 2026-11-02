@@ -7,7 +7,10 @@ succeeds, and the encoder list is simply the old binary's. That is how the
 Android build ended up offering the same (native-only) codecs as an old desktop
 build.
 
-    python3 tool/check_packaged.py
+    python3 tool/check_packaged.py [--only linux-x64]
+
+--only keeps the check honest inside a CI leg that only built one target: the
+pairs of the targets that were not built are not reported as stale.
 """
 
 from __future__ import annotations
@@ -35,9 +38,20 @@ def digest(path: pathlib.Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def main() -> int:
+def main(argv: list[str]) -> int:
+    only = ""
+    if len(argv) == 2 and argv[0] == "--only":
+        only = argv[1].strip("/")
+    elif argv:
+        print("usage: check_packaged.py [--only <dist-target>]")
+        return 2
+
     stale = 0
+    checked = 0
     for dist, app in PAIRS.items():
+        if only and not dist.startswith(f"build/ffmpeg/dist/{only}/"):
+            continue
+        checked += 1
         source = ROOT / dist
         target = ROOT / app
         if not source.exists():
@@ -52,9 +66,14 @@ def main() -> int:
             print(f"stale: {app} ({target.stat().st_size} B) "
                   f"!= {dist} ({source.stat().st_size} B)")
             stale += 1
-    print("packaged artifacts match" if stale == 0 else f"{stale} artifact(s) stale")
+    label = f"{only} " if only else ""
+    if checked == 0:
+        print(f"no packaged artifact for {only or 'any target'}")
+        return 1
+    print(f"packaged artifacts match ({label}{checked} file(s))"
+          if stale == 0 else f"{stale} artifact(s) stale")
     return 0 if stale == 0 else 1
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))
