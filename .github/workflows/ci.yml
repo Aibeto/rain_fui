@@ -607,9 +607,18 @@ jobs:
           set -euo pipefail
           # 镜像通常自带这两个，装不上也别直接失败；nasm 只影响 x86_64 那份的
           # aom/vpx 汇编（缺失时自动退化成 C），pkg-config 则是硬需求。
-          brew install nasm pkg-config || brew upgrade nasm pkg-config || true
+          brew install nasm pkg-config autoconf automake libtool \
+            || brew upgrade nasm pkg-config autoconf automake libtool || true
           nasm -v || echo "::warning::nasm 缺失：x86_64 的 aom/libvpx 将走 C 实现"
           pkg-config --version || { echo "::error::pkg-config 缺失，无法定位依赖前缀"; exit 1; }
+          # libvorbis 的源码包没有预生成的 configure，靠 autogen.sh 现跑 autoreconf
+          autoreconf --version >/dev/null || { echo "::error::autoreconf 缺失：libvorbis 无法生成 configure"; exit 1; }
+          # 苹果自带的 libtool 是二进制工具，不是 GNU libtool：brew 只提供 glibtoolize，
+          # 而 autoreconf 找的是 libtoolize，缺了它 vorbis 会在 LT_INIT 处失败。
+          mkdir -p "$RUNNER_TEMP/bin"
+          ln -sf "$(brew --prefix libtool)/bin/glibtoolize" "$RUNNER_TEMP/bin/libtoolize"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+          libtoolize --version | sed -n '1p' || { echo "::error::libtoolize 不可用"; exit 1; }
 
       # 系统自带的 /bin/bash 是 3.2：mapfile、空数组展开这些都要 4+，否则脚本会在
       # 依赖配方深处报 "cross[@]: unbound variable"。装一个 5.x 并放到 PATH 前面，

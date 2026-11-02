@@ -490,6 +490,7 @@ build_opus() {
         -DOPUS_BUILD_PROGRAMS=OFF
     # The source archive has no git tag to read, so opus.pc claims version 0
     # and FFmpeg's `opus >= 1.1` check rejects it.
+    [ -f "$PREFIX/lib/libopus.a" ] || die "libopus 没有产出（$PREFIX/lib/libopus.a 缺失）"
     local pc="$PREFIX/lib/pkgconfig/opus.pc"
     if [ -f "$pc" ]; then
         sed -i.bak -e 's/^Version:.*/Version: 1.5.2/' \
@@ -520,6 +521,7 @@ build_vorbis() {
         ${CC:+CC="$CC"} >/dev/null
       make -j"$JOBS" >/dev/null
       make install >/dev/null )
+    [ -f "$PREFIX/lib/libvorbis.a" ] || die "libvorbis 没有产出（$PREFIX/lib/libvorbis.a 缺失）"
 }
 
 build_vpx() {
