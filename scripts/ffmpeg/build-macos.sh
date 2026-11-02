@@ -206,6 +206,33 @@ ffmpeg_require_version_line "$distdir/ffmpeg" "$(ffmpeg_tag)"
 ffmpeg_report_artifact "$distdir/ffmpeg"
 lipo -info "$distdir/ffmpeg" 2>/dev/null | sed 's/^/[ffmpeg]   /' || true
 
+# The helper ships alone inside the .app, so it may only link libraries that are
+# part of macOS itself (/usr/lib/…, /System/…). Anything else — a Homebrew dylib,
+# or a prefix library whose install name is @rpath/… — resolves on the build
+# machine and then dies on the user's with
+#   dyld: Library not loaded: @rpath/libz.1.dylib
+# zlib was exactly that: its CMake always builds the shared library and -lz
+# picked it up. Catch the whole class here instead of at first launch.
+if command -v otool >/dev/null 2>&1; then
+    bad=""
+    while IFS= read -r line; do
+        dep="${line#"${line%%[![:space:]]*}"}"
+        dep="${dep%% (compatibility*}"
+        [ -n "$dep" ] || continue
+        case "$dep" in
+            /usr/lib/*|/System/*) : ;;
+            *) bad="$bad $dep" ;;
+        esac
+    done < <(otool -L "$distdir/ffmpeg" 2>/dev/null | sed '1d')
+    if [ -n "$bad" ]; then
+        otool -L "$distdir/ffmpeg" | sed 's/^/[ffmpeg]   /' >&2
+        die "the helper links libraries that are not part of macOS:$bad — make that dependency static (see build_zlib in build-deps.sh)"
+    fi
+    log "link check: only system libraries ($(otool -L "$distdir/ffmpeg" | sed '1d' | wc -l | tr -d ' ') entries)"
+else
+    warn "otool not found; cannot verify that the helper only links system libraries"
+fi
+
 printf '\n[ffmpeg] %s: artifact -version first line:\n  %s\n' "$TARGET" "$first"
 log "$TARGET build complete"
 log "dist: $distdir"
