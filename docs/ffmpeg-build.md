@@ -430,6 +430,16 @@ why the recipes patch them rather than patching clang:
 * libvorbis 1.3.7 hard-codes `-force_cpusubtype_ALL` in its `*-*-darwin*` CFLAGS
   and modern `ld` rejects it, so the recipe strips the flag from `configure`.
 * x265's `.pc` names the C++ runtime; on macOS that is `libc++`, not libstdc++.
+* libvpx must be configured with a **versioned** darwin target
+  (`arm64-darwin20-gcc`, `x86_64-darwin20-gcc`). The unversioned
+  `arm64-darwin-gcc` is libvpx's legacy iOS spelling: its `arm*` code path
+  replaces `CC`/`CXX` with `xcrun --sdk iphoneos` compilers and pushes the
+  iPhoneOS `-isysroot` and `-miphoneos-version-min` into the flags, which then
+  fight the macOS ones we pass in and kill the toolchain probe. The unversioned
+  `x86_64-darwin-gcc` is worse: it is not in 1.15's `all_platforms` at all, so
+  configure dies with `Unrecognized toolchain`. `darwin20` is macOS 11, matching
+  the default `MACOSX_DEPLOYMENT_TARGET`; the `*-darwin2[0-3]-*` branch only
+  contributes `-arch`.
 
 macOS is the only target whose artifact is signed by the build itself. On Apple
 Silicon an unsigned (or wrongly signed) executable does not launch, and every
@@ -555,6 +565,12 @@ persistent storage (MEMFS only); `-y` overwrites inside that in-memory FS.
   checkout without tags (CI's submodule) carries the bare commit instead. Both
   satisfy the contract: the assertions accept tag, `n`-prefixed tag or short
   commit.
+* **A dependency fails with no output** — `build-deps.sh` writes every recipe's
+  configure/make output to `build/ffmpeg/deps/logs/<target>/<dep>.log` and, when
+  a step fails, prints the last 120 lines of that log before exiting. Before
+  this, a failure surfaced as a bare `Error: Process completed with exit code 1`
+  in CI: the recipes silence their output, and libvpx's configure prints its
+  `die` messages to **stdout**, so the diagnosis was thrown away with the log.
 * **Android 16 KB pages** — the link flags already set
   `-Wl,-z,max-page-size=16384`; verify with
   `llvm-readelf -l libffmpeg_exe.so | grep LOAD` (alignment `0x4000`).

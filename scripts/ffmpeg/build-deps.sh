@@ -70,6 +70,29 @@ fi
 ffmpeg_validate_jobs
 mkdir -p "$PREFIX" "$SRC"
 
+# --- build logs -------------------------------------------------------------
+# 配方里的 configure/make 一律静默（否则 CI 日志几万行），可一旦失败就只剩
+# 一句 "Error: Process completed with exit code 1"：libvpx 的 configure 把
+# die 消息写在 stdout 上，被 >/dev/null 一并吞掉，等于什么线索都没有。现在
+# 每个依赖的输出各自落盘，失败时由 EXIT trap 把尾部打回 stderr。
+LOG_DIR="$FFMPEG_BUILD_ROOT/deps/logs"
+BUILD_LOG=""
+
+dump_build_log() {
+    local rc=$?
+    if [ "$rc" -ne 0 ] && [ -n "$BUILD_LOG" ] && [ -s "$BUILD_LOG" ]; then
+        {
+            echo "=============================================================="
+            echo "[ffmpeg] build failed (exit $rc); last 120 lines of $BUILD_LOG"
+            echo "--------------------------------------------------------------"
+            tail -n 120 "$BUILD_LOG"
+            echo "=============================================================="
+        } >&2
+    fi
+    return "$rc"
+}
+trap dump_build_log EXIT
+
 # --- toolchain for a cross target -------------------------------------------
 # Everything below is exported, so the recipes stay plain ./configure and
 # cmake calls.
@@ -276,9 +299,9 @@ cmake_build() { # cmake_build <source dir> <extra cmake args...>
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
         -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
         ${CMAKE_TARGET_ARGS[@]+"${CMAKE_TARGET_ARGS[@]}"} \
-        "$@" >/dev/null
-    cmake --build "$build" -j "$JOBS" >/dev/null
-    cmake --install "$build" >/dev/null
+        "$@" >>"${BUILD_LOG:-/dev/null}" 2>&1
+    cmake --build "$build" -j "$JOBS" >>"${BUILD_LOG:-/dev/null}" 2>&1
+    cmake --install "$build" >>"${BUILD_LOG:-/dev/null}" 2>&1
 }
 
 want() {
@@ -327,9 +350,9 @@ build_lame() {
         --disable-shared --enable-static \
         --disable-frontend \
         ${HOST:+--host="$HOST"} \
-        ${CC:+CC="$CC"} >/dev/null
-      make -j"$JOBS" >/dev/null
-      make install >/dev/null )
+        ${CC:+CC="$CC"} >>"${BUILD_LOG:-/dev/null}" 2>&1
+      make -j"$JOBS" >>"${BUILD_LOG:-/dev/null}" 2>&1
+      make install >>"${BUILD_LOG:-/dev/null}" 2>&1 )
 }
 
 build_svtav1() {
@@ -477,14 +500,14 @@ build_x264() {
         --enable-static --enable-pic --disable-cli \
         ${HOST:+--host="$HOST"} \
         ${cross[@]+"${cross[@]}"} \
-        --extra-cflags="${CFLAGS:-}" >/dev/null
+        --extra-cflags="${CFLAGS:-}" >>"${BUILD_LOG:-/dev/null}" 2>&1
       # x264 adds -m64 for x86_64 hosts; under emcc that means wasm64 and the
       # archive then refuses to link against wasm32 objects.
       if [ "${EM_CROSS:-0}" = "1" ]; then
           sed -i -e 's/-m64//g' config.mak
       fi
-      make -j"$JOBS" >/dev/null
-      make install >/dev/null )
+      make -j"$JOBS" >>"${BUILD_LOG:-/dev/null}" 2>&1
+      make install >>"${BUILD_LOG:-/dev/null}" 2>&1 )
 }
 
 build_opus() {
@@ -527,15 +550,15 @@ build_vorbis() {
     # configure 里抹掉（只有 darwin 分支有，别的平台是空操作）。
     sed -i.bak 's/ -force_cpusubtype_ALL//g' "$dir/configure" && rm -f "$dir/configure.bak"
     ( cd "$dir" && make distclean >/dev/null 2>&1 || true
-      { [ -x ./configure ] || ./autogen.sh >/dev/null; } && \
+      { [ -x ./configure ] || ./autogen.sh >>"${BUILD_LOG:-/dev/null}" 2>&1; } && \
       ${EM_CROSS:+emconfigure} ./configure \
         --prefix="$PREFIX" \
         --disable-shared --enable-static \
         --with-ogg="$PREFIX" \
         ${HOST:+--host="$HOST"} \
-        ${CC:+CC="$CC"} >/dev/null
-      make -j"$JOBS" >/dev/null
-      make install >/dev/null )
+        ${CC:+CC="$CC"} >>"${BUILD_LOG:-/dev/null}" 2>&1
+      make -j"$JOBS" >>"${BUILD_LOG:-/dev/null}" 2>&1
+      make install >>"${BUILD_LOG:-/dev/null}" 2>&1 )
     [ -f "$PREFIX/lib/libvorbis.a" ] || die "libvorbis 没有产出（$PREFIX/lib/libvorbis.a 缺失）"
 }
 
@@ -551,8 +574,16 @@ build_vpx() {
         android-armeabi-v7a) vpx_target=generic-gnu ;;
         android-x86_64) vpx_target=x86_64-android-gcc ;;
         windows-x64) vpx_target=x86_64-win64-gcc ;;
-        macos-arm64) vpx_target=arm64-darwin-gcc ;;
-        macos-x64) vpx_target=x86_64-darwin-gcc ;;
+        # 必须用带 SDK 版本号的 darwin 目标：libvpx 把无版本号的
+        # `arm64-darwin-gcc` 当成历史遗留的 iOS 目标，configure 会把 CC/CXX
+        # 换成 `xcrun --sdk iphoneos` 找出来的 clang，再往 CFLAGS 里塞
+        # iPhoneOS 的 -isysroot、往 LDFLAGS 里塞 -miphoneos-version-min，于是
+        # 和我们自己的 -isysroot/-mmacosx-version-min 打架、死在工具链探测里；
+        # 而 `x86_64-darwin-gcc` 在 1.15 的 all_platforms 里根本不存在，直接
+        # die "Unrecognized toolchain". darwin20 = macOS 11，与
+        # MACOSX_DEPLOYMENT_TARGET 默认值一致；这组分支只负责补 -arch。
+        macos-arm64) vpx_target=arm64-darwin20-gcc ;;
+        macos-x64) vpx_target=x86_64-darwin20-gcc ;;
         web-wasm) vpx_target=generic-gnu ;;
         *) vpx_target=x86_64-linux-gcc ;;
     esac
@@ -566,9 +597,9 @@ build_vpx() {
         --prefix="$PREFIX" \
         --disable-shared --enable-static --enable-pic \
         --disable-examples --disable-tools --disable-docs \
-        --disable-unit-tests >/dev/null
-      make -j"$JOBS" >/dev/null
-      make install >/dev/null )
+        --disable-unit-tests >>"${BUILD_LOG:-/dev/null}" 2>&1
+      make -j"$JOBS" >>"${BUILD_LOG:-/dev/null}" 2>&1
+      make install >>"${BUILD_LOG:-/dev/null}" 2>&1 )
 }
 
 build_webp() {
@@ -595,7 +626,11 @@ for dep in nvcodec lame svtav1 x264 opus ogg vorbis vpx webp x265 aom zlib; do
             continue
             ;;
     esac
+    BUILD_LOG="$LOG_DIR/$TARGET/$dep.log"
+    mkdir -p "$(dirname "$BUILD_LOG")"
+    : >"$BUILD_LOG"
     "build_$dep"
+    BUILD_LOG=""
 done
 
 patch_pc_lm
