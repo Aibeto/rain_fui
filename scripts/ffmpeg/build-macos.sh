@@ -14,7 +14,7 @@
 # macOS is the one platform that cannot carry an unsigned helper: on Apple
 # Silicon an unsigned or wrongly signed binary does not launch at all, so the
 # dist binary is ad-hoc signed here. The app build re-signs the copy it puts in
-# Contents/Frameworks (see macos/ffmpeg_helper/).
+# Contents/Frameworks (Runner's "Embed ffmpeg" build phase).
 # =============================================================================
 set -euo pipefail
 
