@@ -710,7 +710,8 @@ jobs:
           fi
           lipo -info "$HELPER"
           codesign -dv "$HELPER" 2>&1 | sed -n '1,3p'
-          "$HELPER" -hide_banner -version | head -2
+          # sed 读完整个输入：head 会在 pipefail 下把 ffmpeg 的 SIGPIPE 变成步骤失败
+          "$HELPER" -hide_banner -version | sed -n '1,2p'
 
       - name: Assert the packaged tree matches dist
         run: python3 tool/check_packaged.py --only macos

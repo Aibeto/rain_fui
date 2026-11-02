@@ -77,6 +77,18 @@ distdir="$(ffmpeg_distdir "$TARGET")"
 ffmpeg_check_target_name "$TARGET"
 mkdir -p "$distdir"
 
+# The x86_64 slice needs an assembler: FFmpeg's configure refuses to continue
+# without yasm/nasm ("nasm/yasm not found or too old"), and aom/libvpx want it
+# for their SSE/AVX code too. Saying so up front beats a configure error 20
+# minutes into the dependency build.
+case " $ARCHS " in
+    *" x86_64 "*)
+        if ! command -v nasm >/dev/null 2>&1 && ! command -v yasm >/dev/null 2>&1; then
+            die "the x86_64 slice needs nasm (brew install nasm); pass --arch arm64 to build only the native slice"
+        fi
+        ;;
+esac
+
 ffmpeg_banner "$TARGET"
 log "SDK: $sdk"
 log "deployment target: $macmin"
