@@ -460,13 +460,24 @@ build_zlib() {
     fetch https://github.com/madler/zlib/archive/refs/tags/v1.3.1.tar.gz zlib-1.3.1.tar.gz
     unpack zlib-1.3.1.tar.gz zlib
     log "build zlib 1.3.1"
-    cmake_build "$SRC/zlib" -DZLIB_BUILD_EXAMPLES=OFF -DZLIB_BUILD_SHARED=OFF
+    cmake_build "$SRC/zlib" -DZLIB_BUILD_EXAMPLES=OFF
     # zlib's CMake installs libzlibstatic.a; FFmpeg links -lz.
     local libdir="$PREFIX/lib"
     [ -d "$PREFIX/lib64" ] && libdir="$PREFIX/lib64"
     if [ -f "$libdir/libzlibstatic.a" ] && [ ! -f "$libdir/libz.a" ]; then
         cp "$libdir/libzlibstatic.a" "$libdir/libz.a"
     fi
+    # zlib 1.3.1 的 CMakeLists 无条件同时构建共享库（只有一个 ZLIB_BUILD_EXAMPLES
+    # 开关，没有 ZLIB_BUILD_SHARED），而 -L$PREFIX/lib 排在 SDK 之前，-lz 就会挑中
+    # 这个共享库。Linux 上侥幸没事（系统里有同名 SONAME 的 libz.so.1），macOS 上
+    # 直接崩：CMake 给的 install_name 是 @rpath/libz.1.dylib，系统里只有
+    # /usr/lib/libz.1.dylib，于是
+    #   dyld: Library not loaded: @rpath/libz.1.dylib
+    # 只留静态库，让 -lz 命中 libz.a（helper 必须是自足的）。
+    rm -f "$libdir"/libz.so "$libdir"/libz.so.* \
+          "$libdir"/libz.dylib "$libdir"/libz.*.*.dylib "$libdir"/libz.[0-9]*.dylib \
+          "$libdir"/libz.dll.a 2>/dev/null || true
+    [ -f "$libdir/libz.a" ] || die "zlib 没有产出静态库（$libdir/libz.a 缺失）"
 }
 
 build_x264() {
