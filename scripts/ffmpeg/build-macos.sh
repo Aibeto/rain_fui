@@ -216,6 +216,14 @@ lipo -info "$distdir/ffmpeg" 2>/dev/null | sed 's/^/[ffmpeg]   /' || true
 if command -v otool >/dev/null 2>&1; then
     bad=""
     while IFS= read -r line; do
+        # A fat binary makes `otool -L` print a "…/ffmpeg (architecture arm64):"
+        # header for every slice; only lines carrying "(compatibility version"
+        # are real dependencies. Treating the headers as paths reported the
+        # artifact itself as a forbidden library.
+        case "$line" in
+            *"(compatibility version"*) : ;;
+            *) continue ;;
+        esac
         dep="${line#"${line%%[![:space:]]*}"}"
         dep="${dep%% (compatibility*}"
         [ -n "$dep" ] || continue
@@ -223,12 +231,13 @@ if command -v otool >/dev/null 2>&1; then
             /usr/lib/*|/System/*) : ;;
             *) bad="$bad $dep" ;;
         esac
-    done < <(otool -L "$distdir/ffmpeg" 2>/dev/null | sed '1d')
+    done < <(otool -L "$distdir/ffmpeg" 2>/dev/null)
     if [ -n "$bad" ]; then
         otool -L "$distdir/ffmpeg" | sed 's/^/[ffmpeg]   /' >&2
         die "the helper links libraries that are not part of macOS:$bad — make that dependency static (see build_zlib in build-deps.sh)"
     fi
-    log "link check: only system libraries ($(otool -L "$distdir/ffmpeg" | sed '1d' | wc -l | tr -d ' ') entries)"
+    deps="$(otool -L "$distdir/ffmpeg" 2>/dev/null | grep -c '(compatibility version' || true)"
+    log "link check: only system libraries ($deps entries across all slices)"
 else
     warn "otool not found; cannot verify that the helper only links system libraries"
 fi
