@@ -114,10 +114,14 @@ if [ "${FFMPEG_EXTERNAL_LIBS:-0}" = "1" ]; then
     EXTRA_LDFLAGS_EXTRA=" -sDEFAULT_TO_CXX"
     EXTRA_LIB=" -L$(ffmpeg_deps_prefix)/lib"
     EXTERNAL_LINK_LIBS=()
+    has_x265=0
     for pkg in mp3lame opus vorbisenc vorbis vpx libwebp x264 x265 aom SvtAv1Enc zlib; do
         if pkg-config --exists "$pkg" 2>/dev/null; then
             # shellcheck disable=SC2207
             EXTERNAL_LINK_LIBS+=( $(pkg-config --libs "$pkg") )
+            if [ "$pkg" = "x265" ]; then
+                has_x265=1
+            fi
         fi
     done
     for lib in webpmux webpdemux sharpyuv; do
@@ -225,8 +229,15 @@ ffmpeg_make "$builddir" "${fftools_objs[@]}"
 
 # --- link the CLI as a MODULARIZE'd WASM factory (contract §7) --------------
 # binaryen's wasm-opt cannot parse this module once x265 is linked, and emcc 6
-# has no --no-wasm-opt any more; -O0 skips the optimiser entirely.
-LINK_OPT="${WEB_LINK_OPT:--O3}"
+# has no --no-wasm-opt any more; -O0 skips the optimiser entirely. The default
+# therefore follows the link list instead of being a constant: a build without
+# x265 keeps -O3, one with x265 links at -O0 (the objects stay -O3). CI relies on
+# this, so it must not be a caller-only flag.
+DEFAULT_LINK_OPT="-O3"
+if [ "${has_x265:-0}" = "1" ]; then
+    DEFAULT_LINK_OPT="-O0"
+fi
+LINK_OPT="${WEB_LINK_OPT:-$DEFAULT_LINK_OPT}"
 link_flags=(
     "$LINK_OPT" -fPIC -pthread
     -I"$builddir" -I"$FFMPEG_SRC" -DHAVE_AV_CONFIG_H
