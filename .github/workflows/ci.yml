@@ -614,11 +614,24 @@ jobs:
           # libvorbis 的源码包没有预生成的 configure，靠 autogen.sh 现跑 autoreconf
           autoreconf --version >/dev/null || { echo "::error::autoreconf 缺失：libvorbis 无法生成 configure"; exit 1; }
           # 苹果自带的 libtool 是二进制工具，不是 GNU libtool：brew 只提供 glibtoolize，
-          # 而 autoreconf 找的是 libtoolize，缺了它 vorbis 会在 LT_INIT 处失败。
-          mkdir -p "$RUNNER_TEMP/bin"
-          ln -sf "$(brew --prefix libtool)/bin/glibtoolize" "$RUNNER_TEMP/bin/libtoolize"
-          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
-          libtoolize --version | sed -n '1p' || { echo "::error::libtoolize 不可用"; exit 1; }
+          # 而 autoreconf 找的是 libtoolize。libvorbis 已经改用带 configure 的正式发行包，
+          # 这里只是给「万一要跑 autoreconf」兜底，所以找不到时只警告不失败。
+          GLT="$(command -v glibtoolize || true)"
+          if [ -z "$GLT" ]; then
+            for cand in "$(brew --prefix)/bin/glibtoolize" \
+                        /opt/homebrew/opt/libtool/bin/glibtoolize \
+                        /usr/local/opt/libtool/bin/glibtoolize; do
+              if [ -x "$cand" ]; then GLT="$cand"; break; fi
+            done
+          fi
+          if [ -n "$GLT" ]; then
+            mkdir -p "$RUNNER_TEMP/bin"
+            ln -sf "$GLT" "$RUNNER_TEMP/bin/libtoolize"
+            echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+            "$RUNNER_TEMP/bin/libtoolize" --version | sed -n '1p'
+          else
+            echo "::warning::没有 glibtoolize；当前依赖包都自带 configure，不影响构建"
+          fi
 
       # 系统自带的 /bin/bash 是 3.2：mapfile、空数组展开这些都要 4+，否则脚本会在
       # 依赖配方深处报 "cross[@]: unbound variable"。装一个 5.x 并放到 PATH 前面，

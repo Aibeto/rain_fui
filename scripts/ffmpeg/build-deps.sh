@@ -506,7 +506,9 @@ build_ogg() {
 }
 
 build_vorbis() {
-    fetch https://github.com/xiph/vorbis/archive/refs/tags/v1.3.7.tar.gz libvorbis-1.3.7.tar.gz
+    # 用 xiph 的正式发行包而不是 GitHub 的 tag 归档：正式包里带生成的 configure，
+    # 不需要 autoreconf（macOS runner 上缺 autotools，GitHub 归档只能靠 autogen.sh）。
+    fetch https://downloads.xiph.org/releases/vorbis/libvorbis-1.3.7.tar.gz libvorbis-1.3.7.tar.gz
     unpack libvorbis-1.3.7.tar.gz vorbis
     log "build libvorbis 1.3.7"
     local dir
