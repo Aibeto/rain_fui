@@ -347,7 +347,13 @@ jobs:
           set -euo pipefail
           F=build/ffmpeg/dist/linux-x64/ffmpeg
           "$F" -version | head -1
-          "$F" -version | grep -q "version ${{ env.FFMPEG_VERSION }}"
+          # 同 version.txt 的断言：tag / n 前缀 / submodule 提交号任一即可
+          ffmpeg_sha="$(git -C third_party/ffmpeg rev-parse --short HEAD)"
+          version_line="$("$F" -version | head -1)"
+          case "$version_line" in
+            *"${{ env.FFMPEG_VERSION }}"*|*"n${{ env.FFMPEG_VERSION }}"*|*"$ffmpeg_sha"*) ;;
+            *) echo "::error::版本行既没有 ${{ env.FFMPEG_VERSION }} 也没有提交号 $ffmpeg_sha：$version_line"; exit 1 ;;
+          esac
           # 冒烟测试：静态二进制真的能跑（不能只信 ls 出来的文件）
           "$F" -hide_banner -loglevel error -f lavfi -i testsrc=duration=1:size=64x64:rate=5 \
             -frames:v 3 -f null - && echo "ffmpeg encode smoke test: ok"
@@ -360,9 +366,18 @@ jobs:
           if (-not (Test-Path $exe)) { throw "missing $exe" }
           $out = & $exe -version
           if ($LASTEXITCODE -ne 0) { throw "ffmpeg.exe -version exited $LASTEXITCODE" }
-          $out | Select-Object -First 1
-          if (-not ($out -match "version ${{ env.FFMPEG_VERSION }}")) {
-            throw "ffmpeg.exe -version does not report ${{ env.FFMPEG_VERSION }}"
+          $line = ($out | Select-Object -First 1)
+          if (-not $line) { throw "ffmpeg.exe -version 没有任何输出" }
+          $line
+          # 同 version.txt 的断言：tag / n 前缀 / submodule 提交号任一即可
+          $sha = (git -C third_party/ffmpeg rev-parse --short HEAD)
+          $tokens = @("${{ env.FFMPEG_VERSION }}", "n${{ env.FFMPEG_VERSION }}", "$sha")
+          $hit = $false
+          foreach ($t in $tokens) {
+            if ($t -and $line.Contains($t)) { $hit = $true; break }
+          }
+          if (-not $hit) {
+            throw "ffmpeg.exe 的版本行既没有 ${{ env.FFMPEG_VERSION }} 也没有提交号 ${sha}: $line"
           }
 
       # ---------------- 落地进平台工程（build-contract §8） ----------------
@@ -595,8 +610,22 @@ jobs:
           nasm -v || echo "::warning::nasm 缺失：x86_64 的 aom/libvpx 将走 C 实现"
           pkg-config --version || { echo "::error::pkg-config 缺失，无法定位依赖前缀"; exit 1; }
 
+      # 系统自带的 /bin/bash 是 3.2：mapfile、空数组展开这些都要 4+，否则脚本会在
+      # 依赖配方深处报 "cross[@]: unbound variable"。装一个 5.x 并放到 PATH 前面，
+      # 后面所有 `shell: bash` 的 step 就都用它了。
+      - name: 用 Homebrew 的 bash（系统 3.2 跑不了这些脚本）
+        run: |
+          set -euo pipefail
+          brew install bash || brew upgrade bash || true
+          BASH_BIN="$(brew --prefix)/bin"
+          echo "$BASH_BIN" >> "$GITHUB_PATH"
+          "$BASH_BIN/bash" --version | head -1
+
       - name: Prepare scripts
-        run: chmod +x scripts/ffmpeg/*.sh
+        run: |
+          set -euo pipefail
+          bash --version | head -1
+          chmod +x scripts/ffmpeg/*.sh
 
       - name: Cache FFmpeg dependency prefixes
         id: deps-cache
