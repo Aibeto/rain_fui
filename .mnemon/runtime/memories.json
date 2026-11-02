@@ -14,6 +14,13 @@
       "updated_at": "2026-11-02T00:20:01.267Z",
       "target": "memory",
       "importance": "normal"
+    },
+    {
+      "content": "Rain FUI 平台层（macOS / web / 版本断言）：macOS 用 scripts/ffmpeg/build-macos.sh —— 每个架构独立 ffbuild/macos-<arch> 与 deps 前缀（build-deps.sh 的 macos-* 用 xcrun clang + -arch/-isysroot/MACOSX_DEPLOYMENT_TARGET 默认 11.0），再 lipo 成 dist/macos/ffmpeg 并 ad-hoc codesign（未签名的 arm64 二进制无法启动）；external-libs.sh 只为 macos 开 videotoolbox/audiotoolbox，vaapi/vpl/mfx/nvenc 只在 linux|windows。install-to-app.sh 把产物放到 macos/ffmpeg/ffmpeg（git 忽略），Xcode Runner 的 \"Embed ffmpeg\" PBXShellScriptBuildPhase 用 install -m 0755 复制进 Contents/Frameworks 并 ad-hoc 重签名，ffmpeg_locator 已优先查该路径。macOS entitlements 必须去掉 com.apple.security.app-sandbox（沙盒下既不能 exec 内置 helper 也读不到拖入文件），只保留 files.user-selected.read-write + files.downloads.read-write，debug profile 另有 jit/network.server；拖放由 desktop_drop 承担，supportsDropTarget 含 macOS。CI 有独立 build-macos（macos-14）leg，check_expected_encoders.py 用 CONFIG_DIRS['macos']='macos-arm64' 读 configure 结果。web 端暂时废弃：build.sh / install-to-app.sh / ci.yml matrix / check_packaged.py 的入口都注释掉了，代码一行未删，build-web.sh 需 RAIN_FUI_ALLOW_WEB_BUILD=1 才执行，因此 flutter build web 已不在验证清单里。版本断言接受 RELEASE 的 tag、n 前缀或 git 短提交号三者之一（CI 的 submodule 没有 tag，FFmpeg 只打印纯提交号）。iOS 不支持：iOS 禁止 spawn 子进程，与整套「exec 内置 ffmpeg」后端冲突（用户本轮选择先只做 macOS）。",
+      "created_at": "2026-11-02T02:06:50.609Z",
+      "updated_at": "2026-11-02T02:06:50.609Z",
+      "target": "memory",
+      "importance": "normal"
     }
   ]
 }
