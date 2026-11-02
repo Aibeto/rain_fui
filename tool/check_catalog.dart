@@ -141,6 +141,33 @@ void main() {
   );
   check(offersVideo('mpeg4'), 'web baseline offers mpeg4');
 
+  // 3b. The codec dropdown is filtered by the selected container, so the
+  // container whitelist has to name AVC/HEVC/AV1 or those codecs vanish from
+  // the UI even though the encoders exist.
+  MediaCapabilities.useAvailability(
+    EncoderAvailability.baselineForPlatform('linux'),
+  );
+  check(
+    containerNames(MediaKind.video, 'h264').contains('mp4'),
+    'mp4 accepts h264',
+  );
+  check(
+    containerNames(MediaKind.video, 'hevc').contains('mp4'),
+    'mp4 accepts hevc',
+  );
+  check(
+    containerNames(MediaKind.video, 'av1').contains('mp4'),
+    'mp4 accepts av1',
+  );
+  final ContainerSpec mp4 = MediaCapabilities.container('mp4')!;
+  final Set<String> mp4Encoders = MediaCapabilities.videoCodecsFor(mp4)
+      .map((CodecSpec c) => c.encoder)
+      .toSet();
+  check(mp4Encoders.contains('libx264'), 'mp4 offers libx264');
+  check(mp4Encoders.contains('h264_nvenc'), 'mp4 offers h264_nvenc');
+  check(mp4Encoders.contains('libx265'), 'mp4 offers libx265');
+  check(mp4Encoders.contains('libaom-av1'), 'mp4 offers libaom-av1');
+
   // Every encoder FFmpeg knows must be reachable once the probe reports it,
   // otherwise the picker would silently drop it.
   MediaCapabilities.useAvailability(
