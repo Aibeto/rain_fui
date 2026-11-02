@@ -510,7 +510,8 @@ jobs:
           if [ -f NOTICE ]; then cp NOTICE "$STAGE/rain_fui/NOTICE"; fi
           cp build/ffmpeg/dist/linux-x64/version.txt "$STAGE/rain_fui/FFMPEG-VERSION.txt"
           tar -czf build/release-artifacts/rain_fui-linux-x64.tar.gz -C "$STAGE" rain_fui
-          tar -tzf build/release-artifacts/rain_fui-linux-x64.tar.gz | head -10
+          # sed 读完整个输入，不会像 head 那样提前关管道把 tar 弄成 exit 2
+          tar -tzf build/release-artifacts/rain_fui-linux-x64.tar.gz | sed -n '1,10p'
           ls -l build/release-artifacts
 
       - name: Package windows
@@ -543,7 +544,7 @@ jobs:
           if [ -f NOTICE ]; then cp NOTICE "$STAGE/rain_fui-web/NOTICE"; fi
           cp build/ffmpeg/dist/web/version.txt "$STAGE/rain_fui-web/FFMPEG-VERSION.txt"
           ( cd "$STAGE" && zip -qr "$OLDPWD/build/release-artifacts/rain_fui-web.zip" rain_fui-web )
-          unzip -l build/release-artifacts/rain_fui-web.zip | head -10
+          unzip -l build/release-artifacts/rain_fui-web.zip | sed -n '1,10p'
           ls -l build/release-artifacts
 
       - name: Upload artifacts
@@ -686,7 +687,7 @@ jobs:
             exit 1
           fi
           lipo -info "$HELPER"
-          codesign -dv "$HELPER" 2>&1 | head -3
+          codesign -dv "$HELPER" 2>&1 | sed -n '1,3p'
           "$HELPER" -hide_banner -version | head -2
 
       - name: Assert the packaged tree matches dist
