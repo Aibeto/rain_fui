@@ -5,9 +5,10 @@ line, so the whole product rests on one integration layer (`lib/src/ffmpeg/`):
 find a working FFmpeg for the current platform, run a command, stream its log
 and its `-progress` blocks, and hand the exit status back to the caller.
 
-Android, Windows, Linux and the web are supported. iOS and macOS are recognised
-but not built: spawning a bundled `ffmpeg` binary is not allowed on iOS, and
-this repository does not ship a notarised macOS build.
+Android, Windows, Linux and macOS are supported. iOS is recognised but not
+built: spawning a bundled `ffmpeg` binary is not allowed on iOS. The web build
+is temporarily disabled (its code and FFmpeg recipe are kept — see
+`docs/ci.md`), so no web artifact is produced any more.
 
 ## Why a subprocess and not libav* FFI
 
@@ -25,7 +26,8 @@ Per platform that means:
 | Linux | `lib/ffmpeg` in the bundle | `Process.start` on the bundled path |
 | Windows | `ffmpeg.exe` next to the runner | `Process.start` on the bundled path |
 | Android | `lib/<abi>/libffmpeg_exe.so` in the APK | exec'd from `nativeLibraryDir` |
-| Web | `web/ffmpeg/ffmpeg.{js,wasm}` | Emscripten (threaded) module in a Web Worker |
+| macOS | `Contents/Frameworks/ffmpeg` in the `.app` | `Process.start` on the bundled path (ad-hoc signed) |
+| Web (temporarily disabled) | `web/ffmpeg/ffmpeg.{js,wasm}` | Emscripten (threaded) module in a Web Worker |
 
 Android refuses to exec files from the app's data directory on API 29+, but the
 native library directory is executable, hence the `libffmpeg_exe.so` name. The
@@ -214,7 +216,10 @@ submodule commit plus `scripts/ffmpeg/` is exactly that).
 ## CI
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) analyses and tests the
-Dart code, then builds the four supported targets, asserts the FFmpeg artifact
-actually landed in each bundle, and uploads them. iOS and macOS appear as
-explicitly skipped legs — see [`docs/ci.md`](docs/ci.md) for why the requested
-`if: !matrix.skip` form cannot work in GitHub Actions and what replaced it.
+Dart code, then builds the supported targets (Windows, Linux, the three Android
+ABIs and a universal macOS binary), asserts the FFmpeg artifact actually landed
+in each bundle, and uploads them. macOS is the only leg that needs a specific
+runner (`macos-14`) and it ad-hoc signs the helper, because an unsigned arm64
+binary does not launch at all. iOS appears as an explicitly skipped leg — see
+[`docs/ci.md`](docs/ci.md) for why the requested `if: !matrix.skip` form cannot
+work in GitHub Actions and what replaced it.

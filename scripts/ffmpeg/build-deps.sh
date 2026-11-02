@@ -40,8 +40,9 @@ Builds, into \$PREFIX:
   webp      libwebp         (enables --enable-libwebp)
 
 Cross builds: pass --target android-arm64-v8a / android-armeabi-v7a /
-android-x86_64 / windows-x64; the NDK or mingw toolchain is configured here, so
-no CC/CFLAGS juggling is needed. HOST= still overrides the autoconf triple.
+android-x86_64 / windows-x64 / macos-arm64 / macos-x64 / web-wasm; the NDK,
+mingw, Xcode or Emscripten toolchain is configured here, so no CC/CFLAGS
+juggling is needed. HOST= still overrides the autoconf triple.
 EOF
 }
 
@@ -161,6 +162,32 @@ case "$TARGET" in
         export HOST=x86_64-linux-gnu
         CMAKE_TARGET_ARGS=(
             -DCMAKE_TOOLCHAIN_FILE="$(dirname "$local_emcc")/cmake/Modules/Platform/Emscripten.cmake"
+        )
+        ;;
+    macos-*)
+        # 一个 runner 上同时给 arm64 和 x86_64 编依赖，只能靠 -arch 区分；SDK 路径
+        # 和部署目标都显式给出，否则 Homebrew 的头文件会被混进来。
+        arch="${TARGET#macos-}"
+        case "$arch" in
+            arm64)  triple="aarch64-apple-darwin" ;;
+            x86_64) triple="x86_64-apple-darwin" ;;
+            *) die "unknown macOS arch '$arch' (expected macos-arm64 / macos-x64)" ;;
+        esac
+        require_cmd xcrun "install Xcode or the command line tools"
+        sdk="$(xcrun --sdk macosx --show-sdk-path)"
+        macmin="${MACOSX_DEPLOYMENT_TARGET:-11.0}"
+        export MACOSX_DEPLOYMENT_TARGET="$macmin"
+        CC="$(xcrun --sdk macosx --find clang)" || die "no clang in the macOS SDK"
+        CXX="$(xcrun --sdk macosx --find clang++)" || die "no clang++ in the macOS SDK"
+        export CC CXX
+        export CFLAGS="-O2 -arch $arch -isysroot $sdk -mmacosx-version-min=$macmin"
+        export CXXFLAGS="$CFLAGS"
+        export LDFLAGS="-arch $arch -isysroot $sdk -mmacosx-version-min=$macmin"
+        export HOST="$triple"
+        CMAKE_TARGET_ARGS=(
+            -DCMAKE_OSX_ARCHITECTURES="$arch"
+            -DCMAKE_OSX_SYSROOT="$sdk"
+            -DCMAKE_OSX_DEPLOYMENT_TARGET="$macmin"
         )
         ;;
     linux-*)
@@ -374,7 +401,8 @@ build_aom() {
     case "$TARGET" in
         android-arm64-v8a) cpu_args=(-DAOM_TARGET_CPU=arm64) ;;
         android-armeabi-v7a) cpu_args=(-DAOM_TARGET_CPU=generic) ;;
-        android-x86_64|windows-x64) cpu_args=(-DAOM_TARGET_CPU=x86_64) ;;
+        android-x86_64|windows-x64|macos-x64) cpu_args=(-DAOM_TARGET_CPU=x86_64) ;;
+        macos-arm64) cpu_args=(-DAOM_TARGET_CPU=arm64) ;;
         web-wasm) cpu_args=(-DAOM_TARGET_CPU=generic) ;;
     esac
     cmake_build "$SRC/aom" \
@@ -499,6 +527,8 @@ build_vpx() {
         android-armeabi-v7a) vpx_target=generic-gnu ;;
         android-x86_64) vpx_target=x86_64-android-gcc ;;
         windows-x64) vpx_target=x86_64-win64-gcc ;;
+        macos-arm64) vpx_target=arm64-darwin-gcc ;;
+        macos-x64) vpx_target=x86_64-darwin-gcc ;;
         web-wasm) vpx_target=generic-gnu ;;
         *) vpx_target=x86_64-linux-gcc ;;
     esac

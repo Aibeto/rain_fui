@@ -56,6 +56,9 @@ app.*.map.json
 # install-to-app.sh. CI rebuilds and re-stages them, so they stay untracked.
 /linux/ffmpeg/
 /windows/ffmpeg/
+# macOS helper: staged here by install-to-app.sh, then embedded into the bundle
+# by the "Embed ffmpeg" build phase in macos/Runner.xcodeproj.
+/macos/ffmpeg/
 
 # Android executables disguised as lib<name>.so; Gradle packages them, the
 # repository does not carry multi-megabyte binaries.

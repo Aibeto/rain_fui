@@ -34,7 +34,14 @@ DIST = ROOT / "build/ffmpeg/dist"
 BINARIES = {
     "linux-x64": "ffmpeg",
     "windows-x64": "ffmpeg.exe",
+    "macos": "ffmpeg",
     "web": "ffmpeg.js",
+}
+
+# A universal dist target is built from two trees; the arm64 one carries the
+# configure result for both (same feature set, different -arch).
+CONFIG_DIRS = {
+    "macos": "macos-arm64",
 }
 
 CONFIG_LINE = re.compile(r"^#define\s+CONFIG_([A-Z0-9_]+)_ENCODER\s+1\s*$")
@@ -60,7 +67,7 @@ def symbol_for(name: str) -> str:
 
 
 def from_config(target: str) -> set[str] | None:
-    header = FFBUILD / target / "config_components.h"
+    header = FFBUILD / CONFIG_DIRS.get(target, target) / "config_components.h"
     if not header.is_file():
         return None
     symbols = set()
@@ -111,13 +118,14 @@ def main() -> int:
 
     symbols = from_config(args.target)
     if symbols is not None:
-        source = f"ffbuild/{args.target}/config_components.h"
+        source = f"ffbuild/{CONFIG_DIRS.get(args.target, args.target)}/config_components.h"
         missing = [n for n in expect if symbol_for(n) not in symbols]
     else:
         names = from_binary(args.target)
         if names is None:
+            cfg = CONFIG_DIRS.get(args.target, args.target)
             print(f"no encoder list for {args.target}: "
-                  f"neither {FFBUILD / args.target} nor a runnable binary")
+                  f"neither {FFBUILD / cfg} nor a runnable binary")
             return 1
         source = f"dist/{args.target} -encoders"
         present = set(names)

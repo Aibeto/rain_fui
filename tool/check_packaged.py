@@ -29,8 +29,10 @@ PAIRS = {
         "android/app/src/main/jniLibs/armeabi-v7a/libffmpeg_exe.so",
     "build/ffmpeg/dist/android-x86_64/libffmpeg_exe.so":
         "android/app/src/main/jniLibs/x86_64/libffmpeg_exe.so",
-    "build/ffmpeg/dist/web/ffmpeg.js": "web/ffmpeg/ffmpeg.js",
-    "build/ffmpeg/dist/web/ffmpeg.wasm": "web/ffmpeg/ffmpeg.wasm",
+    # web 暂时废弃（需求 m05703）：条目保留，重新启用时取消注释即可。
+    # "build/ffmpeg/dist/web/ffmpeg.js": "web/ffmpeg/ffmpeg.js",
+    # "build/ffmpeg/dist/web/ffmpeg.wasm": "web/ffmpeg/ffmpeg.wasm",
+    "build/ffmpeg/dist/macos/ffmpeg": "macos/ffmpeg/ffmpeg",
 }
 
 

@@ -26,6 +26,7 @@ TARGETS = {
     "linux": "linux-x64",
     "windows": "windows-x64",
     "android": "android-arm64-v8a",
+    "macos": "macos-arm64",
     "web": "web",
 }
 
@@ -51,16 +52,42 @@ def compiled(build_dir: pathlib.Path, names: list[str]) -> list[str]:
     return hit
 
 
+def existing_blocks() -> dict[str, list[str]]:
+    """Baselines already in the generated file, keyed by platform.
+
+    A developer without an Android or macOS build tree must not silently delete
+    that platform's baseline, so a platform whose build directory is missing
+    keeps whatever the file already had.
+    """
+    if not GENERATED.exists():
+        return {}
+    text = GENERATED.read_text()
+    out: dict[str, list[str]] = {}
+    for match in re.finditer(
+        r"  '([a-z]+)': <String>\{\n(.*?)\n  \},", text, re.S
+    ):
+        key, body = match.group(1), match.group(2)
+        out[key] = re.findall(r"'([^']+)'", body)
+    return out
+
+
 def main() -> int:
     names = encoder_names()
+    previous = existing_blocks()
     blocks = []
     for key, target in TARGETS.items():
         build_dir = ROOT / "build/ffmpeg/ffbuild" / target
         hits = compiled(build_dir, names)
         if not hits:
-            print(f"skip {key}: {build_dir} has no config_components.h")
-            continue
-        print(f"{key}: {len(hits)} encoders in {target}")
+            kept = previous.get(key, [])
+            if kept:
+                print(f"keep {key}: no build tree at {build_dir}, reusing {len(kept)} encoders")
+                hits = kept
+            else:
+                print(f"skip {key}: {build_dir} has no config_components.h")
+                continue
+        else:
+            print(f"{key}: {len(hits)} encoders in {target}")
         body = "\n".join(f"    '{name}'," for name in hits)
         blocks.append(f"  '{key}': <String>{{\n{body}\n  }},")
     GENERATED.write_text(

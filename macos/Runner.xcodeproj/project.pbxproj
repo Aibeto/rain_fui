@@ -213,6 +213,7 @@
 				33CC10EB2044A3C60003C045 /* Resources */,
 				33CC110E2044A8840003C045 /* Bundle Framework */,
 				3399D490228B24CF009A79C7 /* ShellScript */,
+				AA11BB22CC33DD44EE55FF66 /* Embed ffmpeg */,
 			);
 			buildRules = (
 			);
@@ -338,6 +339,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"$FLUTTER_ROOT\"/packages/flutter_tools/bin/macos_assemble.sh && touch Flutter/ephemeral/tripwire";
+		};
+		AA11BB22CC33DD44EE55FF66 /* Embed ffmpeg */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Embed ffmpeg";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\nSRC=\"$SRCROOT/ffmpeg/ffmpeg\"\nFRAMEWORKS_DIR=\"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH\"\nDST=\"$FRAMEWORKS_DIR/ffmpeg\"\nif [ ! -f \"$SRC\" ]; then\n  echo \"warning: $SRC is missing. Run scripts/ffmpeg/build-macos.sh, then scripts/ffmpeg/install-to-app.sh macos.\"\n  exit 0\nfi\nmkdir -p \"$FRAMEWORKS_DIR\"\ninstall -m 0755 \"$SRC\" \"$DST\"\nIDENTITY=\"${EXPANDED_CODE_SIGN_IDENTITY:-}\"\nif [ -z \"$IDENTITY\" ] || [ \"$CODE_SIGNING_ALLOWED\" = \"NO\" ]; then\n  IDENTITY=\"-\"\nfi\nif ! codesign --force --sign \"$IDENTITY\" --options runtime --timestamp=none \"$DST\"; then\n  echo \"note: signing with '$IDENTITY' failed; an ad-hoc signature is used instead\"\n  codesign --force --sign - --timestamp=none \"$DST\"\nfi\necho \"note: embedded the FFmpeg helper at $DST\"";
 		};
 /* End PBXShellScriptBuildPhase section */
 

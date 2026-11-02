@@ -64,6 +64,13 @@ while [ $# -gt 0 ]; do
 done
 
 ffmpeg_validate_jobs
+# web 暂时废弃（需求 m05703）：CI、build.sh、install-to-app.sh 的入口都已停用。
+# 脚本本身原样保留（含依赖配方与 emcc 参数），只加一道显式开关，避免被别的
+# 流水线误调用；确有需要时 RAIN_FUI_ALLOW_WEB_BUILD=1 即可恢复。
+if [ "${RAIN_FUI_ALLOW_WEB_BUILD:-0}" != "1" ]; then
+    die "web 构建已暂时废弃；确有需要请设 RAIN_FUI_ALLOW_WEB_BUILD=1 再跑"
+fi
+
 require_ffmpeg_src
 
 EMSDK="${EMSDK:-$HOME/emsdk}"

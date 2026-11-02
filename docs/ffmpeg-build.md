@@ -407,7 +407,60 @@ FFmpeg sources (`avstring.c`, `mjpegenc.c`, `rv60dec.c`, `aacsbr_template.c`,
 ...). They are GCC false positives from cross-TU inlining and do not fail the
 build.
 
+## macOS: universal binary, ad-hoc signing, sandbox
+
+macOS is the only target whose artifact is signed by the build itself. On Apple
+Silicon an unsigned (or wrongly signed) executable does not launch, and every
+universal build carries an arm64 slice, so `build-macos.sh` always ends with
+`codesign --force --sign -`, and the app build re-signs the copy it embeds.
+
+```bash
+scripts/ffmpeg/build-deps.sh --target macos-arm64     # dependency prefix per arch
+scripts/ffmpeg/build-deps.sh --target macos-x64
+scripts/ffmpeg/build-macos.sh --jobs 8                # both arches → lipo → dist/macos/ffmpeg
+scripts/ffmpeg/install-to-app.sh macos                # → macos/ffmpeg/ffmpeg
+flutter build macos --release                         # Runner's "Embed ffmpeg" phase copies + signs
+```
+
+Each architecture gets its own tree (`build/ffmpeg/ffbuild/macos-arm64`,
+`…/macos-x64`) and its own dependency prefix (`build/ffmpeg/deps/macos-*`).
+Both are always configured with `--enable-cross-compile --sysroot`, even when
+the arch matches the host: configure must not probe the target by running it.
+
+What the macOS build adds on top of the shared flags:
+
+* `--enable-videotoolbox --enable-audiotoolbox`. `--disable-autodetect` turns
+  both off, and then `h264_videotoolbox`, `hevc_videotoolbox` and
+  `prores_videotoolbox` simply do not exist.
+* No `nvenc`, `vaapi`, `libvpl`, `amf` or `mediacodec`. Only `linux`/`windows`
+  can emit those, so a Homebrew `libva` in the prefix cannot leak in.
+
+### Sandbox and drag-and-drop
+
+`macos/Runner/*.entitlements` deliberately does **not** enable App Sandbox. A
+sandboxed app cannot `exec` the bundled helper (the child process inherits the
+sandbox, and the file access extensions the drop/pickers grant are not
+transferable), so the feature set that makes this app useful — run the bundled
+`ffmpeg`, read the file the user dragged in, write to `~/Downloads/rain_fui` —
+needs either no sandbox or a signed helper with `com.apple.security.inherit`.
+
+What the entitlements do keep:
+
+* `com.apple.security.files.user-selected.read-write` — the open panels and the
+  `desktop_drop` drag events both hand over user-selected files;
+* `com.apple.security.files.downloads.read-write` — the default output directory;
+* `com.apple.security.cs.allow-jit` / `network.server` in the debug profile only,
+  because the Flutter debug shell needs them.
+
+Dropping files on the window is wired through `desktop_drop` (it has a macOS
+implementation) and the drop affordance in the UI is gated on
+`supportsDropTarget`, which is true on macOS.
+
 ## Web target: ABI and limitations
+
+> The web entry points are currently commented out (see `docs/ci.md` §2 and
+> `scripts/ffmpeg/build-web.sh`): no artifact is produced, but the recipe, the
+> worker bridge and this section are kept verbatim for when web comes back.
 
 The web artifacts follow contract §7 exactly: `ffmpeg.js` + `ffmpeg.wasm`, a
 `createFFmpegCore` `MODULARIZE` factory, `-sINVOKE_RUN=0`, `FS`/`callMain`/

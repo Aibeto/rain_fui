@@ -7,13 +7,15 @@
 #   scripts/ffmpeg/install-to-app.sh [--dry-run] <target>...
 #
 #   target: linux-x64 | windows-x64 | android-arm64-v8a | android-armeabi-v7a
-#           | android-x86_64 | web | linux | windows | android | all
+#           | android-x86_64 | web | macos | linux | windows | android | all
 #
 # Destination mapping (contract §8):
 #   linux-x64             -> linux/ffmpeg/ffmpeg
 #   windows-x64           -> windows/ffmpeg/ffmpeg.exe
 #   android-<abi>         -> android/app/src/main/jniLibs/<abi>/libffmpeg_exe.so
 #   web                   -> web/ffmpeg/ffmpeg.js + ffmpeg.wasm
+#   macos                 -> macos/ffmpeg/ffmpeg (copied into Contents/Frameworks
+#                            by the Runner build phase, see macos/README.md)
 # =============================================================================
 set -euo pipefail
 
@@ -30,7 +32,7 @@ Usage: $(basename "$0") [--dry-run] <target>...
 
 Copy build/ffmpeg/dist/<target>/ artifacts into the Flutter app trees
 (contract §8). Targets: linux-x64, windows-x64, android-arm64-v8a,
-android-armeabi-v7a, android-x86_64, web, or the aliases linux, windows,
+android-armeabi-v7a, android-x86_64, web, macos, or the aliases linux, windows,
 android (all three ABIs) and all.
 
 Options:
@@ -54,16 +56,28 @@ expand_targets() {
     for t in "$@"; do
         case "$t" in
             all)
+                # web 暂时废弃（m05703）：不放进 all，但映射代码保留。
                 printf '%s\n' linux-x64 windows-x64 \
-                    android-arm64-v8a android-armeabi-v7a android-x86_64 web ;;
+                    android-arm64-v8a android-armeabi-v7a android-x86_64 macos ;;
             linux)      printf 'linux-x64\n' ;;
             windows)    printf 'windows-x64\n' ;;
             android)    printf '%s\n' android-arm64-v8a android-armeabi-v7a android-x86_64 ;;
-            web|linux-x64|windows-x64|android-*) printf '%s\n' "$t" ;;
-            *) die "unknown target '$t' (expected linux-x64, windows-x64, android-<abi>, web, all)" ;;
+            web)
+                # 暂时废弃（m05703）：保留分支，报错信息比 "unknown target" 清楚。
+                die "web 暂时废弃；如需重新启用请还原 install-to-app.sh 里的注释"
+                ;;
+            macos|linux-x64|windows-x64|android-*) printf '%s\n' "$t" ;;
+            *) die "unknown target '$t' (expected linux-x64, windows-x64, android-<abi>, web, macos, all)" ;;
         esac
     done
 }
+# Expand in the main shell first: die() inside a process substitution only ends
+# the subshell, and the caller then reports the confusing "0 artifacts".
+for t in "${TARGETS[@]}"; do
+    case "$t" in
+        web) die "web 暂时废弃；如需重新启用请还原 install-to-app.sh 里的注释" ;;
+    esac
+done
 mapfile -t TARGETS < <(expand_targets "${TARGETS[@]}")
 
 # install_one <src> <dst> <mode> <label>
@@ -103,10 +117,19 @@ for target in "${TARGETS[@]}"; do
                 "$REPO_ROOT/android/app/src/main/jniLibs/$abi/libffmpeg_exe.so" 0755 "$target"
             installed=$((installed + 1))
             ;;
+        # web 暂时废弃（m05703）：安装逻辑原样保留，目标入口已被 die 拦住。
         web)
             install_one "$dist/ffmpeg.js"         "$REPO_ROOT/web/ffmpeg/ffmpeg.js"         0644 "$target"
             install_one "$dist/ffmpeg.wasm"       "$REPO_ROOT/web/ffmpeg/ffmpeg.wasm"       0644 "$target"
             installed=$((installed + 2))
+            ;;
+        macos)
+            # The repo keeps the universal binary; the Runner build phase copies
+            # it to Contents/Frameworks/ffmpeg and re-signs it there. Signing
+            # happens at build time, not here, because the copy Xcode makes is a
+            # different file and would lose the signature.
+            install_one "$dist/ffmpeg" "$REPO_ROOT/macos/ffmpeg/ffmpeg" 0755 "$target"
+            installed=$((installed + 1))
             ;;
     esac
     printf '[ffmpeg]   version.txt: %s\n' "$(head -n1 "$dist/version.txt")"

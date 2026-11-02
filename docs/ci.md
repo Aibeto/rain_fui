@@ -40,13 +40,14 @@ PR 上新提交会取消同一 PR 的旧运行；`master` / tag 的运行**不�
 | `android` | `rain_fui-android-<abi>.apk`（3 个 ABI） | ✅ 构建 | `arm64-v8a` / `armeabi-v7a` / `x86_64`，**各一个并行 job**（见 §5） |
 | `windows` | `rain_fui-windows-x64.zip` | ✅ 构建 | FFmpeg 在 MSYS2 MinGW64 里编 |
 | `linux` | `rain_fui-linux-x64.tar.gz` | ✅ 构建 | 静态 FFmpeg，Ubuntu 24.04 构建 |
-| `web` | `rain_fui-web.zip` | ✅ 构建 | Emscripten 版 `ffmpeg.wasm` |
-| `ios` | — | ⏭ 跳过（可见） | 未 vendor iOS 版 FFmpeg，无签名凭据 |
-| `macos` | — | ⏭ 跳过（可见） | 未 vendor macOS 版 FFmpeg，无公证凭据 |
+| `macos` | `rain_fui-macos.zip` | ✅ 构建 | `macos-14` runner，universal FFmpeg + ad-hoc 签名（见 §5） |
+| `web` | — | ⏸ 暂时废弃 | 入口全部注释掉（需求 m05703），配方与代码保留；恢复时取消 `ci.yml` 矩阵里那条注释 |
+| `ios` | — | ⏭ 跳过（可见） | iOS 不允许创建子进程，CLI 架构跑不了；需要换成内嵌库后端才会做 |
 
-**为什么正好是这 4 个目标**：契约 §5 只定义这 4 套 FFmpeg 产物（`linux-x64`、
-`windows-x64`、`android-*`、`web`），仓库也没有 Apple 的签名 / 公证材料；这 4 个目标的
-“构建 → 落地 → 打包 → 断言”链路能在没有 secrets 的情况下完整跑通。
+**为什么是这 5 套产物**：契约 §5 定义的 `linux-x64`、`windows-x64`、`android-*`、
+`macos` 各有一套；macOS 不需要 Developer ID 也能跑通“构建 → 落地 → 打包 → 断言”，
+只有 `codesign --sign -`（ad-hoc）是必需的，因为未签名的 arm64 二进制根本不会启动。
+`web` 的产物按需求 m05703 暂时不构建。
 
 ### 为什么 iOS / macOS 是独立 job，而不是矩阵里的 `if: ${{ !matrix.skip }}`
 
@@ -112,9 +113,11 @@ build-unsupported:         # 矩阵：ios / macos，job 级 if 恒为假
 | `rain_fui-android-x86_64` | `rain_fui-android-x86_64.apk` + `…-ffmpeg-version.txt` | split APK（x86_64，模拟器） |
 | `rain_fui-windows-x64` | `rain_fui-windows-x64.zip` | `rain_fui/` 目录：`rain_fui.exe` + DLL + `ffmpeg.exe` + `LICENSES/` + `FFMPEG-VERSION.txt` |
 | `rain_fui-linux-x64` | `rain_fui-linux-x64.tar.gz` | `rain_fui/` 目录：`rain_fui` + `lib/ffmpeg` + `LICENSES/` + `FFMPEG-VERSION.txt` |
-| `rain_fui-web` | `rain_fui-web.zip` | `rain_fui-web/`：`index.html` + `ffmpeg/ffmpeg.{js,wasm}` + `LICENSES/` |
+| `rain_fui-macos` | `rain_fui-macos.zip` + `FFMPEG-VERSION-macos.txt` | `rain_fui.app`：`Contents/Frameworks/ffmpeg`（已签名）+ `LICENSES/` |
+| `rain_fui-web`（暂时废弃） | `rain_fui-web.zip` | `rain_fui-web/`：`index.html` + `ffmpeg/ffmpeg.{js,wasm}` + `LICENSES/` |
 
-tag `v*` 时，`release` job 把上面这些包（4 个平台、6 个 artifact）**原样**挂到 Release（不重新打包），并额外生成
+tag `v*` 时，`release` job 把上面这些包（4 个平台、6 个 artifact：3 个 Android ABI + windows + linux
++ macos）**原样**挂到 Release（不重新打包），并额外生成
 `rain_fui-ffmpeg-licenses-<tag>.tar.gz`——契约 §2 要求分发二进制时同时分发
 `LICENSES/ffmpeg/` 的许可证原文。若 `LICENSES/ffmpeg/` 不存在，会输出 `::warning::`
 而不是让发布失败（APK 里塞不进许可证，只能以附加文件形式分发）。
@@ -143,7 +146,7 @@ dart run tool/check_catalog.dart    # 编码器/容器表自洽（codec id、容
 
 `flutter analyze` 默认 `--fatal-warnings`、不 `--fatal-infos`，即 warning 会红、info 不会。
 
-### `build (<platform>)`（矩阵：windows / linux / web，`needs: analyze-and-test`）
+### `build (<platform>)`（矩阵：windows / linux，`needs: analyze-and-test`）
 
 公共步骤：
 
@@ -177,8 +180,29 @@ dart run tool/check_catalog.dart    # 编码器/容器表自洽（codec id、容
 | --- | --- |
 | windows | `msys2/setup-msys2@v2`（`msystem: MINGW64`：`mingw-w64-x86_64-gcc`、`nasm`、`pkgconf`、`cmake`、`ninja`、`make`、`git`，外加 `autoconf`/`automake`/`libtool` 给 x264/opus/vorbis/vpx 的 configure）；FFmpeg 与依赖库的步骤用 `shell: msys2 {0}` 跑，Flutter 构建用默认 `pwsh` |
 | linux | apt: `build-essential nasm yasm pkg-config patch autoconf automake libtool gettext clang cmake ninja-build libgtk-3-dev liblzma-dev libstdc++-12-dev zip unzip file`；`flutter config --enable-linux-desktop` |
-| web | `mymindstorm/setup-emsdk@v14`（`version: 6.0.13`，`actions-cache-folder`）+ apt 的 `cmake ninja-build autoconf automake libtool nasm yasm`；打印 `emcc --version` |
+| web（入口已注释） | `mymindstorm/setup-emsdk@v14`（`version: 6.0.13`，`actions-cache-folder`）+ apt 的 `cmake ninja-build autoconf automake libtool nasm yasm`；打印 `emcc --version`。step 还在，但矩阵里没有 `platform: web`，所以永不触发 |
 
+
+### `build-macos`（`macos-14`，300 min，`needs: analyze-and-test`）
+
+macOS 单独一个 job，不是矩阵腿：它需要在**同一个 runner** 上编两套依赖（arm64 与 x86_64）
+再 `lipo` 成一个 universal 二进制，矩阵腿只能表达“一个 target”。
+
+```
+checkout(+submodule) → flutter → pub get → brew install nasm pkg-config
+→ 依赖缓存（两个 prefix 一起缓存）
+→ build-deps.sh --target macos-arm64 / macos-x64（缓存命中则跳过）
+→ FFmpeg 构建缓存（ffbuild/macos-arm64 + macos-x64 + dist/macos）
+→ build-macos.sh（缓存命中则跳过）
+→ check_expected_encoders.py --target macos --expect … --forbid nvenc/vaapi/amf/qsv/mediacodec
+→ lipo -info（必须列出 arm64 与 x86_64）
+→ install-to-app.sh macos → flutter build macos --release
+→ 断言 Contents/Frameworks/ffmpeg 存在、可执行、已签名、能 -version
+→ check_packaged.py --only macos → ditto 打包 → upload
+```
+
+`--forbid` 那一行是 macOS 特有的：Homebrew 的 `libva`、`AMF` 头文件如果混进依赖前缀，
+会悄悄让产物带上别的平台的硬件后端。
 
 ### `build-android`（矩阵：`arm64-v8a` / `armeabi-v7a` / `x86_64`，`needs: analyze-and-test`）
 

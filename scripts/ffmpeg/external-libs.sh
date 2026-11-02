@@ -143,14 +143,20 @@ ffmpeg_external_flags() {
         # --disable-autodetect turns ffnvcodec off, so it has to be named.
         printf '%s\n' --enable-ffnvcodec --enable-nvenc
     fi
-    if ffmpeg_have_pkg libva "$target_os" "$prefix"; then
-        printf '%s\n' --enable-vaapi
-    fi
-    if ffmpeg_have_pkg vpl "$target_os" "$prefix"; then
-        printf '%s\n' --enable-libvpl
-    elif ffmpeg_have_pkg libmfx "$target_os" "$prefix"; then
-        printf '%s\n' --enable-libmfx
-    fi
+    # vaapi / qsv only exist on Linux and Windows; on macOS a Homebrew libva
+    # in the prefix must not leak in.
+    case "$target_os" in
+        linux|windows)
+            if ffmpeg_have_pkg libva "$target_os" "$prefix"; then
+                printf '%s\n' --enable-vaapi
+            fi
+            if ffmpeg_have_pkg vpl "$target_os" "$prefix"; then
+                printf '%s\n' --enable-libvpl
+            elif ffmpeg_have_pkg libmfx "$target_os" "$prefix"; then
+                printf '%s\n' --enable-libmfx
+            fi
+            ;;
+    esac
     case "$target_os" in
         android)
             printf '%s\n' --enable-jni --enable-mediacodec
@@ -160,6 +166,11 @@ ffmpeg_external_flags() {
                || [ -f "$prefix/include/AMF/videocodec.h" ]; then
                 printf '%s\n' --enable-amf
             fi
+            ;;
+        macos)
+            # VideoToolbox/AudioToolbox 是系统框架，--disable-autodetect 会关掉，
+            # 必须显式点名，否则 h264_videotoolbox 之类的编码器根本不存在。
+            printf '%s\n' --enable-videotoolbox --enable-audiotoolbox
             ;;
     esac
 }

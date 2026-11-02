@@ -8,5 +8,5 @@ import 'platform_key_stub.dart'
     if (dart.library.io) 'platform_key_io.dart'
     as impl;
 
-/// One of `linux`, `windows`, `android`, `web`.
+/// One of `linux`, `windows`, `macos`, `android`, `web`.
 String baselinePlatformKey() => impl.baselinePlatformKey();

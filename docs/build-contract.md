@@ -79,7 +79,8 @@ build/ffmpeg/dist/<target>/version.txt
 | `android-arm64-v8a` | `libffmpeg_exe.so` | 内容是可执行文件，改名以进入 `nativeLibraryDir` |
 | `android-armeabi-v7a` | `libffmpeg_exe.so` | API 24，`-Wl,-z,max-page-size=16384` |
 | `android-x86_64` | `libffmpeg_exe.so` | 同上 |
-| `web` | `ffmpeg.js` + `ffmpeg.wasm` | Emscripten `MODULARIZE` 工厂，见 §7 |
+| `macos` | `ffmpeg` | arm64 + x86_64 的 universal binary，`lipo` 合成，ad-hoc 签名 |
+| `web`（暂时废弃） | `ffmpeg.js` + `ffmpeg.wasm` | Emscripten `MODULARIZE` 工厂，见 §7。入口已注释（m05703），产物不再生成 |
 
 `version.txt` 内容 = 产物 `-version` 输出的第一行（例：`ffmpeg version 9.0.2 Copyright (c) 2000-2025 the FFmpeg developers`）。
 Android 无法在主机执行，写 `ffmpeg version <TAG> (cross-compiled for <target>)` 即可。
@@ -94,7 +95,8 @@ scripts/ffmpeg/build.sh         [--targets LIST] [--all] [--jobs N] [--api N]
 scripts/ffmpeg/build-linux.sh   [--jobs N] [--clean] [--arch x86_64]
 scripts/ffmpeg/build-android.sh [--jobs N] [--abis arm64-v8a,armeabi-v7a,x86_64] [--api 24]
 scripts/ffmpeg/build-windows.sh [--jobs N]             # 在 MSYS2/Git-Bash 下运行
-scripts/ffmpeg/build-web.sh     [--jobs N]             # 需要 emcc（emsdk）
+scripts/ffmpeg/build-macos.sh   [--jobs N] [--arch "arm64 x86_64"]  # 需要 Xcode，产出 universal
+scripts/ffmpeg/build-web.sh     [--jobs N]             # 需要 emcc（emsdk）；入口已暂时注释（m05703）
 scripts/ffmpeg/install-to-app.sh <target> [<target>…]  # 拷贝产物进平台工程目录
 ```
 
@@ -155,7 +157,8 @@ Dart 侧把它显示为 `unavailableReason`，而不是抛一个看不懂的 was
 | `linux-x64` | `linux/ffmpeg/ffmpeg` | CMake `install(PROGRAMS …)` → `<bundle>/lib/ffmpeg`（这是**文件**，不是目录） |
 | `windows-x64` | `windows/ffmpeg/ffmpeg.exe` | CMake `install(FILES …)` → 与 `rain_fui.exe` 同级 |
 | `android-*` | `android/app/src/main/jniLibs/<abi>/libffmpeg_exe.so` | `nativeLibraryDir` === `android/app/src/main/jniLibs` 打包解压目录 |
-| `web` | `web/ffmpeg/ffmpeg.js`、`web/ffmpeg/ffmpeg.wasm` | `web/ffmpeg/ffmpeg_worker.js` 内 `importScripts('ffmpeg.js')` |
+| `macos` | `macos/ffmpeg/ffmpeg` | Runner 的 "Embed ffmpeg" 构建阶段拷到 `Contents/Frameworks/ffmpeg` 并重新签名；`FfmpegLocator` 先查 `Contents/Frameworks`，再查 `Contents/Resources` |
+| `web`（暂时废弃） | `web/ffmpeg/ffmpeg.js`、`web/ffmpeg/ffmpeg.wasm` | `web/ffmpeg/ffmpeg_worker.js` 内 `importScripts('ffmpeg.js')`。映射保留，入口已注释 |
 
 Android 必须保持 `android:extractNativeLibs="true"` + `useLegacyPackaging = true`，否则
 `libffmpeg_exe.so` 不会被解压成可执行文件。
@@ -167,6 +170,8 @@ Android 必须保持 `android:extractNativeLibs="true"` + `useLegacyPackaging = 
 3. 宿主可执行的目标：`./build/ffmpeg/dist/<target>/ffmpeg -version` 必须打印 `9.0.2`。
 4. Android：`flutter build apk --release --target-platform android-arm64` 后，APK 内
    `lib/arm64-v8a/libffmpeg_exe.so` 存在（CI 用 `unzip -l` 断言）。
-5. web：`flutter build web --release` 后 `build/web/ffmpeg/{ffmpeg.js,ffmpeg.wasm}` 都存在，
-   且在带 COOP/COEP 头的服务器上能真实转码一次（见 `docs/ffmpeg-build.md`）。
+5. macOS：`flutter build macos --release` 后
+   `build/macos/Build/Products/Release/rain_fui.app/Contents/Frameworks/ffmpeg`
+   存在、`lipo -info` 显示 arm64 与 x86_64、`codesign -dv` 有签名，且该文件能 `-version`。
+6. web（暂时废弃）：入口已注释，`flutter build web` 不属于验收范围；恢复入口后按原规则验收。
 6. 桌面端集成测试：`REAL_FFMPEG=<built binary> flutter test test/real_binary_test.dart` 通过（未设置 `REAL_FFMPEG` 时自动 skip）。

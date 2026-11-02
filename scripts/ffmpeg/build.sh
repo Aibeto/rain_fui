@@ -21,14 +21,18 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 source "$SCRIPT_DIR/common.sh"
 
 # Order matters: it is the menu order and the default --all order.
-ALL_TARGETS=(linux-x64 windows-x64 android-arm64-v8a android-armeabi-v7a android-x86_64 web)
+# web 暂时废弃（需求 m05703）：入口从这里摘掉，脚本与依赖配方全部保留。
+# 需要重新启用时，把下面两行注释还原并把 ALL_LABELS 里那条一并还原。
+ALL_TARGETS=(linux-x64 windows-x64 android-arm64-v8a android-armeabi-v7a android-x86_64 macos)
+# ALL_TARGETS=(linux-x64 windows-x64 android-arm64-v8a android-armeabi-v7a android-x86_64 web)
 ALL_LABELS=(
     "Linux desktop (x86_64)"
     "Windows desktop (x86_64, MinGW)"
     "Android arm64-v8a (64-bit phones)"
     "Android armeabi-v7a (32-bit phones)"
     "Android x86_64 (emulators)"
-    "Web (wasm, threaded)"
+    "macOS (universal, VideoToolbox)"
+    # "Web (wasm, threaded)"
 )
 
 JOBS_ARG=""
@@ -61,7 +65,8 @@ Options:
   -h, --help           show this help
 
 Targets and aliases:
-      linux, windows, web          single targets
+      linux, windows, macos        single targets
+      (web 暂时废弃，见 validate_token)
       android                      all three Android ABIs
       all                          everything
 
@@ -121,9 +126,13 @@ add_target() {
 validate_token() {
     local token="$1"
     case "$token" in
-        all|linux|windows|android|linux-x64|windows-x64|\
-        android-arm64-v8a|android-armeabi-v7a|android-x86_64|web)
+        all|linux|windows|android|macos|linux-x64|windows-x64|\
+        android-arm64-v8a|android-armeabi-v7a|android-x86_64)
             return 0
+            ;;
+        web)
+            # 暂时废弃（m05703）：保留分支，让提示比 "unknown target" 更有用。
+            die "web 构建已暂时废弃；如需重新启用请还原 build.sh / build-web.sh 里的注释"
             ;;
         [0-9]|[0-9][0-9])
             if [ "$token" -lt 1 ] || [ "$token" -gt "${#ALL_TARGETS[@]}" ]; then
@@ -151,7 +160,7 @@ expand_token() {
         linux)      printf 'linux-x64\n' ;;
         windows)    printf 'windows-x64\n' ;;
         android)    printf '%s\n' android-arm64-v8a android-armeabi-v7a android-x86_64 ;;
-        linux-x64|windows-x64|android-arm64-v8a|android-armeabi-v7a|android-x86_64|web)
+        linux-x64|windows-x64|android-arm64-v8a|android-armeabi-v7a|android-x86_64|macos)
             printf '%s\n' "$token" ;;
         [0-9]*-[0-9]*)
             local lo="${token%%-*}" hi="${token#*-}" n
@@ -276,6 +285,10 @@ build_command_for() {
             BUILD_CMD=( "$SCRIPT_DIR/build-android.sh" ${JOBS_ARGS[@]+"${JOBS_ARGS[@]}"} \
                 --abis "${target#android-}" --api "$API" )
             ;;
+        macos)
+            BUILD_CMD=( "$SCRIPT_DIR/build-macos.sh" ${JOBS_ARGS[@]+"${JOBS_ARGS[@]}"} )
+            ;;
+        # web 暂时废弃（m05703）：命令保留在这里，入口在 validate_token 里就挡住了。
         web)
             BUILD_CMD=( "$SCRIPT_DIR/build-web.sh" ${JOBS_ARGS[@]+"${JOBS_ARGS[@]}"} )
             ;;

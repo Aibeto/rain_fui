@@ -8,5 +8,8 @@ String baselinePlatformKey() {
   if (Platform.isWindows) {
     return 'windows';
   }
+  if (Platform.isMacOS) {
+    return 'macos';
+  }
   return 'linux';
 }
