@@ -196,8 +196,10 @@ dart run tool/check_catalog.dart    # 编码器/容器表自洽（codec id、容
 2. `Resolve FFmpeg submodule revision`（缓存键的一部分）
 3. FFmpeg 构建缓存：key 里带 `android-${{ matrix.abi }}`，三个 leg 互不命中
 4. **依赖库缓存**：每个 ABI 一份前缀（`build/ffmpeg/deps/android-<abi>`），同样带 abi
-5. JDK 17（temurin）+ Android SDK + `sdkmanager --install "ndk;28.2.13676358" "cmake;3.22.1"`，
-   `ANDROID_NDK_HOME` / `ANDROID_NDK_ROOT` / `ANDROID_NDK` 写进 `$GITHUB_ENV`
+5. JDK 17（temurin）+ Android SDK（`android-actions/setup-android@v3`，**显式**传
+   `packages: platform-tools`，见 §8 第 11 条）。随后 `sdkmanager --install "ndk;28.2.13676358"`
+   （缺了就红）与 `sdkmanager --install "cmake;3.22.1"`（装不上只 warning，本项目没有 CMake
+   原生模块），再把 `ANDROID_NDK_HOME` / `ANDROID_NDK_ROOT` / `ANDROID_NDK` 写进 `$GITHUB_ENV`
 6. `~/.gradle/caches`、`~/.gradle/wrapper` 缓存
 7. apt：`build-essential cmake ninja-build pkg-config patch autoconf automake libtool nasm yasm`
 8. `chmod +x scripts/ffmpeg/*.sh`
@@ -338,6 +340,12 @@ FFmpeg 缓存的三条硬规则：
    要么本地复现（§11），要么临时注释矩阵条目。
 10. **`release` 依赖 `needs.build.result == 'success'`**：如果以后把某个 leg 改成“允许失败”
     （`continue-on-error`），发布会被静默挡掉——那时需要同步改这个条件。
+11. **`setup-android` 的默认 `packages` 已经过时**。它默认装 `tools platform-tools`，
+    而 `tools`（旧的 SDK Tools）早已从 SDK 仓库下掉、被 cmdline-tools 取代，于是
+    `sdkmanager tools` 报 `Failed to find package 'tools'` 并以 1 退出，三个 Android leg
+    会在同一行一起红，看不出和我们的代码有任何关系。workflow 里已改成
+    `packages: platform-tools`；如果哪天平台工具也改名，先看这个 action 的
+    `action.yml` 默认值，再决定是覆盖还是干脆自己调 `sdkmanager`。
 
 ---
 

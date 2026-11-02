@@ -613,15 +613,26 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      # 不要用 setup-android 的默认 packages：它默认装 `tools platform-tools`，
+      # 而 `tools` 这个包已经从 SDK 仓库里下掉了（cmdline-tools 取代了它），
+      # sdkmanager 报 "Failed to find package 'tools'" 并以 1 退出，三个 ABI 会在
+      # 同一行一起红。这里只留 platform-tools，NDK 与 CMake 由下一步显式安装。
       - name: Android · Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
 
       - name: Android · NDK + CMake, export ANDROID_NDK_HOME
         shell: bash
         run: |
           set -euo pipefail
           yes | sdkmanager --licenses >/dev/null 2>&1 || true
-          sdkmanager --install "ndk;${{ env.ANDROID_NDK_VERSION }}" "cmake;3.22.1" >/dev/null
+          # NDK 必须有：build-deps.sh 和 flutter.ndkVersion 都指向它
+          sdkmanager --install "ndk;${{ env.ANDROID_NDK_VERSION }}" >/dev/null
+          # CMake 只是给 Gradle 的 native 构建兜底。本项目没有 CMake 原生模块，
+          # 万一这个包在仓库里改了名，不要让它把整个 leg 一起掀翻。
+          sdkmanager --install "cmake;3.22.1" >/dev/null \
+            || echo "::warning::cmake;3.22.1 未安装（本项目没有 CMake 原生模块，可忽略）"
           NDK_HOME="${ANDROID_SDK_ROOT:?ANDROID_SDK_ROOT is not set}/ndk/${{ env.ANDROID_NDK_VERSION }}"
           if [ ! -d "$NDK_HOME" ]; then
             echo "::error::NDK ${{ env.ANDROID_NDK_VERSION }} 未安装到 $NDK_HOME"
