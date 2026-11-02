@@ -369,6 +369,22 @@ ffmpeg_banner() {
     printf '[ffmpeg] ============================================================\n'
 }
 
+# ffmpeg_require_bash — fail early on bash 3.2 instead of deep inside a recipe.
+#
+# These scripts rely on bash 4 semantics (mapfile in install-to-app.sh, and
+# `${arr[@]}` on a declared-but-empty array, which bash 3.2 rejects under
+# `set -u` with the useless "cross[@]: unbound variable"). macOS still ships
+# /bin/bash 3.2, so anyone running there needs a newer one.
+ffmpeg_require_bash() {
+    if [ "${BASH_VERSINFO[0]:-0}" -lt 4 ]; then
+        local brew_bin
+        brew_bin="$(brew --prefix 2>/dev/null || echo /opt/homebrew)/bin"
+        die "these scripts need bash 4+ (running $BASH_VERSION). macOS ships bash 3.2: 'brew install bash', then run with $brew_bin/bash or put that directory first on PATH"
+    fi
+}
+
+ffmpeg_require_bash
+
 # ffmpeg_usage_common — flags every build script understands.
 ffmpeg_usage_common() {
     cat <<'EOF'

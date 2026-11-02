@@ -411,6 +411,12 @@ build.
 
 ## macOS: universal binary, ad-hoc signing, sandbox
 
+**Bash 4 or newer is required** (Homebrew's `bash`, not `/bin/bash` 3.2). The
+scripts use `mapfile` and expand arrays that may be empty, which bash 3.2 rejects
+under `set -u` — with 3.2 the very first dependency build fails with
+`cross[@]: unbound variable`. `common.sh` now checks the version up front, and the
+CI leg installs Homebrew bash and puts it first on `PATH`.
+
 macOS is the only target whose artifact is signed by the build itself. On Apple
 Silicon an unsigned (or wrongly signed) executable does not launch, and every
 universal build carries an arm64 slice, so `build-macos.sh` always ends with

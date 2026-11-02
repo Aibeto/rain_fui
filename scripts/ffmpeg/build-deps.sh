@@ -271,7 +271,7 @@ cmake_build() { # cmake_build <source dir> <extra cmake args...>
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
         -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-        "${CMAKE_TARGET_ARGS[@]}" \
+        ${CMAKE_TARGET_ARGS[@]+"${CMAKE_TARGET_ARGS[@]}"} \
         "$@" >/dev/null
     cmake --build "$build" -j "$JOBS" >/dev/null
     cmake --install "$build" >/dev/null
@@ -415,7 +415,7 @@ build_aom() {
     cmake_build "$SRC/aom" \
         -DENABLE_TESTS=OFF -DENABLE_EXAMPLES=OFF -DENABLE_TOOLS=OFF \
         -DENABLE_DOCS=OFF -DCONFIG_PIC=1 -DENABLE_CCACHE=OFF \
-        "${cpu_args[@]}"
+        ${cpu_args[@]+"${cpu_args[@]}"}
 }
 
 build_zlib() {
@@ -469,7 +469,7 @@ build_x264() {
         --prefix="$PREFIX" \
         --enable-static --enable-pic --disable-cli \
         ${HOST:+--host="$HOST"} \
-        "${cross[@]}" \
+        ${cross[@]+"${cross[@]}"} \
         --extra-cflags="${CFLAGS:-}" >/dev/null
       # x264 adds -m64 for x86_64 hosts; under emcc that means wasm64 and the
       # archive then refuses to link against wasm32 objects.
@@ -545,7 +545,7 @@ build_vpx() {
     ( cd "$dir" && make distclean >/dev/null 2>&1 || true
       ${EM_CROSS:+emconfigure} ./configure \
         --target="$vpx_target" \
-        "${vpx_extra[@]}" \
+        ${vpx_extra[@]+"${vpx_extra[@]}"} \
         --prefix="$PREFIX" \
         --disable-shared --enable-static --enable-pic \
         --disable-examples --disable-tools --disable-docs \
