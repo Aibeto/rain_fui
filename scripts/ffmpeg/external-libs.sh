@@ -118,14 +118,27 @@ ffmpeg_external_flags() {
     # targets need a real ffnvcodec.pc: with only headers installed, configure
     # fails the LoadLibrary dependency check and aborts the whole build.
     local have_nvcodec=0
-    if [ "$target_os" = "linux" ] \
-       && [ -f "$prefix/include/ffnvcodec/nvEncodeAPI.h" ]; then
-        have_nvcodec=1
-    fi
-    if [ "$target_os" != "windows" ] \
-       && ffmpeg_have_pkg ffnvcodec "$target_os" "$prefix"; then
-        have_nvcodec=1
-    fi
+    case "$target_os" in
+        linux)
+            if [ -f "$prefix/include/ffnvcodec/nvEncodeAPI.h" ] \
+               || ffmpeg_have_pkg ffnvcodec "$target_os" "$prefix"; then
+                have_nvcodec=1
+            fi
+            ;;
+        windows)
+            # 交叉目标只有头文件不够：configure 的 LoadLibrary 检查要的是
+            # ffnvcodec.pc，缺 .pc 就会整条构建中止。
+            if ffmpeg_have_pkg ffnvcodec "$target_os" "$prefix"; then
+                have_nvcodec=1
+            fi
+            ;;
+        *)
+            # android / web 没有 CUDA 运行时。web 上即使装上了 ffnvcodec.pc，
+            # configure 也会以 "nvenc requested, but not all dependencies are
+            # satisfied" 直接失败（CI 就是这么红掉的）。
+            have_nvcodec=0
+            ;;
+    esac
     if [ "$have_nvcodec" = "1" ]; then
         # --disable-autodetect turns ffnvcodec off, so it has to be named.
         printf '%s\n' --enable-ffnvcodec --enable-nvenc

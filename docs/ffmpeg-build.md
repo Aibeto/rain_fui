@@ -528,3 +528,21 @@ A build is only accepted when the encoders are really inside it, which is what
 `python3 tool/check_packaged.py --only <t>` asserts the app tree got that exact
 binary (a build without `install-to-app.sh` leaves the old one in place and is
 otherwise invisible).
+
+### Toolchain assumptions the scripts no longer make
+
+Three assumptions were baked in and each one broke a CI leg, so they are now
+probed instead:
+
+* **A native build has no `--host`.** `build_x264` used to pass
+  `--host "$HOST"`, which aborts under `set -u` when `HOST` is unset; configure
+  guesses the host by itself for `linux-*`.
+* **MSYS2 may ship binutils without the triple prefix.** `windows-x64` picks
+  `x86_64-w64-mingw32-ar` when it exists and falls back to plain `ar`/`ranlib`/
+  `windres`; the same choice decides x264's `--cross-prefix` (empty prefix means
+  "use the tools on `PATH`").
+* **nvenc only exists where a CUDA driver can exist.** `--enable-nvenc` and
+  `--enable-ffnvcodec` are emitted for `linux` and `windows` only, and
+  `build-deps.sh` skips nv-codec-headers for `android-*`/`web-wasm`; on wasm a
+  stray `ffnvcodec.pc` in the prefix used to abort configure with
+  "nvenc requested, but not all dependencies are satisfied".

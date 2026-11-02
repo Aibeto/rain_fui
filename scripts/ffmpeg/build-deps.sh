@@ -105,23 +105,48 @@ case "$TARGET" in
         )
         ;;
     windows-x64)
-        command -v x86_64-w64-mingw32-gcc >/dev/null \
-            || die "mingw-w64 is not installed (x86_64-w64-mingw32-gcc)"
-        export CC=x86_64-w64-mingw32-gcc
-        export CXX=x86_64-w64-mingw32-g++
-        export AR=x86_64-w64-mingw32-ar
-        export RANLIB=x86_64-w64-mingw32-ranlib
-        export NM=x86_64-w64-mingw32-nm
-        export STRIP=x86_64-w64-mingw32-strip
+        # MSYS2 的 MINGW64 环境里，binutils 可能只装成 ar/ranlib/nm/strip（不带
+        # 三元组前缀），而 gcc 是带前缀的。写死 x86_64-w64-mingw32-ar 时 libtool
+        # 会报 "x86_64-w64-mingw32-ar: command not found"（CI 上 LAME 就是这么死的），
+        # 所以每个工具都先找带前缀的，再退回不带前缀的。
+        pick_tool() {
+            local candidate
+            for candidate in "$@"; do
+                if command -v "$candidate" >/dev/null 2>&1; then
+                    printf '%s\n' "$candidate"
+                    return 0
+                fi
+            done
+            return 1
+        }
+        # `export VAR="$(cmd)"` hides cmd's exit status, so assign first and
+        # export after the check; otherwise an empty CC would surface much later
+        # as a confusing configure failure.
+        CC="$(pick_tool x86_64-w64-mingw32-gcc gcc)" \
+            || die "mingw-w64 is not installed (no x86_64-w64-mingw32-gcc / gcc)"
+        CXX="$(pick_tool x86_64-w64-mingw32-g++ g++)" \
+            || die "mingw-w64 is not installed (no x86_64-w64-mingw32-g++ / g++)"
+        AR="$(pick_tool x86_64-w64-mingw32-ar ar)" || die "no ar for mingw-w64"
+        RANLIB="$(pick_tool x86_64-w64-mingw32-ranlib ranlib)" \
+            || die "no ranlib for mingw-w64"
+        NM="$(pick_tool x86_64-w64-mingw32-nm nm)" || NM=""
+        STRIP="$(pick_tool x86_64-w64-mingw32-strip strip)" || STRIP=""
+        export CC CXX AR RANLIB NM STRIP
         export CFLAGS="-O2"
         export CXXFLAGS="$CFLAGS"
         export HOST=x86_64-w64-mingw32
+        # x264/vpx 会调用 ${cross_prefix}windres，导出 RC 让它用我们找到的那个。
+        RC="$(pick_tool x86_64-w64-mingw32-windres windres)" || RC=""
+        export RC
+        RC_COMPILER="$RC"
         CMAKE_TARGET_ARGS=(
             -DCMAKE_SYSTEM_NAME=Windows
             -DCMAKE_C_COMPILER="$CC"
             -DCMAKE_CXX_COMPILER="$CXX"
-            -DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres
         )
+        if [ -n "$RC_COMPILER" ]; then
+            CMAKE_TARGET_ARGS+=( -DCMAKE_RC_COMPILER="$RC_COMPILER" )
+        fi
         ;;
     web-wasm)
         local_emcc="$(command -v emcc || true)"
@@ -378,9 +403,23 @@ build_x264() {
     local cross=()
     case "$TARGET" in
         android-*) cross=(--cross-prefix="$ANDROID_TOOLCHAIN_PREFIX" --sysroot="$ANDROID_SYSROOT") ;;
-        windows-*) : ;;
-        web-wasm) cross=(--host=x86_64-linux-gnu --disable-asm) ;;
-        *) cross=(--host="$HOST") ;;
+        windows-*)
+            # x264 用 ${cross_prefix}ar 拼工具名。MSYS2 可能只装了不带三元组前缀的
+            # binutils，此时传空前缀，让它退回 PATH 上的 ar/ranlib/windres。
+            if command -v "${HOST:-x86_64-w64-mingw32}-ar" >/dev/null 2>&1; then
+                cross=(--cross-prefix="${HOST:-x86_64-w64-mingw32}-")
+            else
+                cross=(--cross-prefix=)
+            fi
+            ;;
+
+        # --host for wasm comes from HOST (set by the web-wasm toolchain block);
+        # only the assembler has to be turned off here.
+        web-wasm) cross=(--disable-asm) ;;
+        # Native build: HOST is unset on purpose, and `--host "$HOST"` under
+        # `set -u` is what made CI die at this line. configure guesses the host
+        # itself when it is not told.
+        *) : ;;
     esac
     local dir
     dir="$(srccopy x264 x264-stable.tar.gz)"
@@ -492,6 +531,15 @@ build_webp() {
 
 for dep in nvcodec lame svtav1 x264 opus ogg vorbis vpx webp x265 aom zlib; do
     want "$dep" || continue
+    # nv-codec-headers only makes sense where a CUDA driver exists; on android
+    # and web the headers would just get --enable-nvenc added to a configure
+    # line that cannot satisfy it.
+    case "$dep:$TARGET" in
+        nvcodec:android-*|nvcodec:web-wasm|nvcodec:ios-*)
+            log "skip $dep (no use on $TARGET)"
+            continue
+            ;;
+    esac
     "build_$dep"
 done
 
